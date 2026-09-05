@@ -44,7 +44,7 @@ With Visualink: a map you can keep.
 
 ![Visualink turns the same Kubernetes question into an interactive system map](docs/assets/why-visualink-after.png)
 
-Same question. Now the answer, the whole system, and the path through it are visible at once. Open the live example: [`kubernetes-explained.html`](kubernetes-explained.html).
+Same question. Now the answer, the whole system, and the path through it are visible at once. Open the [live Kubernetes example](https://jessiedengjie.github.io/Visualink/kubernetes-explained.html).
 
 </td>
 </tr>
@@ -133,8 +133,8 @@ Every explainer is designed around the same learning flow:
 
 These two files demonstrate the interaction pattern. Visualink is not limited to these concepts or to infrastructure:
 
-- [`kubernetes-explained.html`](kubernetes-explained.html) — an example of explaining a layered technical system
-- [`proxy-mcp-server.html`](proxy-mcp-server.html) — an example of explaining an end-to-end request flow
+- [Kubernetes explained](https://jessiedengjie.github.io/Visualink/kubernetes-explained.html) — an example of explaining a layered technical system
+- [Proxy MCP server explained](https://jessiedengjie.github.io/Visualink/proxy-mcp-server.html) — an example of explaining an end-to-end request flow
 
 Download either HTML file and open it locally in a browser to use the full interaction.
 

@@ -44,7 +44,7 @@ Visualink 是一个为非技术人员设计的 Agent Skill，帮助你理解学�
 
 ![Visualink 把同一个 Kubernetes 问题变成可交互的系统地图](docs/assets/why-visualink-after.png)
 
-同一个问题。现在答案、全貌，以及理解它的路径同时可见。打开完整示例：[`kubernetes-explained.html`](kubernetes-explained.html)。
+同一个问题。现在答案、全貌，以及理解它的路径同时可见。打开 [Kubernetes 在线示例](https://jessiedengjie.github.io/Visualink/kubernetes-explained.html)。
 
 </td>
 </tr>
@@ -133,8 +133,8 @@ Visualink 会生成一个独立 HTML 文件并在浏览器中打开。不需要�
 
 以下两个文件用于展示 Visualink 的交互方式。它并不局限于这些概念，也不局限于基础设施领域：
 
-- [`kubernetes-explained.html`](kubernetes-explained.html) —— 分层技术系统的解释示例
-- [`proxy-mcp-server.html`](proxy-mcp-server.html) —— 端到端请求流程的解释示例
+- [Kubernetes 在线示例](https://jessiedengjie.github.io/Visualink/kubernetes-explained.html) —— 分层技术系统的解释示例
+- [Proxy MCP Server 在线示例](https://jessiedengjie.github.io/Visualink/proxy-mcp-server.html) —— 端到端请求流程的解释示例
 
 下载任意 HTML 文件并用浏览器打开，即可体验完整交互。
 
