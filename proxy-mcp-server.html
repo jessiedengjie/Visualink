@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What is a Proxy MCP Server</title>
+<style>
+  :root {
+    --bg: #eae4d8;
+    --panel: #fbf9f4;
+    --panel-2: #f4f0e7;
+    --ink: #16181c;
+    --ink-2: #4a4d55;
+    --muted: #7c7a74;
+    --hair: #d5cdbd;
+    --hair-2: #c3b9a5;
+    --out: #a8552f;
+    --ctrl: #6b4076;
+    --entry: #106b68;
+    --work: #2e6b45;
+    --focus: #b8862b;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+  }
+  body[data-t="dusk"] {
+    --bg: #14171c;
+    --panel: #1c2027;
+    --panel-2: #232830;
+    --ink: #ece7dc;
+    --ink-2: #b9b5ab;
+    --muted: #8d8a83;
+    --hair: #333941;
+    --hair-2: #454c56;
+    --out: #dd8f63;
+    --ctrl: #bd94c8;
+    --entry: #55b3ab;
+    --work: #6cb185;
+    --focus: #dfb45e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  .app {
+    height: 100vh;
+    padding: 20px 26px 22px;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    gap: 14px;
+  }
+  .bar { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+  h1 {
+    font-size: 25px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    max-width: 34rem;
+  }
+  h1 .tick { color: var(--focus); }
+  .tools { display: flex; gap: 8px; }
+  .tools button {
+    font: 500 11px/1 var(--sans);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-radius: 2px;
+    padding: 9px 13px;
+    cursor: pointer;
+  }
+  .tools button:hover { color: var(--ink); border-color: var(--hair-2); }
+
+  .strip {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 18px;
+    align-items: center;
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-radius: 3px;
+    padding: 12px 16px;
+  }
+  .strip .meta { border-right: 1px solid var(--hair); padding-right: 16px; }
+  .eyebrow { font-size: 9.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
+  .strip .now { margin-top: 5px; font-size: 14px; font-weight: 600; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    display: flex; align-items: baseline; gap: 8px;
+    background: transparent;
+    border: 1px solid var(--hair);
+    border-radius: 2px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font: 500 12px/1.1 var(--sans);
+    color: var(--ink-2);
+    text-align: left;
+  }
+  .chip b { font-size: 9.5px; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; }
+  .chip:hover { border-color: var(--hair-2); color: var(--ink); }
+  .chip.on { background: var(--ink); border-color: var(--ink); color: var(--panel); }
+  .chip.on b { color: var(--focus); }
+
+  .stage {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-radius: 3px;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  svg { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+  svg.drag { cursor: grabbing; }
+  .foot {
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    border-top: 1px solid var(--hair);
+    padding: 9px 16px;
+  }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; }
+  .lg { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--ink-2); }
+  .sw { width: 16px; height: 3px; border-radius: 2px; }
+  .zoom { display: flex; align-items: center; gap: 4px; }
+  .zoom button {
+    width: 26px; height: 24px;
+    font: 500 13px/1 var(--sans);
+    color: var(--ink-2);
+    background: transparent;
+    border: 1px solid var(--hair);
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  .zoom button:hover { color: var(--ink); border-color: var(--hair-2); }
+  .zoom span { font-size: 10.5px; letter-spacing: 0.08em; color: var(--muted); min-width: 42px; text-align: center; }
+
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-top: 2px solid var(--ac, var(--hair-2));
+    border-radius: 3px;
+    padding: 13px 16px 15px;
+  }
+  .card h2 { font-size: 12.5px; font-weight: 600; letter-spacing: 0.01em; }
+  .card ul { list-style: none; margin-top: 9px; display: grid; gap: 7px; }
+  .card li { font-size: 12px; line-height: 1.45; color: var(--ink-2); padding-left: 12px; position: relative; }
+  .card li::before { content: ""; position: absolute; left: 0; top: 7px; width: 4px; height: 4px; border-radius: 50%; background: var(--ac, var(--hair-2)); }
+
+  /* diagram */
+  .zr { fill: var(--panel-2); stroke: var(--hair-2); stroke-width: 1; stroke-dasharray: 5 4; }
+  .zl { font: 600 9.5px var(--sans); letter-spacing: 0.16em; text-transform: uppercase; fill: var(--muted); }
+  .nb { fill: var(--panel); stroke: var(--hair-2); stroke-width: 1; }
+  .stripe { stroke: none; }
+  .nl { font: 600 13px var(--sans); fill: var(--ink); }
+  .ns { font: 400 10.5px var(--sans); fill: var(--muted); }
+  .ep { fill: none; stroke: var(--hair-2); stroke-width: 1.2; }
+  .el { font: 500 9.5px var(--sans); fill: var(--muted); letter-spacing: 0.01em; }
+  .edge[data-main] .ep { stroke: var(--entry); stroke-width: 2; }
+  .edge[data-main] .el { fill: var(--entry); }
+  .node[data-acc="out"] .stripe { fill: var(--out); }
+  .node[data-acc="ctrl"] .stripe { fill: var(--ctrl); }
+  .node[data-acc="entry"] .stripe { fill: var(--entry); }
+  .node[data-acc="work"] .stripe { fill: var(--work); }
+  .node, .zone, .edge { transition: opacity 260ms ease; }
+  .node { cursor: pointer; }
+  .is-dim { opacity: 0.42; }
+  .is-hot .zr { stroke: var(--focus); }
+  .is-hot .nb { stroke-width: 1.7; }
+  .node[data-acc="out"].is-hot .nb { stroke: var(--out); }
+  .node[data-acc="ctrl"].is-hot .nb { stroke: var(--ctrl); }
+  .node[data-acc="entry"].is-hot .nb { stroke: var(--entry); }
+  .node[data-acc="work"].is-hot .nb { stroke: var(--work); }
+  @media (max-width: 900px) {
+    .app { height: auto; }
+    .strip, .cards { grid-template-columns: 1fr; }
+    .strip .meta { border-right: 0; border-bottom: 1px solid var(--hair); padding: 0 0 10px; }
+  }
+</style>
+</head>
+<body data-t="bone">
+<div class="app">
+
+  <div class="bar">
+    <h1>What is a Proxy MCP Server<span class="tick">?</span></h1>
+    <div class="tools">
+      <button id="play" type="button">Play</button>
+      <button id="theme" type="button">Dusk</button>
+    </div>
+  </div>
+
+  <div class="strip">
+    <div class="meta">
+      <div class="eyebrow">Chapter <span id="cn">1</span> of 5</div>
+      <div class="now" id="now">MCP is a plug</div>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="stage">
+    <svg id="svg" viewBox="0 0 1000 382" preserveAspectRatio="xMidYMid meet" aria-label="Proxy MCP server diagram">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,1 L9,5 L0,9 z" fill="var(--hair-2)"/>
+        </marker>
+        <marker id="ahm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,1 L9,5 L0,9 z" fill="var(--entry)"/>
+        </marker>
+      </defs>
+
+      <g id="scene">
+        <g class="zone" data-k="desk">
+          <rect class="zr" x="486" y="40" width="210" height="260" rx="4"/>
+          <text class="zl" x="497" y="58">Proxy MCP Server</text>
+        </g>
+
+        <g class="edge" data-from="you" data-to="cursor" data-main="1">
+          <path class="ep" d="M164,239 H240" marker-end="url(#ahm)"/>
+          <text class="el" x="202" y="231" text-anchor="middle">asks in chat</text>
+        </g>
+        <g class="edge" data-from="cursor" data-to="proxy" data-main="1">
+          <path class="ep" d="M396,239 H504" marker-end="url(#ahm)"/>
+          <text class="el" x="450" y="231" text-anchor="middle">MCP request</text>
+        </g>
+        <g class="edge" data-from="auth" data-to="proxy">
+          <path class="ep" d="M591,136 V208" marker-end="url(#ah)"/>
+          <text class="el" x="601" y="176">checks login</text>
+        </g>
+        <g class="edge" data-from="proxy" data-to="github" data-main="1">
+          <path class="ep" d="M678,228 H712 V119 H780" marker-end="url(#ahm)"/>
+          <text class="el" x="722" y="176">forwards tool</text>
+        </g>
+        <g class="edge" data-from="proxy" data-to="notion">
+          <path class="ep" d="M678,250 H752 V311 H780" marker-end="url(#ah)"/>
+          <text class="el" x="762" y="268">forwards tool</text>
+        </g>
+
+        <g class="node" data-k="you" data-acc="out">
+          <rect class="nb" x="24" y="208" width="140" height="62" rx="3"/>
+          <rect class="stripe" x="24" y="208" width="4" height="62"/>
+          <text class="nl" x="42" y="234">You</text>
+          <text class="ns" x="42" y="251">in the chat</text>
+        </g>
+        <g class="node" data-k="cursor" data-acc="entry">
+          <rect class="nb" x="240" y="208" width="156" height="62" rx="3"/>
+          <rect class="stripe" x="240" y="208" width="4" height="62"/>
+          <text class="nl" x="258" y="234">Cursor</text>
+          <text class="ns" x="258" y="251">the MCP client</text>
+        </g>
+        <g class="node" data-k="auth" data-acc="ctrl">
+          <rect class="nb" x="504" y="74" width="174" height="62" rx="3"/>
+          <rect class="stripe" x="504" y="74" width="4" height="62"/>
+          <text class="nl" x="522" y="100">Login</text>
+          <text class="ns" x="522" y="117">the keycard check</text>
+        </g>
+        <g class="node" data-k="proxy" data-acc="ctrl">
+          <rect class="nb" x="504" y="208" width="174" height="62" rx="3"/>
+          <rect class="stripe" x="504" y="208" width="4" height="62"/>
+          <text class="nl" x="522" y="234">The Proxy</text>
+          <text class="ns" x="522" y="251">one front desk</text>
+        </g>
+        <g class="node" data-k="github" data-acc="work">
+          <rect class="nb" x="780" y="88" width="190" height="62" rx="3"/>
+          <rect class="stripe" x="780" y="88" width="4" height="62"/>
+          <text class="nl" x="798" y="114">GitHub MCP server</text>
+          <text class="ns" x="798" y="131">real tools live here</text>
+        </g>
+        <g class="node" data-k="notion" data-acc="work">
+          <rect class="nb" x="780" y="280" width="190" height="62" rx="3"/>
+          <rect class="stripe" x="780" y="280" width="4" height="62"/>
+          <text class="nl" x="798" y="306">Notion MCP server</text>
+          <text class="ns" x="798" y="323">real tools live here</text>
+        </g>
+      </g>
+    </svg>
+
+    <div class="foot">
+      <div class="legend">
+        <div class="lg"><span class="sw" style="background:var(--out)"></span>You, outside</div>
+        <div class="lg"><span class="sw" style="background:var(--entry)"></span>MCP client</div>
+        <div class="lg"><span class="sw" style="background:var(--ctrl)"></span>Proxy layer</div>
+        <div class="lg"><span class="sw" style="background:var(--work)"></span>Real MCP servers</div>
+      </div>
+      <div class="zoom">
+        <button id="out" type="button" aria-label="Zoom out">–</button>
+        <span id="pct">100%</span>
+        <button id="in" type="button" aria-label="Zoom in">+</button>
+        <button id="reset" type="button" aria-label="Reset view">&#8635;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card" style="--ac:var(--out)">
+      <h2>How the pieces nest</h2>
+      <ul>
+        <li>MCP is a plug: Cursor is the client; GitHub and Notion are servers</li>
+        <li>A proxy sits in the middle so Cursor talks to one desk, not every kitchen</li>
+        <li>Real servers do the work; the proxy forwards, checks, and combines</li>
+      </ul>
+    </div>
+    <div class="card" style="--ac:var(--ctrl)">
+      <h2>What the neighbors do</h2>
+      <ul>
+        <li>Client: the app you chat with, sending MCP requests</li>
+        <li>Login: the keycard check before a tool may run</li>
+        <li>Tool: one action a real server can take, such as search</li>
+      </ul>
+    </div>
+    <div class="card" style="--ac:var(--entry)">
+      <h2>Why the proxy exists</h2>
+      <ul>
+        <li>One plug instead of wiring Cursor to every MCP server</li>
+        <li>Hide keys, block unsafe tools, and record what was asked</li>
+        <li>You keep talking to Cursor while servers behind the desk change</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+const chapters = [
+  { chip: "MCP is a plug", title: "MCP is a plug",
+    focus: ["you", "cursor", "github", "notion"] },
+  { chip: "The proxy", title: "The proxy sits in the middle",
+    focus: ["cursor", "desk", "proxy", "github", "notion"] },
+  { chip: "Login first", title: "Login before tools run",
+    focus: ["desk", "auth", "proxy", "github"] },
+  { chip: "Many kitchens", title: "One desk, many kitchens",
+    focus: ["desk", "proxy", "github", "notion"] },
+  { chip: "Your question", title: "How your question travels",
+    focus: ["you", "cursor", "proxy", "github"] }
+];
+
+const chips = document.getElementById("chips");
+chapters.forEach((c, i) => {
+  const b = document.createElement("button");
+  b.className = "chip";
+  b.type = "button";
+  b.innerHTML = '<b>0' + (i + 1) + '</b><span>' + c.chip + '</span>';
+  b.addEventListener("click", () => { stop(); go(i); });
+  chips.appendChild(b);
+});
+
+const parts = [...document.querySelectorAll(".node, .zone")];
+const edges = [...document.querySelectorAll(".edge")];
+let at = 0;
+
+function go(n) {
+  at = (n + chapters.length) % chapters.length;
+  const f = chapters[at].focus;
+  document.getElementById("cn").textContent = at + 1;
+  document.getElementById("now").textContent = chapters[at].title;
+  [...chips.children].forEach((b, i) => b.classList.toggle("on", i === at));
+  parts.forEach(el => {
+    const on = f.includes(el.dataset.k);
+    el.classList.toggle("is-dim", !on);
+    el.classList.toggle("is-hot", on);
+  });
+  edges.forEach(el => {
+    const on = f.includes(el.dataset.from) && f.includes(el.dataset.to);
+    el.classList.toggle("is-dim", !on);
+  });
+}
+
+document.querySelectorAll(".node").forEach(el => {
+  el.addEventListener("click", e => {
+    e.stopPropagation();
+    const hit = chapters.findIndex(c => c.focus.includes(el.dataset.k));
+    if (hit >= 0) { stop(); go(hit); }
+  });
+});
+
+/* play */
+let timer = null;
+const playBtn = document.getElementById("play");
+function stop() { if (timer) { clearInterval(timer); timer = null; playBtn.textContent = "Play"; } }
+playBtn.addEventListener("click", () => {
+  if (timer) return stop();
+  playBtn.textContent = "Pause";
+  timer = setInterval(() => go(at + 1), 3400);
+});
+
+/* theme */
+const themeBtn = document.getElementById("theme");
+themeBtn.addEventListener("click", () => {
+  const dusk = document.body.dataset.t === "dusk";
+  document.body.dataset.t = dusk ? "bone" : "dusk";
+  themeBtn.textContent = dusk ? "Dusk" : "Bone";
+});
+
+/* zoom + pan */
+const svg = document.getElementById("svg");
+const scene = document.getElementById("scene");
+const pct = document.getElementById("pct");
+let s = 1, tx = 0, ty = 0, drag = null;
+function apply() {
+  scene.setAttribute("transform", "translate(" + tx.toFixed(1) + "," + ty.toFixed(1) + ") scale(" + s.toFixed(3) + ")");
+  pct.textContent = Math.round(s * 100) + "%";
+}
+function zoom(f) {
+  const ns = Math.min(2.6, Math.max(0.6, s * f));
+  const cx = 500, cy = 191;
+  tx = cx - (cx - tx) * (ns / s);
+  ty = cy - (cy - ty) * (ns / s);
+  s = ns;
+  apply();
+}
+document.getElementById("in").addEventListener("click", () => zoom(1.18));
+document.getElementById("out").addEventListener("click", () => zoom(1 / 1.18));
+document.getElementById("reset").addEventListener("click", () => { s = 1; tx = 0; ty = 0; apply(); });
+svg.addEventListener("wheel", e => { e.preventDefault(); zoom(e.deltaY < 0 ? 1.08 : 1 / 1.08); }, { passive: false });
+svg.addEventListener("pointerdown", e => {
+  drag = { x: e.clientX, y: e.clientY, tx, ty };
+  svg.classList.add("drag");
+  svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener("pointermove", e => {
+  if (!drag) return;
+  const r = svg.getBoundingClientRect();
+  const k = 1000 / r.width;
+  tx = drag.tx + (e.clientX - drag.x) * k;
+  ty = drag.ty + (e.clientY - drag.y) * k;
+  apply();
+});
+svg.addEventListener("pointerup", () => { drag = null; svg.classList.remove("drag"); });
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight") { stop(); go(at + 1); }
+  if (e.key === "ArrowLeft") { stop(); go(at - 1); }
+});
+
+go(0);
+apply();
+</script>
+</body>
+</html>

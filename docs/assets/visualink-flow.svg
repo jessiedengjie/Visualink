@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="340" viewBox="0 0 1400 340" role="img" aria-labelledby="title desc">
+  <title id="title">How Visualink turns a question into understanding</title>
+  <desc id="desc">Five steps: ask, answer, map, explore, and export.</desc>
+  <defs>
+    <linearGradient id="canvas" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#f4f9ff"/>
+      <stop offset="1" stop-color="#eefbf7"/>
+    </linearGradient>
+    <filter id="cardShadow" x="-20%" y="-30%" width="140%" height="170%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#64748b" flood-opacity=".14"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 1 9 5 0 9Z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="340" rx="28" fill="url(#canvas)"/>
+  <text x="60" y="60" fill="#0f172a" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="28" font-weight="750">
+    One question becomes a mental model
+  </text>
+  <text x="60" y="90" fill="#64748b" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="15">
+    Visualink gives you the answer first, then reveals the system around it.
+  </text>
+
+  <g transform="translate(60 126)" filter="url(#cardShadow)">
+    <rect width="220" height="150" rx="18" fill="#fff" stroke="#f08b62" stroke-width="2"/>
+    <circle cx="32" cy="32" r="17" fill="#fff0ea"/>
+    <text x="26" y="38" fill="#c84d25" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="16" font-weight="800">1</text>
+    <text x="24" y="76" fill="#111827" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="18" font-weight="750">Ask</text>
+    <text x="24" y="104" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">"What does this mean?"</text>
+    <text x="24" y="126" fill="#94a3b8" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12">No technical brief needed.</text>
+  </g>
+
+  <path d="M292 201H326" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <g transform="translate(340 126)" filter="url(#cardShadow)">
+    <rect width="220" height="150" rx="18" fill="#fff" stroke="#8b5cf6" stroke-width="2"/>
+    <circle cx="32" cy="32" r="17" fill="#f2edff"/>
+    <text x="26" y="38" fill="#6d3ed1" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="16" font-weight="800">2</text>
+    <text x="24" y="76" fill="#111827" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="18" font-weight="750">Answer</text>
+    <text x="24" y="103" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">Get the core idea in</text>
+    <text x="24" y="124" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">one or two sentences.</text>
+  </g>
+
+  <path d="M572 201H606" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <g transform="translate(620 126)" filter="url(#cardShadow)">
+    <rect width="220" height="150" rx="18" fill="#fff" stroke="#0ea5e9" stroke-width="2"/>
+    <circle cx="32" cy="32" r="17" fill="#e9f8ff"/>
+    <text x="26" y="38" fill="#037cae" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="16" font-weight="800">3</text>
+    <text x="24" y="76" fill="#111827" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="18" font-weight="750">Map</text>
+    <text x="24" y="103" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">See the full picture and</text>
+    <text x="24" y="124" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">how the pieces connect.</text>
+  </g>
+
+  <path d="M852 201H886" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <g transform="translate(900 126)" filter="url(#cardShadow)">
+    <rect width="220" height="150" rx="18" fill="#fff" stroke="#10b981" stroke-width="2"/>
+    <circle cx="32" cy="32" r="17" fill="#e8fbf3"/>
+    <text x="26" y="38" fill="#087d59" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="16" font-weight="800">4</text>
+    <text x="24" y="76" fill="#111827" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="18" font-weight="750">Explore</text>
+    <text x="24" y="103" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">Follow guided chapters,</text>
+    <text x="24" y="124" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">hover, zoom, and connect.</text>
+  </g>
+
+  <path d="M1132 201H1166" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <g transform="translate(1180 126)" filter="url(#cardShadow)">
+    <rect width="160" height="150" rx="18" fill="#0f172a" stroke="#22d3ee" stroke-width="2"/>
+    <circle cx="32" cy="32" r="17" fill="#17344a"/>
+    <text x="26" y="38" fill="#67e8f9" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="16" font-weight="800">5</text>
+    <text x="24" y="76" fill="#f8fafc" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="18" font-weight="750">Keep it</text>
+    <text x="24" y="103" fill="#cbd5e1" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">Copy or download</text>
+    <text x="24" y="124" fill="#cbd5e1" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">the map as PNG.</text>
+  </g>
+</svg>

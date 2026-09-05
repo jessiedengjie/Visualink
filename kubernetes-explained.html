@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kubernetes, from Docker to Cluster</title>
+<style>
+  :root {
+    --bg: #f3f7fc;
+    --panel: #ffffff;
+    --panel-2: #f1f6fc;
+    --ink: #101828;
+    --ink-2: #475467;
+    --muted: #66758a;
+    --hair: #dce5f0;
+    --hair-2: #aebed1;
+    --out: #c9562d;
+    --ctrl: #7d3f91;
+    --entry: #007f79;
+    --work: #26834e;
+    --focus: #b7791f;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+  }
+  body[data-t="dusk"] {
+    --bg: #0b0f14;
+    --panel: #131922;
+    --panel-2: #18212c;
+    --ink: #f8fafc;
+    --ink-2: #d3dbe6;
+    --muted: #a8b4c3;
+    --hair: #354153;
+    --hair-2: #607086;
+    --out: #f09a70;
+    --ctrl: #d3a7df;
+    --entry: #64d2c8;
+    --work: #83d39f;
+    --focus: #f2c66d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  .app {
+    height: 100vh;
+    padding: 20px 26px 22px;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    gap: 14px;
+  }
+  .bar { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+  .title { min-width: 0; }
+  h1 {
+    font-size: 25px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    max-width: 34rem;
+  }
+  h1 .punctuation { color: inherit; }
+  .lede {
+    margin-top: 8px;
+    max-width: 46rem;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+  .tools { display: flex; gap: 8px; align-items: flex-start; flex-shrink: 0; }
+  .tools > button, .drop > button {
+    font: 500 11px/1 var(--sans);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    padding: 9px 16px;
+    cursor: pointer;
+  }
+  .tools > button:hover, .drop > button:hover { color: var(--ink); border-color: var(--hair-2); }
+  .theme-trigger {
+    font: 500 11px/1 var(--sans);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    padding: 8px 12px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .theme-trigger:hover { color: var(--ink); border-color: var(--hair-2); }
+  .theme-trigger .chevron {
+    width: 10px;
+    height: 10px;
+    margin-left: 2px;
+    transition: transform 160ms ease;
+  }
+  .theme-trigger[aria-expanded="true"] .chevron { transform: rotate(180deg); }
+  .theme-ico {
+    width: 14px;
+    height: 14px;
+    display: block;
+    flex-shrink: 0;
+  }
+  .theme-menu button {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .theme-menu button[aria-checked="true"] {
+    background: var(--panel-2);
+    font-weight: 600;
+  }
+  .drop { position: relative; }
+  .menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 5px);
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-radius: 14px;
+    min-width: 168px;
+    z-index: 8;
+    padding: 4px;
+    box-shadow: 0 10px 28px rgba(22, 24, 28, 0.12);
+  }
+  .menu[hidden] { display: none; }
+  .menu button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: 0;
+    font: 500 12.5px/1.2 var(--sans);
+    padding: 8px 10px;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    border-radius: 10px;
+  }
+  .menu button:hover { background: var(--panel-2); }
+
+  .strip {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 18px;
+    align-items: center;
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-radius: 10px;
+    padding: 12px 16px;
+  }
+  .strip .meta { border-right: 1px solid var(--hair); padding-right: 16px; }
+  .eyebrow { font-size: 9.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
+  .strip .now { margin-top: 5px; font-size: 14px; font-weight: 600; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    display: flex; align-items: baseline; gap: 8px;
+    background: transparent;
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font: 500 12px/1.1 var(--sans);
+    color: var(--ink-2);
+    text-align: left;
+  }
+  .chip b { font-size: 9.5px; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; }
+  .chip:hover { border-color: var(--hair-2); color: var(--ink); background: var(--panel-2); }
+  .chip.on { background: var(--ink); border-color: var(--ink); color: var(--panel); }
+  .chip.on b { color: var(--focus); }
+  .chip.on:hover { background: var(--ink); color: var(--panel); }
+
+  .stage {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-radius: 10px;
+    overflow: hidden;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  svg { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+  svg.drag { cursor: grabbing; }
+  .foot {
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    border-top: 1px solid var(--hair);
+    padding: 9px 16px;
+  }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; }
+  .lg { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--ink-2); }
+  .sw { width: 16px; height: 3px; border-radius: 2px; }
+  .zoom { display: flex; align-items: center; gap: 4px; }
+  .zoom button {
+    width: 26px; height: 24px;
+    font: 500 13px/1 var(--sans);
+    color: var(--ink-2);
+    background: transparent;
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .zoom button:hover { color: var(--ink); border-color: var(--hair-2); background: var(--panel-2); }
+  .zoom span { font-size: 10.5px; letter-spacing: 0.08em; color: var(--muted); min-width: 42px; text-align: center; }
+
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-top: 2px solid var(--ac, var(--hair-2));
+    border-radius: 10px;
+    padding: 13px 16px 15px;
+  }
+  .card h2 { font-size: 12.5px; font-weight: 600; letter-spacing: 0.01em; }
+  .card ul { list-style: none; margin-top: 9px; display: grid; gap: 7px; }
+  .card li { font-size: 12px; line-height: 1.45; color: var(--ink-2); padding-left: 12px; position: relative; }
+  .card li::before { content: ""; position: absolute; left: 0; top: 7px; width: 4px; height: 4px; border-radius: 50%; background: var(--ac, var(--hair-2)); }
+
+  .tip {
+    position: absolute;
+    z-index: 4;
+    max-width: 260px;
+    background: var(--ink);
+    color: var(--panel);
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 8px 10px;
+    border-radius: 3px;
+    pointer-events: none;
+    box-shadow: 0 8px 22px rgba(22, 24, 28, 0.18);
+  }
+  .tip[hidden] { display: none; }
+  .toast {
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--panel);
+    font-size: 12.5px;
+    padding: 9px 14px;
+    border-radius: 3px;
+    z-index: 30;
+    pointer-events: none;
+  }
+  .toast[hidden] { display: none; }
+
+  /* diagram */
+  .zr { fill: none; stroke: var(--hair-2); stroke-width: 1; stroke-dasharray: 5 4; }
+  .zone[data-k="cluster"] .zr { fill: var(--panel-2); }
+  .zl { font: 600 9.5px var(--sans); letter-spacing: 0.16em; text-transform: uppercase; fill: var(--muted); }
+  .nb { fill: var(--panel); stroke: var(--hair-2); stroke-width: 1; }
+  .stripe { stroke: none; rx: 2px; }
+  .nl { font: 600 13px var(--sans); fill: var(--ink); }
+  .ns { font: 400 10.5px var(--sans); fill: var(--muted); }
+  .ep { fill: none; stroke: var(--hair-2); stroke-width: 1.2; }
+  .el { font: 500 9.5px var(--sans); fill: var(--muted); letter-spacing: 0.01em; }
+  .edge[data-main] .ep { stroke: var(--entry); stroke-width: 2; }
+  .edge[data-main] .el { fill: var(--entry); }
+  .node[data-acc="out"] .stripe { fill: var(--out); }
+  .node[data-acc="ctrl"] .stripe { fill: var(--ctrl); }
+  .node[data-acc="entry"] .stripe { fill: var(--entry); }
+  .node[data-acc="work"] .stripe { fill: var(--work); }
+  .node, .zone, .edge { transition: opacity 260ms ease; }
+  .node, .node * { cursor: pointer; }
+  .zone { cursor: pointer; }
+  .is-dim { opacity: 0.42; }
+  .is-hot .zr { stroke: var(--focus); }
+  .is-hot .nb { stroke-width: 1.7; }
+  .node[data-acc="out"].is-hot .nb { stroke: var(--out); }
+  .node[data-acc="ctrl"].is-hot .nb { stroke: var(--ctrl); }
+  .node[data-acc="entry"].is-hot .nb { stroke: var(--entry); }
+  .node[data-acc="work"].is-hot .nb { stroke: var(--work); }
+  .node:hover .nb,
+  .node.is-hover .nb {
+    stroke-width: 2;
+  }
+  .node[data-acc="out"]:hover .nb,
+  .node[data-acc="out"].is-hover .nb { stroke: var(--out); }
+  .node[data-acc="ctrl"]:hover .nb,
+  .node[data-acc="ctrl"].is-hover .nb { stroke: var(--ctrl); }
+  .node[data-acc="entry"]:hover .nb,
+  .node[data-acc="entry"].is-hover .nb { stroke: var(--entry); }
+  .node[data-acc="work"]:hover .nb,
+  .node[data-acc="work"].is-hover .nb { stroke: var(--work); }
+  .zone:hover .zr,
+  .zone.is-hover .zr { stroke: var(--focus); }
+  .edge.is-hover .ep { stroke: var(--focus); stroke-width: 1.9; }
+  .edge.is-hover .el { fill: var(--ink); }
+
+  /* Brighter category colors and connectors in light mode */
+  body[data-t="bone"] .strip,
+  body[data-t="bone"] .stage,
+  body[data-t="bone"] .card {
+    border-color: #c4d4e7;
+  }
+  body[data-t="bone"] .zone .zr {
+    stroke-width: 1.45;
+    stroke-dasharray: 7 5;
+  }
+  body[data-t="bone"] .zone[data-k="cluster"] .zr {
+    fill: #edf6ff;
+    stroke: #4f82c2;
+  }
+  body[data-t="bone"] .zone[data-k="control"] .zr { stroke: #a943bc; }
+  body[data-t="bone"] .zone[data-k="node1"] .zr,
+  body[data-t="bone"] .zone[data-k="node2"] .zr { stroke: #299a58; }
+  body[data-t="bone"] .zone[data-k="cluster"] .zl { fill: #315f98; }
+  body[data-t="bone"] .zone[data-k="control"] .zl { fill: #87339a; }
+  body[data-t="bone"] .zone[data-k="node1"] .zl,
+  body[data-t="bone"] .zone[data-k="node2"] .zl { fill: #197640; }
+  body[data-t="bone"] .zl { font-weight: 700; }
+  body[data-t="bone"] .nb {
+    stroke-width: 1.3;
+    filter: drop-shadow(0 2px 4px rgba(55, 86, 125, 0.08));
+  }
+  body[data-t="bone"] .node[data-acc="out"] .nb { stroke: #dc683b; }
+  body[data-t="bone"] .node[data-acc="ctrl"] .nb { stroke: #9b4cad; }
+  body[data-t="bone"] .node[data-acc="entry"] .nb { stroke: #008e87; }
+  body[data-t="bone"] .node[data-acc="work"] .nb { stroke: #2d9b59; }
+  body[data-t="bone"] .edge .ep { stroke-width: 1.6; }
+  body[data-t="bone"] .edge[data-from="docker_image"] .ep { stroke: #df6838; }
+  body[data-t="bone"] .edge[data-from="docker_image"] .el { fill: #b7441d; }
+  body[data-t="bone"] .edge[data-from="manager"] .ep { stroke: #a64dba; }
+  body[data-t="bone"] .edge[data-from="manager"] .el { fill: #87339a; }
+  body[data-t="bone"] .edge[data-from="you"] .ep,
+  body[data-t="bone"] .edge[data-from="service"] .ep { stroke: #009c94; }
+  body[data-t="bone"] .edge[data-from="you"] .el,
+  body[data-t="bone"] .edge[data-from="service"] .el { fill: #007a74; }
+  body[data-t="bone"] .edge[data-from="pod_a"] .ep,
+  body[data-t="bone"] .edge[data-from="pod_b"] .ep { stroke: #32a861; }
+  body[data-t="bone"] .edge[data-from="pod_a"] .el,
+  body[data-t="bone"] .edge[data-from="pod_b"] .el { fill: #207d46; }
+
+  /* Stronger hierarchy and boundaries in dark mode */
+  body[data-t="dusk"] h1 {
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    text-shadow: 0 1px 18px rgba(248, 250, 252, 0.08);
+  }
+  body[data-t="dusk"] .lede { color: #c5cfdb; }
+  body[data-t="dusk"] .strip,
+  body[data-t="dusk"] .stage,
+  body[data-t="dusk"] .card {
+    border-color: #3b485b;
+  }
+  body[data-t="dusk"] .eyebrow { color: #9facbc; }
+  body[data-t="dusk"] .now,
+  body[data-t="dusk"] .card h2 {
+    color: #f8fafc;
+    font-weight: 700;
+  }
+  body[data-t="dusk"] .card li { color: #c7d1dd; }
+  body[data-t="dusk"] .chip {
+    color: #cbd5e1;
+    border-color: #445166;
+  }
+  body[data-t="dusk"] .chip:hover {
+    border-color: #718096;
+    background: #1d2632;
+  }
+  body[data-t="dusk"] .zone .zr {
+    stroke-width: 1.45;
+    stroke-dasharray: 7 5;
+  }
+  body[data-t="dusk"] .zone[data-k="cluster"] .zr {
+    fill: #171e28;
+    stroke: #718096;
+  }
+  body[data-t="dusk"] .zone[data-k="control"] .zr {
+    stroke: #aa82b6;
+  }
+  body[data-t="dusk"] .zone[data-k="node1"] .zr,
+  body[data-t="dusk"] .zone[data-k="node2"] .zr {
+    stroke: #679377;
+  }
+  body[data-t="dusk"] .zone[data-k="cluster"] .zl { fill: #c7d2df; }
+  body[data-t="dusk"] .zone[data-k="control"] .zl { fill: #d3a7df; }
+  body[data-t="dusk"] .zone[data-k="node1"] .zl,
+  body[data-t="dusk"] .zone[data-k="node2"] .zl { fill: #9ad9af; }
+  body[data-t="dusk"] .zl {
+    font-weight: 700;
+    font-size: 10px;
+  }
+  body[data-t="dusk"] .nb {
+    fill: #151c25;
+    stroke: #536277;
+    stroke-width: 1.25;
+  }
+  body[data-t="dusk"] .nl {
+    fill: #ffffff;
+    font-weight: 700;
+    font-size: 13.5px;
+  }
+  body[data-t="dusk"] .ns {
+    fill: #b7c2d0;
+    font-size: 10.75px;
+  }
+  body[data-t="dusk"] .ep {
+    stroke: #68788e;
+    stroke-width: 1.4;
+  }
+  body[data-t="dusk"] .el {
+    fill: #b8c3d1;
+    font-weight: 600;
+  }
+  body[data-t="dusk"] .edge[data-main] .ep { stroke-width: 2.2; }
+  body[data-t="dusk"] .edge[data-main] .el { fill: #78ddd4; }
+
+  @media (max-width: 900px) {
+    .app { height: auto; }
+    .strip, .cards { grid-template-columns: 1fr; }
+    .strip .meta { border-right: 0; border-bottom: 1px solid var(--hair); padding: 0 0 10px; }
+    .tools { flex-wrap: wrap; justify-content: flex-end; }
+  }
+</style>
+</head>
+<body data-t="dusk">
+<div class="app">
+
+  <div class="bar">
+    <div class="title">
+      <h1>Kubernetes<span class="punctuation">,</span> from Docker to Cluster<span class="punctuation">.</span></h1>
+      <p class="lede" id="lede">Kubernetes is a system that runs your app across a group of computers, restarts it when something breaks, and scales it when traffic grows — so you do not babysit each machine.</p>
+    </div>
+    <div class="tools">
+      <button id="play" type="button">Play</button>
+      <div class="drop">
+        <button id="export" type="button" aria-haspopup="menu" aria-expanded="false">Export</button>
+        <div class="menu" id="export-menu" role="menu" hidden>
+          <button type="button" id="copy-img" role="menuitem">Copy image</button>
+          <button type="button" id="dl-img" role="menuitem">Download PNG</button>
+        </div>
+      </div>
+      <div class="drop">
+        <button class="theme-trigger" id="theme" type="button" aria-haspopup="menu" aria-expanded="false">
+          <svg class="theme-ico" id="theme-icon" viewBox="0 0 16 16" aria-hidden="true">
+            <path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/>
+          </svg>
+          <span id="theme-label">Dark</span>
+          <svg class="chevron" viewBox="0 0 12 12" aria-hidden="true">
+            <path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="menu theme-menu" id="theme-menu" role="menu" hidden>
+          <button type="button" id="theme-light" role="menuitemradio" aria-checked="false">
+            <svg class="theme-ico" viewBox="0 0 16 16" aria-hidden="true">
+              <circle cx="8" cy="8" r="3.15" fill="currentColor"/>
+              <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <path d="M8 1.2v1.7M8 13.1v1.7M1.2 8h1.7M13.1 8h1.7"/>
+                <path d="M3.15 3.15l1.2 1.2M11.65 11.65l1.2 1.2M3.15 12.85l1.2-1.2M11.65 4.35l1.2-1.2"/>
+              </g>
+            </svg>
+            Light
+          </button>
+          <button type="button" id="theme-dark" role="menuitemradio" aria-checked="true">
+            <svg class="theme-ico" viewBox="0 0 16 16" aria-hidden="true">
+              <path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/>
+            </svg>
+            Dark
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="strip">
+    <div class="meta">
+      <div class="eyebrow" id="eyebrow">Overview</div>
+      <div class="now" id="now">The whole picture</div>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="stage">
+    <svg id="svg" viewBox="0 0 1040 520" preserveAspectRatio="xMidYMid meet" aria-label="Kubernetes diagram">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/>
+        </marker>
+        <marker id="ahm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/>
+        </marker>
+      </defs>
+
+      <g id="scene">
+        <!-- zones -->
+        <g class="zone" data-k="cluster">
+          <rect class="zr" x="252" y="8" width="760" height="496" rx="12"/>
+          <text class="zl" x="264" y="26">Kubernetes Cluster — the campus</text>
+        </g>
+        <g class="zone" data-k="control">
+          <rect class="zr" x="270" y="30" width="204" height="204" rx="10"/>
+          <text class="zl" x="281" y="47">Control Plane — the office</text>
+        </g>
+        <g class="zone" data-k="node1">
+          <rect class="zr" x="604" y="172" width="392" height="118" rx="10"/>
+          <text class="zl" x="615" y="189">Worker Node 1 — a computer</text>
+        </g>
+        <g class="zone" data-k="node2">
+          <rect class="zr" x="604" y="360" width="392" height="118" rx="10"/>
+          <text class="zl" x="615" y="377">Worker Node 2 — a computer</text>
+        </g>
+
+        <!-- edges -->
+        <g class="edge" data-from="docker_image" data-to="manager">
+          <path class="ep" d="M180,87 H288" marker-end="url(#ah)"/>
+          <text class="el" x="228" y="79" text-anchor="middle">recipe</text>
+        </g>
+        <g class="edge" data-from="manager" data-to="memory">
+          <path class="ep" d="M372,118 V152" marker-end="url(#ah)"/>
+          <text class="el" x="382" y="139">saves the plan</text>
+        </g>
+        <g class="edge" data-from="manager" data-to="pod_a">
+          <path class="ep" d="M456,87 H690 V200" marker-end="url(#ah)"/>
+          <text class="el" x="573" y="79" text-anchor="middle">places and watches</text>
+        </g>
+        <g class="edge" data-from="you" data-to="service" data-main="1">
+          <path class="ep" d="M180,387 H288" marker-end="url(#ahm)"/>
+          <text class="el" x="218" y="379" text-anchor="middle">uses the app</text>
+        </g>
+        <g class="edge" data-from="service" data-to="pod_a" data-main="1">
+          <path class="ep" d="M456,344 H546 V231 H624" marker-end="url(#ahm)"/>
+          <text class="el" x="500" y="336" text-anchor="middle">forwards work</text>
+        </g>
+        <g class="edge" data-from="service" data-to="pod_b">
+          <path class="ep" d="M456,370 H572 V419 H624" marker-end="url(#ah)"/>
+          <text class="el" x="505" y="362" text-anchor="middle">forwards work</text>
+        </g>
+        <g class="edge" data-from="pod_a" data-to="container_a" data-main="1">
+          <path class="ep" d="M768,231 H820" marker-end="url(#ahm)"/>
+          <text class="el" x="794" y="223" text-anchor="middle">holds</text>
+        </g>
+        <g class="edge" data-from="pod_b" data-to="container_b">
+          <path class="ep" d="M768,419 H820" marker-end="url(#ah)"/>
+          <text class="el" x="794" y="411" text-anchor="middle">holds</text>
+        </g>
+
+        <!-- nodes -->
+        <g class="node" data-k="docker_image" data-acc="out">
+          <rect class="nb" x="24" y="56" width="156" height="62" rx="8"/>
+          <rect class="stripe" x="24" y="56" width="4" height="62"/>
+          <text class="nl" x="42" y="82">Docker Image</text>
+          <text class="ns" x="42" y="99">the recipe</text>
+        </g>
+        <g class="node" data-k="you" data-acc="out">
+          <rect class="nb" x="24" y="356" width="156" height="62" rx="8"/>
+          <rect class="stripe" x="24" y="356" width="4" height="62"/>
+          <text class="nl" x="42" y="382">You</text>
+          <text class="ns" x="42" y="399">browser or phone</text>
+        </g>
+        <g class="node" data-k="manager" data-acc="ctrl">
+          <rect class="nb" x="288" y="56" width="168" height="62" rx="8"/>
+          <rect class="stripe" x="288" y="56" width="4" height="62"/>
+          <text class="nl" x="306" y="82">The Manager</text>
+          <text class="ns" x="306" y="99">places and heals</text>
+        </g>
+        <g class="node" data-k="memory" data-acc="ctrl">
+          <rect class="nb" x="288" y="152" width="168" height="62" rx="8"/>
+          <rect class="stripe" x="288" y="152" width="4" height="62"/>
+          <text class="nl" x="306" y="178">Cluster Memory</text>
+          <text class="ns" x="306" y="195">the written plan</text>
+        </g>
+        <g class="node" data-k="service" data-acc="entry">
+          <rect class="nb" x="288" y="326" width="168" height="62" rx="8"/>
+          <rect class="stripe" x="288" y="326" width="4" height="62"/>
+          <text class="nl" x="306" y="352">Service</text>
+          <text class="ns" x="306" y="369">stable front desk</text>
+        </g>
+        <g class="node" data-k="pod_a" data-acc="work">
+          <rect class="nb" x="624" y="200" width="144" height="62" rx="8"/>
+          <rect class="stripe" x="624" y="200" width="4" height="62"/>
+          <text class="nl" x="642" y="226">Pod A</text>
+          <text class="ns" x="642" y="243">running copy 1</text>
+        </g>
+        <g class="node" data-k="container_a" data-acc="work">
+          <rect class="nb" x="820" y="200" width="156" height="62" rx="8"/>
+          <rect class="stripe" x="820" y="200" width="4" height="62"/>
+          <text class="nl" x="838" y="226">Container</text>
+          <text class="ns" x="838" y="243">the packed app</text>
+        </g>
+        <g class="node" data-k="pod_b" data-acc="work">
+          <rect class="nb" x="624" y="388" width="144" height="62" rx="8"/>
+          <rect class="stripe" x="624" y="388" width="4" height="62"/>
+          <text class="nl" x="642" y="414">Pod B</text>
+          <text class="ns" x="642" y="431">running copy 2</text>
+        </g>
+        <g class="node" data-k="container_b" data-acc="work">
+          <rect class="nb" x="820" y="388" width="156" height="62" rx="8"/>
+          <rect class="stripe" x="820" y="388" width="4" height="62"/>
+          <text class="nl" x="838" y="414">Container</text>
+          <text class="ns" x="838" y="431">the packed app</text>
+        </g>
+      </g>
+    </svg>
+    <div class="tip" id="tip" hidden></div>
+
+    <div class="foot">
+      <div class="legend">
+        <div class="lg"><span class="sw" style="background:var(--out)"></span>Outside the cluster</div>
+        <div class="lg"><span class="sw" style="background:var(--ctrl)"></span>Control plane</div>
+        <div class="lg"><span class="sw" style="background:var(--entry)"></span>Service</div>
+        <div class="lg"><span class="sw" style="background:var(--work)"></span>Pods and containers</div>
+      </div>
+      <div class="zoom">
+        <button id="out" type="button" aria-label="Zoom out">–</button>
+        <span id="pct">100%</span>
+        <button id="in" type="button" aria-label="Zoom in">+</button>
+        <button id="reset" type="button" aria-label="Reset view">&#8635;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card" style="--ac:var(--out)">
+      <h2>How the pieces nest</h2>
+      <ul>
+        <li>Docker packs the app into a Container that runs the same everywhere</li>
+        <li>A Pod holds that Container — the smallest unit Kubernetes will place</li>
+        <li>A Worker Node is one computer; the Cluster is the whole campus plus the office</li>
+      </ul>
+    </div>
+    <div class="card" style="--ac:var(--ctrl)">
+      <h2>What the neighbors do</h2>
+      <ul>
+        <li>Control Plane: places Pods, restarts crashes, keeps the written plan</li>
+        <li>Service: a stable front desk so you never hunt for a Pod</li>
+        <li>Image is the recipe; a Container is one running copy of it</li>
+      </ul>
+    </div>
+    <div class="card" style="--ac:var(--entry)">
+      <h2>Why this exists</h2>
+      <ul>
+        <li>A computer fails: work moves to another Worker Node</li>
+        <li>Traffic grows: more Pods start from the same Docker Image</li>
+        <li>You keep calling one Service while Pods are replaced behind it</li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const OVERVIEW_LEDE = "Kubernetes is a system that runs your app across a group of computers, restarts it when something breaks, and scales it when traffic grows — so you do not babysit each machine.";
+
+const chapters = [
+  { chip: "Docker packs it", title: "Docker packs the app",
+    lede: "A Docker Image is the recipe for the app. A Container is one running copy of that recipe, packed so it behaves the same on any computer.",
+    focus: ["docker_image", "container_a", "container_b"] },
+  { chip: "A Pod holds it", title: "A Pod holds the box",
+    lede: "A Pod is the smallest box Kubernetes will place. It holds one or more Containers that should live and die together.",
+    focus: ["pod_a", "container_a", "pod_b", "container_b"] },
+  { chip: "Worker Nodes", title: "Worker Nodes are computers",
+    lede: "A Worker Node is one computer in the cluster. Kubernetes places Pods onto these machines and can move them if a machine fails.",
+    focus: ["node1", "node2", "pod_a", "container_a", "pod_b", "container_b"] },
+  { chip: "The Cluster", title: "The Cluster is the campus",
+    lede: "The Cluster is the whole campus: Worker Nodes that run the app, plus a Control Plane that keeps the written plan and heals problems.",
+    focus: ["cluster", "control", "manager", "memory", "service", "node1", "node2", "pod_a", "pod_b"] },
+  { chip: "How you reach it", title: "How you reach the app",
+    lede: "A Service is a stable front desk. You talk to one address; Kubernetes forwards the work to whichever Pods are healthy behind it.",
+    focus: ["you", "service", "pod_a", "pod_b"] }
+];
+
+const blurbs = {
+  docker_image: "A Docker Image is the recipe: the files and settings needed to run the app.",
+  you: "You are the person or device using the app — a browser, a phone, or another service.",
+  manager: "The Manager (part of the Control Plane) places Pods, restarts crashes, and follows the written plan.",
+  memory: "Cluster Memory is the written plan — what should be running, and where.",
+  service: "A Service is a stable front desk. You call one address; it forwards work to healthy Pods.",
+  pod_a: "A Pod is the smallest unit Kubernetes will place. Pod A is one running copy of the app.",
+  pod_b: "A Pod is the smallest unit Kubernetes will place. Pod B is a second running copy, for spare capacity.",
+  container_a: "A Container is one running copy of the Docker Image — the packed app itself.",
+  container_b: "A Container is one running copy of the Docker Image — the packed app itself.",
+  cluster: "The Cluster is the whole campus: the computers plus the office that runs them.",
+  control: "The Control Plane is the office that decides where work goes and heals what breaks.",
+  node1: "A Worker Node is one computer that actually runs Pods.",
+  node2: "A Worker Node is one computer that actually runs Pods."
+};
+
+const chips = document.getElementById("chips");
+const ledeEl = document.getElementById("lede");
+const eyebrow = document.getElementById("eyebrow");
+const nowEl = document.getElementById("now");
+const tip = document.getElementById("tip");
+const toastEl = document.getElementById("toast");
+
+function addChip(label, num, onClick) {
+  const b = document.createElement("button");
+  b.className = "chip";
+  b.type = "button";
+  b.innerHTML = num ? "<b>" + num + "</b><span>" + label + "</span>" : "<span>" + label + "</span>";
+  b.addEventListener("click", onClick);
+  chips.appendChild(b);
+}
+
+chapters.forEach((c, i) => {
+  addChip(c.chip, "0" + (i + 1), () => { stop(); go(i); });
+});
+
+const parts = [...document.querySelectorAll(".node, .zone")];
+const edges = [...document.querySelectorAll(".edge")];
+let at = -1;
+let toastTimer = null;
+
+function paintChips() {
+  [...chips.children].forEach((b, i) => b.classList.toggle("on", i === at));
+}
+
+function clearDim() {
+  parts.forEach(el => {
+    el.classList.remove("is-dim", "is-hot", "is-hover");
+  });
+  edges.forEach(el => el.classList.remove("is-dim", "is-hover"));
+}
+
+function overviewMode() {
+  at = -1;
+  eyebrow.textContent = "Overview";
+  nowEl.textContent = "The whole picture";
+  ledeEl.textContent = OVERVIEW_LEDE;
+  paintChips();
+  clearDim();
+  hideTip();
+}
+
+function go(n) {
+  at = (n + chapters.length) % chapters.length;
+  const ch = chapters[at];
+  const f = ch.focus;
+  eyebrow.textContent = "Chapter " + (at + 1) + " of 5";
+  nowEl.textContent = ch.title;
+  ledeEl.textContent = ch.lede;
+  paintChips();
+  parts.forEach(el => {
+    const on = f.includes(el.dataset.k);
+    const zone = el.classList.contains("zone");
+    el.classList.toggle("is-dim", !zone && !on);
+    el.classList.toggle("is-hot", on);
+    el.classList.remove("is-hover");
+  });
+  edges.forEach(el => {
+    const on = f.includes(el.dataset.from) && f.includes(el.dataset.to);
+    el.classList.toggle("is-dim", !on);
+    el.classList.remove("is-hover");
+  });
+  hideTip();
+}
+
+function neighbors(k) {
+  const n = new Set([k]);
+  edges.forEach(el => {
+    if (el.dataset.from === k) n.add(el.dataset.to);
+    if (el.dataset.to === k) n.add(el.dataset.from);
+  });
+  return n;
+}
+
+function hideTip() { tip.hidden = true; }
+
+function showTip(el, text) {
+  const box = el.querySelector(".nb, .zr");
+  if (!box) return;
+  const r = box.getBoundingClientRect();
+  const s = document.querySelector(".stage").getBoundingClientRect();
+  tip.hidden = false;
+  tip.textContent = text;
+  const tw = tip.offsetWidth;
+  const th = tip.offsetHeight;
+  let left = r.left - s.left;
+  let top = r.bottom - s.top + 8;
+  if (left + tw > s.width - 12) left = s.width - tw - 12;
+  if (left < 12) left = 12;
+  if (top + th > s.height - 12) top = r.top - s.top - th - 8;
+  tip.style.left = left + "px";
+  tip.style.top = top + "px";
+}
+
+function hoverKey(k) {
+  const near = neighbors(k);
+  parts.forEach(el => {
+    const zone = el.classList.contains("zone");
+    el.classList.toggle("is-hover", el.dataset.k === k);
+    if (at < 0 && !zone) el.classList.toggle("is-dim", !near.has(el.dataset.k));
+  });
+  edges.forEach(ed => {
+    const on = ed.dataset.from === k || ed.dataset.to === k;
+    ed.classList.toggle("is-hover", on);
+    if (at < 0) ed.classList.toggle("is-dim", !on);
+  });
+}
+
+function clearHover() {
+  parts.forEach(el => el.classList.remove("is-hover"));
+  edges.forEach(el => el.classList.remove("is-hover"));
+  if (at < 0) {
+    parts.forEach(el => el.classList.remove("is-dim"));
+    edges.forEach(el => el.classList.remove("is-dim"));
+  }
+  hideTip();
+}
+
+parts.forEach(el => {
+  el.addEventListener("pointerenter", () => {
+    hoverKey(el.dataset.k);
+    const text = blurbs[el.dataset.k];
+    if (text) showTip(el, text);
+  });
+  el.addEventListener("pointerleave", clearHover);
+  el.addEventListener("click", e => {
+    e.stopPropagation();
+    const hit = chapters.findIndex(c => c.focus.includes(el.dataset.k));
+    if (hit >= 0) { stop(); go(hit); }
+  });
+});
+
+/* play */
+let timer = null;
+const playBtn = document.getElementById("play");
+function stop() { if (timer) { clearInterval(timer); timer = null; playBtn.textContent = "Play"; } }
+playBtn.addEventListener("click", () => {
+  if (timer) return stop();
+  playBtn.textContent = "Pause";
+  if (at < 0) go(0);
+  timer = setInterval(() => go(at + 1), 3400);
+});
+
+/* theme */
+const themeBtn = document.getElementById("theme");
+const themeMenu = document.getElementById("theme-menu");
+const themeLabel = document.getElementById("theme-label");
+const themeIcon = document.getElementById("theme-icon");
+const lightBtn = document.getElementById("theme-light");
+const darkBtn = document.getElementById("theme-dark");
+const moonPath = '<path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/>';
+const sunPath = '<circle cx="8" cy="8" r="3.15" fill="currentColor"/><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1.2v1.7M8 13.1v1.7M1.2 8h1.7M13.1 8h1.7"/><path d="M3.15 3.15l1.2 1.2M11.65 11.65l1.2 1.2M3.15 12.85l1.2-1.2M11.65 4.35l1.2-1.2"/></g>';
+function closeTheme() {
+  themeMenu.hidden = true;
+  themeBtn.setAttribute("aria-expanded", "false");
+}
+function setTheme(dusk) {
+  document.body.dataset.t = dusk ? "dusk" : "bone";
+  themeLabel.textContent = dusk ? "Dark" : "Light";
+  themeIcon.innerHTML = dusk ? moonPath : sunPath;
+  lightBtn.setAttribute("aria-checked", String(!dusk));
+  darkBtn.setAttribute("aria-checked", String(dusk));
+  closeTheme();
+}
+themeBtn.addEventListener("click", e => {
+  e.stopPropagation();
+  const open = themeMenu.hidden;
+  themeMenu.hidden = !open;
+  themeBtn.setAttribute("aria-expanded", String(open));
+});
+themeMenu.addEventListener("click", e => e.stopPropagation());
+lightBtn.addEventListener("click", () => setTheme(false));
+darkBtn.addEventListener("click", () => setTheme(true));
+
+/* export */
+const exportBtn = document.getElementById("export");
+const exportMenu = document.getElementById("export-menu");
+function closeExport() {
+  exportMenu.hidden = true;
+  exportBtn.setAttribute("aria-expanded", "false");
+}
+exportBtn.addEventListener("click", e => {
+  e.stopPropagation();
+  const open = exportMenu.hidden;
+  exportMenu.hidden = !open;
+  exportBtn.setAttribute("aria-expanded", String(open));
+});
+document.addEventListener("click", () => {
+  closeExport();
+  closeTheme();
+});
+
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toastEl.hidden = true; }, 2200);
+}
+
+function cloneForExport() {
+  const clone = svg.cloneNode(true);
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  clone.setAttribute("width", "2080");
+  clone.setAttribute("height", "1040");
+  const scene = clone.querySelector("#scene");
+  if (scene) scene.removeAttribute("transform");
+  clone.querySelectorAll(".is-hover").forEach(el => el.classList.remove("is-hover"));
+  const srcAll = [svg, ...svg.querySelectorAll("*")];
+  const dstAll = [clone, ...clone.querySelectorAll("*")];
+  const props = ["fill", "stroke", "stroke-width", "stroke-dasharray", "opacity", "font-size", "font-weight", "font-family", "letter-spacing", "text-anchor"];
+  srcAll.forEach((el, i) => {
+    const d = dstAll[i];
+    if (!d) return;
+    const cs = getComputedStyle(el);
+    props.forEach(p => {
+      const v = cs.getPropertyValue(p).trim();
+      if (!v || v === "normal") return;
+      d.style.setProperty(p, v);
+    });
+  });
+  const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  bg.setAttribute("width", "100%");
+  bg.setAttribute("height", "100%");
+  bg.setAttribute("fill", getComputedStyle(document.body).getPropertyValue("--panel").trim());
+  clone.insertBefore(bg, clone.firstChild);
+  return clone;
+}
+
+function rasterize() {
+  return new Promise((resolve, reject) => {
+    const clone = cloneForExport();
+    const xml = new XMLSerializer().serializeToString(clone);
+    const url = URL.createObjectURL(new Blob([xml], { type: "image/svg+xml;charset=utf-8" }));
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 2080;
+      canvas.height = 1040;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = getComputedStyle(document.body).getPropertyValue("--panel").trim();
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(blob => {
+        if (!blob) reject(new Error("Could not build image"));
+        else resolve(blob);
+      }, "image/png");
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Could not render diagram"));
+    };
+    img.src = url;
+  });
+}
+
+function downloadBlob(blob) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "kubernetes-explained.png";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+document.getElementById("copy-img").addEventListener("click", async e => {
+  e.stopPropagation();
+  closeExport();
+  const blobPromise = rasterize();
+  try {
+    if (navigator.clipboard && window.ClipboardItem) {
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": blobPromise })]);
+      toast("Copied image");
+      return;
+    }
+  } catch (err) {
+    /* clipboard blocked — fall through to download */
+  }
+  try {
+    downloadBlob(await blobPromise);
+    toast("Copied not available — downloaded PNG instead");
+  } catch (err) {
+    toast("Could not export image");
+  }
+});
+
+document.getElementById("dl-img").addEventListener("click", async e => {
+  e.stopPropagation();
+  closeExport();
+  try {
+    const blob = await rasterize();
+    downloadBlob(blob);
+    toast("Downloaded PNG");
+  } catch (err) {
+    toast("Could not download image");
+  }
+});
+
+/* zoom + pan */
+const svg = document.getElementById("svg");
+const scene = document.getElementById("scene");
+const pct = document.getElementById("pct");
+let s = 1, tx = 0, ty = 0, drag = null;
+function apply() {
+  scene.setAttribute("transform", "translate(" + tx.toFixed(1) + "," + ty.toFixed(1) + ") scale(" + s.toFixed(3) + ")");
+  pct.textContent = Math.round(s * 100) + "%";
+}
+function zoom(f) {
+  const ns = Math.min(2.6, Math.max(0.6, s * f));
+  const cx = 520, cy = 260;
+  tx = cx - (cx - tx) * (ns / s);
+  ty = cy - (cy - ty) * (ns / s);
+  s = ns;
+  apply();
+}
+document.getElementById("in").addEventListener("click", () => zoom(1.18));
+document.getElementById("out").addEventListener("click", () => zoom(1 / 1.18));
+document.getElementById("reset").addEventListener("click", () => { s = 1; tx = 0; ty = 0; apply(); });
+svg.addEventListener("wheel", e => { e.preventDefault(); zoom(e.deltaY < 0 ? 1.08 : 1 / 1.08); }, { passive: false });
+svg.addEventListener("pointerdown", e => {
+  if (e.target.closest(".node, .zone")) return;
+  drag = { x: e.clientX, y: e.clientY, tx, ty };
+  svg.classList.add("drag");
+  svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener("pointermove", e => {
+  if (!drag) return;
+  const r = svg.getBoundingClientRect();
+  const k = 1040 / r.width;
+  tx = drag.tx + (e.clientX - drag.x) * k;
+  ty = drag.ty + (e.clientY - drag.y) * k;
+  apply();
+});
+svg.addEventListener("pointerup", () => { drag = null; svg.classList.remove("drag"); });
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight") {
+    stop();
+    if (at < 0) go(0);
+    else go(at + 1);
+  }
+  if (e.key === "ArrowLeft") {
+    stop();
+    if (at < 0) go(chapters.length - 1);
+    else if (at === 0) overviewMode();
+    else go(at - 1);
+  }
+});
+
+overviewMode();
+apply();
+</script>
+</body>
+</html>

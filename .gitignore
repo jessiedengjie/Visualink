@@ -1,0 +1,9 @@
+.DS_Store
+.env
+.env.*
+*.key
+*.pem
+*.p12
+credentials.json
+service-account*.json
+**/secrets/
