@@ -1,6 +1,8 @@
 ---
 name: visualink
-description: Turns difficult technical concepts into clear, interactive visual maps for non-technical learners. Use when a user asks to visualize, understand, or explain infrastructure, software architecture, networking, AI systems, developer tools, or another technical concept as a standalone HTML explainer.
+description: Turns difficult technical concepts into clear, interactive visual maps. Use when a user asks to visualize, understand, or explain infrastructure, software architecture, networking, AI systems, developer tools, or another unfamiliar technical concept as a standalone HTML explainer.
+license: MIT
+compatibility: Requires filesystem write access. Browser tools are recommended for visual and interaction verification but are not required to generate the HTML explainer.
 ---
 
 # Visualink

@@ -6,14 +6,22 @@
 
 **Turn difficult technical concepts into interactive maps you can actually understand.**
 
-Visualink is an Agent Skill for non-technical people who need to understand an unfamiliar technical concept for learning or work. Ask in your own words and get a precise answer, a complete visual map, and a guided path through the ideas you need to know next.
+Visualink is an Agent Skill for anyone learning an unfamiliar technical concept. Ask in your own words and get a direct answer, a complete visual map, and the related concepts you may not have known to ask about—especially useful when you do not have a technical background.
 
 ![Agent Skill](https://img.shields.io/badge/Agent-Skill-7C3AED?style=flat-square)
 ![Output](https://img.shields.io/badge/output-single_HTML-0891B2?style=flat-square)
 ![Themes](https://img.shields.io/badge/themes-light_%2B_dark-16A34A?style=flat-square)
-![Audience](https://img.shields.io/badge/built_for-non--technical_learners-EA580C?style=flat-square)
+[![License: MIT](https://img.shields.io/badge/license-MIT-EA580C?style=flat-square)](LICENSE)
 
 ![Visualink: see the concept and understand the system](docs/assets/visualink-hero.svg)
+
+<p align="center">
+  <a href="https://jessiedengjie.github.io/Visualink/kubernetes-explained.html"><strong>Try the live demo →</strong></a>
+  ·
+  <a href="#quick-start">Install Visualink</a>
+  ·
+  <a href=".cursor/skills/visualink/SKILL.md">View the Skill</a>
+</p>
 
 ## Why Visualink
 
@@ -66,36 +74,35 @@ That is the difference Visualink is built for:
 
 ### 1. Install the skill
 
-Clone or download this repository, then copy the skill into your agent's personal skills directory.
-
-**Cursor**
+Install Visualink with one command:
 
 ```bash
-mkdir -p ~/.cursor/skills/visualink
-cp .cursor/skills/visualink/SKILL.md ~/.cursor/skills/visualink/SKILL.md
+npx skills add jessiedengjie/Visualink
 ```
 
-**Claude Code**
+The installer detects supported agents and places the skill in the correct location. It supports Cursor, Claude Code, OpenAI Codex, and other Agent Skills-compatible tools.
+
+<details>
+<summary>Manual installation</summary>
+
+Clone or download this repository, then copy the Skill into your agent's personal directory:
+
+- Cursor: `~/.cursor/skills/visualink/`
+- Claude Code: `~/.claude/skills/visualink/`
+- OpenAI Codex: `~/.agents/skills/visualink/`
 
 ```bash
-mkdir -p ~/.claude/skills/visualink
-cp .cursor/skills/visualink/SKILL.md ~/.claude/skills/visualink/SKILL.md
+# Replace this with one of the directories listed above.
+SKILL_DIR="$HOME/.cursor/skills/visualink"
+mkdir -p "$SKILL_DIR"
+cp .cursor/skills/visualink/SKILL.md "$SKILL_DIR/SKILL.md"
 ```
 
-**OpenAI Codex**
+For project-only use, copy the Skill into `.cursor/skills/visualink/`, `.claude/skills/visualink/`, or `.agents/skills/visualink/`.
 
-```bash
-mkdir -p ~/.agents/skills/visualink
-cp .cursor/skills/visualink/SKILL.md ~/.agents/skills/visualink/SKILL.md
-```
+[Download the packaged Skill ZIP](https://github.com/jessiedengjie/Visualink/releases/latest/download/visualink-skill.zip) if your agent accepts uploaded Skill bundles.
 
-In Codex, you can mention `$visualink` or ask the agent to use Visualink. Some setups still scan `~/.codex/skills/` as a fallback.
-
-For project-only use, copy the skill into the matching directory inside your project:
-
-- Cursor: `.cursor/skills/visualink/`
-- Claude Code: `.claude/skills/visualink/`
-- OpenAI Codex: `.agents/skills/visualink/`
+</details>
 
 ### 2. Ask a normal question
 
@@ -187,6 +194,7 @@ Visualink/
 ├── .cursor/skills/visualink/SKILL.md   # The reusable Agent Skill
 ├── docs/assets/                        # GitHub onboarding visuals
 ├── kubernetes-explained.html           # Interactive example
+├── LICENSE                             # MIT License
 ├── README.md                           # English onboarding
 └── README_ZH.md                        # Chinese onboarding
 ```
@@ -199,4 +207,8 @@ Visualink/
 - Make every important connection directional and named.
 - Prefer one self-contained file that is easy to open and share.
 - Verify the experience in the browser instead of trusting source code alone.
+
+## Support Visualink
+
+If Visualink helps you understand a difficult concept, [star the repository](https://github.com/jessiedengjie/Visualink) so you can find it again—and share the map you created.
 

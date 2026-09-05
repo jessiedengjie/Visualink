@@ -6,14 +6,22 @@
 
 **把难以消化的技术概念，变成一眼能看懂、可以逐步探索的交互式地图。**
 
-Visualink 是一个为非技术人员设计的 Agent Skill，帮助你理解学习或工作中遇到的陌生技术概念。你只需要用自己的语言提问，它会先给出准确简短的回答，再展示完整视觉地图，并带你理解接下来需要知道的相关概念。
+Visualink 是一个帮助所有人理解陌生技术概念的 Agent Skill。你只需要用自己的语言提问，它会给出直接回答、完整视觉地图，以及你可能还不知道该问、但理解全貌所必需的相关概念——对没有技术背景的学习者尤其有帮助。
 
 ![Agent Skill](https://img.shields.io/badge/Agent-Skill-7C3AED?style=flat-square)
 ![输出](https://img.shields.io/badge/输出-单个_HTML-0891B2?style=flat-square)
 ![主题](https://img.shields.io/badge/主题-Light_%2B_Dark-16A34A?style=flat-square)
-![用户](https://img.shields.io/badge/面向-非技术学习者-EA580C?style=flat-square)
+[![License: MIT](https://img.shields.io/badge/license-MIT-EA580C?style=flat-square)](LICENSE)
 
 ![Visualink：看见概念，理解系统](docs/assets/visualink-hero.svg)
+
+<p align="center">
+  <a href="https://jessiedengjie.github.io/Visualink/kubernetes-explained.html"><strong>打开在线 Demo →</strong></a>
+  ·
+  <a href="#快速开始">安装 Visualink</a>
+  ·
+  <a href=".cursor/skills/visualink/SKILL.md">查看 Skill</a>
+</p>
 
 ## 为什么做 Visualink
 
@@ -66,36 +74,35 @@ Kubernetes 只是这里的示范。网络、AI 系统、开发工具，或其他
 
 ### 1. 安装 Skill
 
-克隆或下载本仓库，然后把 Skill 复制到 Agent 的个人 Skill 目录。
-
-**Cursor**
+使用一条命令安装 Visualink：
 
 ```bash
-mkdir -p ~/.cursor/skills/visualink
-cp .cursor/skills/visualink/SKILL.md ~/.cursor/skills/visualink/SKILL.md
+npx skills add jessiedengjie/Visualink
 ```
 
-**Claude Code**
+安装工具会自动识别支持的 Agent，并把 Skill 放到正确目录。它支持 Cursor、Claude Code、OpenAI Codex，以及其他兼容 Agent Skills 的工具。
+
+<details>
+<summary>手动安装</summary>
+
+克隆或下载本仓库，然后把 Skill 复制到 Agent 的个人目录：
+
+- Cursor：`~/.cursor/skills/visualink/`
+- Claude Code：`~/.claude/skills/visualink/`
+- OpenAI Codex：`~/.agents/skills/visualink/`
 
 ```bash
-mkdir -p ~/.claude/skills/visualink
-cp .cursor/skills/visualink/SKILL.md ~/.claude/skills/visualink/SKILL.md
+# 请替换成上面列出的目标目录之一。
+SKILL_DIR="$HOME/.cursor/skills/visualink"
+mkdir -p "$SKILL_DIR"
+cp .cursor/skills/visualink/SKILL.md "$SKILL_DIR/SKILL.md"
 ```
 
-**OpenAI Codex**
+如果只希望在当前项目中使用，请把 Skill 复制到 `.cursor/skills/visualink/`、`.claude/skills/visualink/` 或 `.agents/skills/visualink/`。
 
-```bash
-mkdir -p ~/.agents/skills/visualink
-cp .cursor/skills/visualink/SKILL.md ~/.agents/skills/visualink/SKILL.md
-```
+[下载打包好的 Skill ZIP](https://github.com/jessiedengjie/Visualink/releases/latest/download/visualink-skill.zip)，可以用于支持上传 Skill 压缩包的 Agent。
 
-在 Codex 里可以提到 `$visualink`，或直接让 Agent 使用 Visualink。部分环境仍会扫描 `~/.codex/skills/` 作为兼容路径。
-
-如果只希望在当前项目中使用，请把 Skill 复制到项目里对应的目录：
-
-- Cursor：`.cursor/skills/visualink/`
-- Claude Code：`.claude/skills/visualink/`
-- OpenAI Codex：`.agents/skills/visualink/`
+</details>
 
 ### 2. 直接提问
 
@@ -187,6 +194,7 @@ Visualink/
 ├── .cursor/skills/visualink/SKILL.md   # 可复用的 Agent Skill
 ├── docs/assets/                        # GitHub 引导图片
 ├── kubernetes-explained.html           # 交互示例 A
+├── LICENSE                             # MIT License
 ├── README.md                           # English onboarding
 └── README_ZH.md                        # 中文使用引导
 ```
@@ -199,4 +207,8 @@ Visualink/
 - 每一条重要连接都应该有方向和名称。
 - 优先交付一个容易打开、保存和分享的独立文件。
 - 必须在浏览器里检查真实体验，不能只相信代码。
+
+## 支持 Visualink
+
+如果 Visualink 帮你理解了一个困难概念，可以 [Star 这个仓库](https://github.com/jessiedengjie/Visualink)，方便以后找到它，也欢迎分享你生成的地图。
 
