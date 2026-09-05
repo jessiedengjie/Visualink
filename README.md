@@ -129,41 +129,6 @@ Every explainer is designed around the same learning flow:
 7. Light and Dark themes
 8. Copy image and Download PNG
 
-## Current demos—not the limit
-
-These two files demonstrate the interaction pattern. Visualink is not limited to these concepts or to infrastructure:
-
-- [Kubernetes explained](https://jessiedengjie.github.io/Visualink/kubernetes-explained.html) — an example of explaining a layered technical system
-- [Proxy MCP server explained](https://jessiedengjie.github.io/Visualink/proxy-mcp-server.html) — an example of explaining an end-to-end request flow
-
-Download either HTML file and open it locally in a browser to use the full interaction.
-
-## Good questions to ask
-
-Visualink works best when the concept has components, boundaries, or a flow:
-
-```text
-What happens when I type a URL into a browser?
-```
-
-```text
-What is retrieval-augmented generation, and how does data move through it?
-```
-
-```text
-How does single sign-on work when I log in to a workplace application?
-```
-
-```text
-What does an API gateway do between a client and several services?
-```
-
-```text
-What happens to my data when a dashboard refreshes?
-```
-
-If the term has multiple meanings, Visualink should clarify the intended context before drawing.
-
 ## The Visualink approach
 
 ### Precise before comprehensive
@@ -222,7 +187,6 @@ Visualink/
 ├── .cursor/skills/visualink/SKILL.md   # The reusable Agent Skill
 ├── docs/assets/                        # GitHub onboarding visuals
 ├── kubernetes-explained.html           # Interactive example
-├── proxy-mcp-server.html               # Interactive example
 ├── README.md                           # English onboarding
 └── README_ZH.md                        # Chinese onboarding
 ```

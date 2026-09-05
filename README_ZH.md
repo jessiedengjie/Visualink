@@ -129,41 +129,6 @@ Visualink 会生成一个独立 HTML 文件并在浏览器中打开。不需要�
 7. Light 与 Dark 两套主题
 8. 复制图片与下载 PNG
 
-## 当前 Demo，而不是能力边界
-
-以下两个文件用于展示 Visualink 的交互方式。它并不局限于这些概念，也不局限于基础设施领域：
-
-- [Kubernetes 在线示例](https://jessiedengjie.github.io/Visualink/kubernetes-explained.html) —— 分层技术系统的解释示例
-- [Proxy MCP Server 在线示例](https://jessiedengjie.github.io/Visualink/proxy-mcp-server.html) —— 端到端请求流程的解释示例
-
-下载任意 HTML 文件并用浏览器打开，即可体验完整交互。
-
-## 适合问什么
-
-Visualink 最适合解释包含组件、边界或流程的概念：
-
-```text
-在浏览器输入一个网址后，背后发生了什么？
-```
-
-```text
-什么是 RAG？数据从提问到生成回答经历了什么？
-```
-
-```text
-登录工作应用时，单点登录是如何工作的？
-```
-
-```text
-API Gateway 位于客户端和多个服务之间时，到底负责什么？
-```
-
-```text
-当一个数据看板刷新时，我的数据经历了什么？
-```
-
-如果同一个词有多种完全不同的含义，Visualink 应该先确认上下文，再开始绘图。
-
 ## Visualink 的解释方式
 
 ### 先准确，再全面
@@ -222,7 +187,6 @@ Visualink/
 ├── .cursor/skills/visualink/SKILL.md   # 可复用的 Agent Skill
 ├── docs/assets/                        # GitHub 引导图片
 ├── kubernetes-explained.html           # 交互示例 A
-├── proxy-mcp-server.html               # 交互示例 B
 ├── README.md                           # English onboarding
 └── README_ZH.md                        # 中文使用引导
 ```
