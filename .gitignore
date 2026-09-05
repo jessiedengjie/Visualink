@@ -7,3 +7,8 @@
 credentials.json
 service-account*.json
 **/secrets/
+
+# Local artifacts from `npx skills add` (installer output, duplicates .cursor/skills source)
+/.agents/
+/.claude/
+/skills-lock.json
