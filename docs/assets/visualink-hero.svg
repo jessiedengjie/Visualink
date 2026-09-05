@@ -118,9 +118,9 @@
     <path d="m372 13 8 6-8 6" fill="none" stroke="#475569" stroke-width="2"/>
     <rect x="396" width="246" height="38" rx="19" fill="#172033" stroke="#334155"/>
     <text x="419" y="25" fill="#cbd5e1" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="13" font-weight="650">2 &#183; See the full picture</text>
-    <path d="M654 19h54" stroke="#475569" stroke-width="2"/>
-    <path d="m700 13 8 6-8 6" fill="none" stroke="#475569" stroke-width="2"/>
-    <rect x="724" width="254" height="38" rx="19" fill="#172033" stroke="#334155"/>
-    <text x="747" y="25" fill="#cbd5e1" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="13" font-weight="650">3 &#183; Learn step by step</text>
+    <path d="M654 19h154" stroke="#475569" stroke-width="2"/>
+    <path d="m800 13 8 6-8 6" fill="none" stroke="#475569" stroke-width="2"/>
+    <rect x="824" width="254" height="38" rx="19" fill="#172033" stroke="#334155"/>
+    <text x="847" y="25" fill="#cbd5e1" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="13" font-weight="650">3 &#183; Learn step by step</text>
   </g>
 </svg>
