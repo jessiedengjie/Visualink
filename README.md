@@ -157,22 +157,19 @@ Visualink creates a `VisualinkSpec`, validates it, renders one portable HTML fil
 
 > The right explanation depends on who is learning. Visualink adapts the mental model, terminology, depth, examples, and learning path to your role.
 
-A CSM, salesperson, PM, software engineer, solutions architect, executive, and beginner may all ask "Explain Kubernetes." They should not get the same map.
+Ask "Explain what LiteLLM is" with no role, then ask again as a Customer Success Manager. You should not get the same map.
 
 The role changes what Visualink emphasizes, which components become primary nodes, how chapters are ordered, how deep the terminology goes, and why the concept matters in that work. It does not invent a different system.
 
-Compare the same concept for two audiences:
+Compare the same concept:
 
-- [Kubernetes for a Customer Success Manager](https://jessiedengjie.github.io/Visualink/kubernetes-csm.html) — application → container → Kubernetes; deploy, scale, recover.
-- [Kubernetes for a software engineer](https://jessiedengjie.github.io/Visualink/kubernetes-engineer.html) — Deployment → ReplicaSet → Pods → Nodes, with the API Server and Scheduler.
-
-The [general Kubernetes example](https://jessiedengjie.github.io/Visualink/kubernetes-explained.html) is what you get when no role is specified.
+- [What LiteLLM is](https://jessiedengjie.github.io/Visualink/litellm.html) — no role specified: one OpenAI-compatible interface, used as a Python library or as a proxy.
+- [LiteLLM for a Customer Success Manager](https://jessiedengjie.github.io/Visualink/litellm-csm.html) — LiteLLM as the customer's AI gateway: where it sits, virtual keys, spend, and reliability, plus a **Why this matters for a Customer Success Manager** section.
 
 Informal context is enough. You do not have to use a job title:
 
 ```text
-I work with enterprise AI customers but I'm not an engineer.
-Use Visualink to explain RAG.
+I am a Customer Success Manager. Explain what LiteLLM is.
 ```
 
 ## What you get
@@ -201,7 +198,7 @@ npm run visualink -- dev examples/rag.json
 
 Rendered files are written to `dist/` by default. They inline the shared CSS and runtime and remain fully portable after generation. See the [VisualinkSpec contributor guide](docs/visualink-spec.md) and the public [JSON Schema](.cursor/skills/visualink/schema/visualink.schema.json).
 
-The repository includes structured examples for general Kubernetes, Kubernetes for CSMs, Kubernetes for engineers, RAG, and OAuth. The three existing root Kubernetes HTML files remain unchanged as migration and regression references; new renderer output lives under `dist/`.
+The repository includes structured examples for Kubernetes, LiteLLM (general and Customer Success), RAG, and OAuth. The three existing root Kubernetes HTML files remain unchanged as migration and regression references; new renderer output lives under `dist/`. The LiteLLM HTML files at the repository root are the live demos linked above.
 
 ## The Visualink approach
 
@@ -269,6 +266,7 @@ Visualink/
 ├── tests/                              # Dependency-free Node tests
 ├── docs/visualink-spec.md              # Contributor guide
 ├── kubernetes-*.html                   # Legacy/reference demos
+├── litellm*.html                       # Live LiteLLM role demos
 ├── package.json                        # Local CLI and scripts
 └── README_ZH.md                        # Chinese onboarding
 ```

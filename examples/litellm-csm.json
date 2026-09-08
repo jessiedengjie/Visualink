@@ -1,0 +1,277 @@
+{
+  "version": "1.0",
+  "concept": {
+    "name": "LiteLLM",
+    "title": "LiteLLM, for Customer Success",
+    "definition": "LiteLLM is a self-hosted AI gateway that sits between a customer's applications and many model providers. Apps send one OpenAI-style request; LiteLLM routes it, tracks spend, and controls who can use which models.",
+    "problem": "Without a gateway, each app talks to each vendor separately. Keys scatter, spend is hard to explain, switching models means changing application code, and an outage at one provider can stop the product."
+  },
+  "audience": {
+    "role": "Customer Success Managers",
+    "technicalLevel": "intermediate",
+    "goals": [
+      "understand customer architecture discussions about LiteLLM",
+      "explain the gateway accurately to customers",
+      "recognize spend, access, and reliability implications"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "customer-apps",
+      "label": "Customer's AI Apps",
+      "caption": "chatbots, agents, tools",
+      "type": "input",
+      "description": "The products teams ship that need language models. They should call one gateway instead of every vendor API.",
+      "layoutHint": { "rank": 0, "order": 0 }
+    },
+    {
+      "id": "virtual-keys",
+      "label": "Virtual Keys",
+      "caption": "access with limits",
+      "type": "concept",
+      "description": "LiteLLM issues its own keys to teams and apps. A virtual key can allow specific models, set a budget, and be revoked without rotating the real vendor keys.",
+      "layoutHint": { "rank": 1, "order": 0 }
+    },
+    {
+      "id": "litellm-gateway",
+      "label": "LiteLLM Gateway",
+      "caption": "one endpoint for many models",
+      "type": "service",
+      "description": "A self-hosted proxy that accepts OpenAI-compatible requests and talks to the configured providers. Customers usually mean this service when they say they use LiteLLM.",
+      "layoutHint": { "rank": 2, "order": 0 }
+    },
+    {
+      "id": "routing",
+      "label": "Route and Fallback",
+      "caption": "pick a working model",
+      "type": "process",
+      "description": "LiteLLM can send traffic across providers or regions, retry failures, and fall back to another model if one is down or rate-limited.",
+      "layoutHint": { "rank": 3, "order": 0 }
+    },
+    {
+      "id": "spend-control",
+      "label": "Spend and Budgets",
+      "caption": "track and cap cost",
+      "type": "store",
+      "description": "Every request can be attributed to a key, team, or user. Budgets can stop new requests when a limit is reached, instead of discovering the bill later.",
+      "layoutHint": { "rank": 3, "order": 1 }
+    },
+    {
+      "id": "guardrails",
+      "label": "Guardrails",
+      "caption": "policy checks",
+      "type": "process",
+      "importance": "supporting",
+      "description": "Optional checks such as PII masking or prompt-injection filters that can run on a model call. Not every customer enables them.",
+      "layoutHint": { "rank": 3, "order": 2 }
+    },
+    {
+      "id": "model-providers",
+      "label": "Model Providers",
+      "caption": "OpenAI, Anthropic, Bedrock, and more",
+      "type": "infrastructure",
+      "description": "The actual model vendors and hosted endpoints. LiteLLM keeps their different APIs behind one interface so apps do not integrate each one separately.",
+      "layoutHint": { "rank": 4, "order": 0 }
+    },
+    {
+      "id": "admin-view",
+      "label": "Admin View",
+      "caption": "who used what",
+      "type": "output",
+      "importance": "supporting",
+      "description": "The LiteLLM dashboard for keys, teams, spend, and request health. Operations and finance often use this to see AI usage.",
+      "layoutHint": { "rank": 4, "order": 2 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "apps-to-keys",
+      "from": "customer-apps",
+      "to": "virtual-keys",
+      "label": "presents",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "keys-to-gateway",
+      "from": "virtual-keys",
+      "to": "litellm-gateway",
+      "label": "authorizes",
+      "kind": "control",
+      "importance": "primary"
+    },
+    {
+      "id": "apps-to-gateway",
+      "from": "customer-apps",
+      "to": "litellm-gateway",
+      "label": "sends request",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "gateway-to-routing",
+      "from": "litellm-gateway",
+      "to": "routing",
+      "label": "selects model",
+      "kind": "control",
+      "importance": "primary"
+    },
+    {
+      "id": "routing-to-providers",
+      "from": "routing",
+      "to": "model-providers",
+      "label": "forwards",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "gateway-to-spend",
+      "from": "litellm-gateway",
+      "to": "spend-control",
+      "label": "records usage",
+      "kind": "data",
+      "importance": "primary"
+    },
+    {
+      "id": "keys-to-spend",
+      "from": "virtual-keys",
+      "to": "spend-control",
+      "label": "sets budget",
+      "kind": "control"
+    },
+    {
+      "id": "spend-to-admin",
+      "from": "spend-control",
+      "to": "admin-view",
+      "label": "shows",
+      "kind": "data"
+    },
+    {
+      "id": "gateway-to-guardrails",
+      "from": "litellm-gateway",
+      "to": "guardrails",
+      "label": "checks",
+      "kind": "control"
+    }
+  ],
+  "groups": [
+    {
+      "id": "litellm",
+      "label": "LiteLLM — one gateway for many models",
+      "description": "The self-hosted AI gateway customers place in front of model providers to unify access, routing, and spend control.",
+      "nodes": [
+        "virtual-keys",
+        "litellm-gateway",
+        "routing",
+        "spend-control",
+        "guardrails",
+        "admin-view"
+      ]
+    }
+  ],
+  "chapters": [
+    {
+      "id": "where-it-sits",
+      "title": "Where LiteLLM sits",
+      "shortTitle": "Where it sits",
+      "explanation": "A customer's AI apps need models from several vendors. LiteLLM sits in the middle as one gateway, so those apps do not each integrate OpenAI, Anthropic, Bedrock, and the rest separately.",
+      "focusNodes": ["customer-apps", "litellm-gateway", "routing", "model-providers"],
+      "focusEdges": ["apps-to-gateway", "gateway-to-routing", "routing-to-providers"],
+      "focusGroups": ["litellm"],
+      "introducedNodes": ["litellm-gateway"],
+      "takeaways": [
+        "The app is the product",
+        "LiteLLM is the gateway in front of models",
+        "Providers own the models"
+      ]
+    },
+    {
+      "id": "one-request",
+      "title": "One request, many models",
+      "shortTitle": "One request",
+      "explanation": "Apps send an OpenAI-compatible request to LiteLLM. The gateway translates that request to the chosen provider and returns a consistent response, so switching models is a gateway change, not an application rewrite.",
+      "focusNodes": ["customer-apps", "litellm-gateway", "routing", "model-providers"],
+      "focusEdges": ["apps-to-gateway", "gateway-to-routing", "routing-to-providers"],
+      "introducedNodes": ["routing"],
+      "takeaways": [
+        "OpenAI-compatible means one request shape",
+        "Model swaps stay in the gateway"
+      ]
+    },
+    {
+      "id": "access-with-keys",
+      "title": "Access with virtual keys",
+      "shortTitle": "Virtual keys",
+      "explanation": "Teams do not need a copy of every vendor API key. LiteLLM issues virtual keys that can limit models, budgets, and rate limits. Revoking a virtual key cuts off an app without rotating the real provider credentials.",
+      "focusNodes": ["customer-apps", "virtual-keys", "litellm-gateway", "spend-control"],
+      "focusEdges": ["apps-to-keys", "keys-to-gateway", "keys-to-spend"],
+      "introducedNodes": ["virtual-keys"],
+      "takeaways": [
+        "A virtual key is LiteLLM access, not a vendor password",
+        "Budgets and model permissions live on the key"
+      ]
+    },
+    {
+      "id": "reliability-and-cost",
+      "title": "Stay up and stay in budget",
+      "shortTitle": "Reliability and cost",
+      "explanation": "If a provider fails or rate-limits, LiteLLM can retry or fall back to another model. At the same time it attributes spend to keys and teams, and can stop requests when a budget is reached. The admin view is how operators and finance see that activity.",
+      "focusNodes": ["litellm-gateway", "routing", "spend-control", "admin-view", "model-providers", "guardrails"],
+      "focusEdges": [
+        "routing-to-providers",
+        "gateway-to-spend",
+        "spend-to-admin",
+        "gateway-to-guardrails"
+      ],
+      "focusGroups": ["litellm"],
+      "introducedNodes": ["spend-control", "admin-view"],
+      "takeaways": [
+        "Fallback is a reliability control",
+        "Budgets are a cost control",
+        "The admin view answers who spent what"
+      ]
+    }
+  ],
+  "roleRelevance": {
+    "title": "Why this matters for a Customer Success Manager",
+    "points": [
+      "When a customer says they use LiteLLM, they usually mean a shared gateway, not a Python library inside one app.",
+      "Ask whether apps call vendors directly or go through the gateway. That changes how you diagnose outages, spend spikes, and model-switch requests.",
+      "Spend questions belong on virtual keys, teams, and the admin view, not on each application's logs.",
+      "An Anthropic or OpenAI outage may not be a product incident if fallback is already configured in the gateway.",
+      "SSO, audit logs, and contracted support are LiteLLM Enterprise add-ons. The open-source gateway already covers unified access, virtual keys, budgets, and routing."
+    ]
+  },
+  "contextCards": [
+    {
+      "id": "stack",
+      "title": "How the pieces fit",
+      "points": [
+        "Apps send one OpenAI-style request to LiteLLM.",
+        "A virtual key authorizes the call and can carry a budget.",
+        "LiteLLM routes the call to a model provider and records the spend."
+      ]
+    },
+    {
+      "id": "customer-language",
+      "title": "Terms customers may use",
+      "points": [
+        "Proxy, AI gateway, and LiteLLM often mean the same shared service.",
+        "The Python SDK is a library one app can import. The gateway is what the whole organization calls.",
+        "OpenAI-compatible means apps keep the OpenAI request shape even when the backend is Anthropic, Bedrock, or Azure."
+      ]
+    },
+    {
+      "id": "value",
+      "title": "Why customers use it",
+      "points": [
+        "Stop integrating every vendor API in every app.",
+        "See and cap AI spend before the invoice arrives.",
+        "Change models without starting a new application project."
+      ]
+    }
+  ],
+  "layout": {
+    "preferredDirection": "left-to-right"
+  }
+}
