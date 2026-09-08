@@ -70,7 +70,7 @@ That is the difference Visualink is built for:
 - **See the whole system** — begin with the complete map, not an isolated fragment.
 - **Learn top-down** — move through guided chapters only when you are ready.
 - **Discover the missing questions** — understand the components, dependencies, boundaries, and flows you did not yet know to ask about.
-- **Explain it for your role** — the same concept becomes a different map for a CSM, an engineer, a PM, or an executive.
+- **Explain it for your role** — if you say who you are, Visualink adapts the answer and map, and explains why the concept matters in that work. If you don't, you still get a clear general explainer.
 - **Keep the mental model** — copy or download the diagram as an image.
 
 ![How Visualink turns a question into understanding](docs/assets/visualink-flow.svg)
