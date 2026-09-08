@@ -9,7 +9,9 @@ const exampleNames = [
   "kubernetes-csm",
   "kubernetes-engineer",
   "rag",
-  "oauth"
+  "oauth",
+  "litellm",
+  "litellm-csm"
 ];
 
 async function loadExample(name) {

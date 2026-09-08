@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="generator" content="Visualink renderer 1.0"/>
+<title>LiteLLM: one interface for many language models</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f3f7fc;
+  --panel: #ffffff;
+  --panel-2: #edf4fb;
+  --ink: #101828;
+  --ink-2: #475467;
+  --muted: #66758a;
+  --hair: #cbd8e8;
+  --hair-2: #8fa4bd;
+  --external: #d15f32;
+  --service: #008e87;
+  --model: #2b7fd3;
+  --store: #9b4cad;
+  --infra: #2d9b59;
+  --concept: #b7791f;
+  --focus: #d08b1e;
+  --edge-flow: #008e87;
+  --edge-control: #9b4cad;
+  --edge-data: #2d9b59;
+  --edge-dependency: #d15f32;
+  --edge-relationship: #718096;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+}
+
+body[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b0f14;
+  --panel: #131922;
+  --panel-2: #18212c;
+  --ink: #f8fafc;
+  --ink-2: #d3dbe6;
+  --muted: #a8b4c3;
+  --hair: #354153;
+  --hair-2: #607086;
+  --external: #f09a70;
+  --service: #64d2c8;
+  --model: #77b9ff;
+  --store: #d3a7df;
+  --infra: #83d39f;
+  --concept: #f2c66d;
+  --focus: #f2c66d;
+  --edge-flow: #64d2c8;
+  --edge-control: #d3a7df;
+  --edge-data: #83d39f;
+  --edge-dependency: #f09a70;
+  --edge-relationship: #91a0b4;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 20px 26px 24px;
+  display: grid;
+  grid-template-rows: auto auto minmax(410px, 1fr) auto;
+  gap: 14px;
+}
+
+.bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.title {
+  min-width: 0;
+}
+
+h1 {
+  max-width: 48rem;
+  font-size: clamp(24px, 3vw, 31px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.13;
+}
+
+.audience {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.lede {
+  max-width: 54rem;
+  margin-top: 8px;
+  color: var(--ink-2);
+  font-size: 14.5px;
+  line-height: 1.52;
+}
+
+.tools {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tool-button,
+.theme-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 15px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.tool-button:hover,
+.theme-trigger:hover,
+.tool-button:focus-visible,
+.theme-trigger:focus-visible {
+  border-color: var(--hair-2);
+  color: var(--ink);
+  outline: 2px solid color-mix(in srgb, var(--focus) 48%, transparent);
+  outline-offset: 2px;
+}
+
+.theme-icon,
+.chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.chevron {
+  width: 10px;
+  height: 10px;
+  transition: transform 160ms ease;
+}
+
+[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+.drop {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 172px;
+  padding: 4px;
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: 0 14px 34px rgba(4, 10, 20, 0.22);
+}
+
+.menu[hidden] {
+  display: none;
+}
+
+.menu button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.menu button:hover,
+.menu button:focus-visible,
+.menu button[aria-checked="true"] {
+  background: var(--panel-2);
+  outline: none;
+}
+
+.strip {
+  display: grid;
+  grid-template-columns: 235px 1fr;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 16px;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.strip-meta {
+  padding-right: 16px;
+  border-right: 1px solid var(--hair);
+}
+
+.eyebrow {
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.now {
+  margin-top: 5px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 550;
+  line-height: 1.1;
+  text-align: left;
+}
+
+.chip b {
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+}
+
+.chip:hover,
+.chip:focus-visible {
+  border-color: var(--hair-2);
+  background: var(--panel-2);
+  color: var(--ink);
+  outline: none;
+}
+
+.chip.is-active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--panel);
+}
+
+.chip.is-active b {
+  color: var(--focus);
+}
+
+.takeaways {
+  grid-column: 1 / -1;
+  padding-top: 10px;
+  border-top: 1px solid var(--hair);
+}
+
+.takeaways[hidden] {
+  display: none;
+}
+
+.takeaways ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 6px;
+  list-style: none;
+}
+
+.takeaways li {
+  position: relative;
+  padding-left: 11px;
+  color: var(--ink-2);
+  font-size: 11.5px;
+}
+
+.takeaways li::before {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--focus);
+  content: "";
+}
+
+.stage {
+  position: relative;
+  min-height: 410px;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+#diagram {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 390px;
+  cursor: grab;
+  touch-action: none;
+}
+
+#diagram.is-dragging {
+  cursor: grabbing;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 9px 16px;
+  border-top: 1px solid var(--hair);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 18px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink-2);
+  font-size: 11px;
+}
+
+.legend-swatch {
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--swatch);
+}
+
+.zoom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.zoom button {
+  width: 27px;
+  height: 25px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.zoom button:hover,
+.zoom button:focus-visible {
+  border-color: var(--hair-2);
+  background: var(--panel-2);
+  color: var(--ink);
+  outline: none;
+}
+
+.zoom-output {
+  min-width: 44px;
+  color: var(--muted);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.group,
+.node,
+.edge {
+  transition: opacity 240ms ease;
+}
+
+.group-boundary {
+  fill: color-mix(in srgb, var(--panel-2) 64%, transparent);
+  stroke: var(--hair-2);
+  stroke-width: 1.4;
+  stroke-dasharray: 7 5;
+}
+
+.group[data-family="external"] .group-boundary { stroke: var(--external); }
+.group[data-family="service"] .group-boundary { stroke: var(--service); }
+.group[data-family="model"] .group-boundary { stroke: var(--model); }
+.group[data-family="store"] .group-boundary { stroke: var(--store); }
+.group[data-family="infra"] .group-boundary { stroke: var(--infra); }
+.group[data-family="concept"] .group-boundary { stroke: var(--concept); }
+.group[data-depth="0"] .group-boundary {
+  fill: color-mix(in srgb, var(--panel-2) 78%, transparent);
+}
+
+.group[data-depth="1"] .group-boundary,
+.group[data-depth="2"] .group-boundary {
+  fill: color-mix(in srgb, var(--panel-2) 34%, transparent);
+}
+
+.group-label {
+  fill: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.group[data-family="external"] .group-label { fill: var(--external); }
+.group[data-family="service"] .group-label { fill: var(--service); }
+.group[data-family="model"] .group-label { fill: var(--model); }
+.group[data-family="store"] .group-label { fill: var(--store); }
+.group[data-family="infra"] .group-label { fill: var(--infra); }
+.group[data-family="concept"] .group-label { fill: var(--concept); }
+
+.group,
+.node {
+  cursor: pointer;
+}
+
+.node-bg {
+  fill: var(--panel);
+  stroke: var(--node-color, var(--hair-2));
+  stroke-width: 1.25;
+}
+
+.node-stripe {
+  fill: var(--node-color, var(--hair-2));
+}
+
+.node-label {
+  fill: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.node-caption {
+  fill: var(--muted);
+  font-size: 10.5px;
+}
+
+.node[data-type="actor"],
+.node[data-type="input"],
+.node[data-type="output"] {
+  --node-color: var(--external);
+}
+
+.node[data-type="process"],
+.node[data-type="service"] {
+  --node-color: var(--service);
+}
+
+.node[data-type="model"] {
+  --node-color: var(--model);
+}
+
+.node[data-type="store"] {
+  --node-color: var(--store);
+}
+
+.node[data-type="infrastructure"],
+.node[data-type="boundary"] {
+  --node-color: var(--infra);
+}
+
+.node[data-type="concept"] {
+  --node-color: var(--concept);
+}
+
+.edge-path {
+  fill: none;
+  stroke: var(--edge-color, var(--edge-relationship));
+  stroke-width: 1.45;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.edge[data-kind="flow"] {
+  --edge-color: var(--edge-flow);
+}
+
+.edge[data-kind="control"] {
+  --edge-color: var(--edge-control);
+}
+
+.edge[data-kind="data"] {
+  --edge-color: var(--edge-data);
+}
+
+.edge[data-kind="dependency"] {
+  --edge-color: var(--edge-dependency);
+}
+
+.edge[data-importance="primary"] .edge-path {
+  stroke-width: 2.3;
+}
+
+.edge-label-bg {
+  fill: var(--panel);
+  stroke: var(--hair);
+  stroke-width: 0.8;
+}
+
+.edge-label {
+  fill: var(--edge-color, var(--muted));
+  font-size: 9.5px;
+  font-weight: 650;
+}
+
+.is-dim {
+  opacity: 0.38;
+}
+
+.group.is-dim {
+  opacity: 0.45;
+}
+
+.node.is-hot .node-bg,
+.node.is-hover .node-bg,
+.node:focus-visible .node-bg {
+  stroke-width: 2.4;
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--node-color) 35%, transparent));
+}
+
+.group.is-hot .group-boundary,
+.group.is-hover .group-boundary {
+  stroke: var(--focus);
+  stroke-width: 2;
+}
+
+.edge.is-hot .edge-path,
+.edge.is-hover .edge-path {
+  stroke-width: 2.7;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--edge-color) 32%, transparent));
+}
+
+.node.is-new .node-bg {
+  stroke-width: 3;
+  stroke-dasharray: 5 3;
+}
+
+.node:focus-visible {
+  outline: none;
+}
+
+.tip {
+  position: absolute;
+  z-index: 10;
+  max-width: 280px;
+  padding: 8px 10px;
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  background: var(--ink);
+  box-shadow: 0 9px 26px rgba(0, 0, 0, 0.28);
+  color: var(--panel);
+  font-size: 12px;
+  line-height: 1.42;
+  pointer-events: none;
+}
+
+.tip[hidden],
+.toast[hidden] {
+  display: none;
+}
+
+.below {
+  display: grid;
+  gap: 14px;
+}
+
+.role-relevance {
+  padding: 14px 16px 16px;
+  border: 1px solid var(--hair);
+  border-left: 3px solid var(--focus);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.role-relevance h2,
+.card h2 {
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.role-relevance ul {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 28px;
+  margin-top: 10px;
+  list-style: none;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.card {
+  padding: 13px 16px 15px;
+  border: 1px solid var(--hair);
+  border-top: 2px solid var(--card-accent, var(--hair-2));
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.role-relevance li,
+.card li {
+  position: relative;
+  padding-left: 12px;
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.role-relevance li::before,
+.card li::before {
+  position: absolute;
+  top: 7px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--focus);
+  content: "";
+}
+
+.card ul {
+  display: grid;
+  gap: 7px;
+  margin-top: 9px;
+  list-style: none;
+}
+
+.card:nth-child(4n + 1) {
+  --card-accent: var(--external);
+}
+
+.card:nth-child(4n + 2) {
+  --card-accent: var(--store);
+}
+
+.card:nth-child(4n + 3) {
+  --card-accent: var(--service);
+}
+
+.card:nth-child(4n) {
+  --card-accent: var(--infra);
+}
+
+.toast {
+  position: fixed;
+  z-index: 40;
+  bottom: 22px;
+  left: 50%;
+  padding: 9px 14px;
+  transform: translateX(-50%);
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--panel);
+  font-size: 12.5px;
+  pointer-events: none;
+}
+
+body[data-theme="dark"] .node-bg {
+  fill: #151c25;
+}
+
+body[data-theme="dark"] .node-label {
+  fill: #ffffff;
+}
+
+body[data-theme="dark"] .node-caption {
+  fill: #b7c2d0;
+}
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-rows: auto auto minmax(440px, auto) auto;
+    padding: 16px;
+  }
+
+  .bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tools {
+    flex-wrap: wrap;
+  }
+
+  .strip {
+    grid-template-columns: 1fr;
+  }
+
+  .strip-meta {
+    padding: 0 0 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--hair);
+  }
+
+  .cards,
+  .role-relevance ul {
+    grid-template-columns: 1fr;
+  }
+
+  .foot {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #diagram {
+    min-height: 420px;
+  }
+}
+
+@media (max-width: 520px) {
+  .app {
+    padding: 12px;
+  }
+
+  .chips {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .chip {
+    width: 100%;
+  }
+
+  .legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+</style>
+</head>
+<body data-theme="dark">
+<main class="app">
+  <header class="bar">
+    <div class="title">
+      <h1>LiteLLM: one interface for many language models</h1>
+      
+      <p class="lede" id="lede">LiteLLM is an open-source toolkit that lets you call 100+ language-model providers through one OpenAI-compatible interface. Use it as a Python library in your app, or as a proxy so any OpenAI client can reach many backends.</p>
+    </div>
+    <div class="tools">
+    <button class="tool-button" id="play" type="button" aria-label="Play guided chapters">Play</button>
+    <div class="drop">
+      <button class="tool-button" id="export" type="button" aria-haspopup="menu" aria-expanded="false">Export</button>
+      <div class="menu" id="export-menu" role="menu" hidden>
+        <button type="button" id="copy-image" role="menuitem">Copy image</button>
+        <button type="button" id="download-image" role="menuitem">Download PNG</button>
+      </div>
+    </div>
+    <div class="drop">
+      <button class="theme-trigger" id="theme" type="button" aria-haspopup="menu" aria-expanded="false">
+        <svg class="theme-icon" id="theme-icon" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/></svg>
+        <span id="theme-label">Dark</span>
+        <svg class="chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="menu" id="theme-menu" role="menu" hidden>
+        <button type="button" id="theme-light" role="menuitemradio" aria-checked="false">
+          <svg class="theme-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3.15" fill="currentColor"/><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1.2v1.7M8 13.1v1.7M1.2 8h1.7M13.1 8h1.7"/><path d="M3.15 3.15l1.2 1.2M11.65 11.65l1.2 1.2M3.15 12.85l1.2-1.2M11.65 4.35l1.2-1.2"/></g></svg>
+          Light
+        </button>
+        <button type="button" id="theme-dark" role="menuitemradio" aria-checked="true">
+          <svg class="theme-icon" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/></svg>
+          Dark
+        </button>
+      </div>
+    </div>
+  </div>
+  </header>
+  <section class="strip" aria-label="Guided chapters">
+    <div class="strip-meta">
+      <div class="eyebrow" id="eyebrow">Overview</div>
+      <div class="now" id="now">The whole picture</div>
+    </div>
+    <div class="chips"><button class="chip" type="button" data-chapter-index="0" aria-pressed="false"><b>01</b><span>The gap</span></button>
+      <button class="chip" type="button" data-chapter-index="1" aria-pressed="false"><b>02</b><span>One interface</span></button>
+      <button class="chip" type="button" data-chapter-index="2" aria-pressed="false"><b>03</b><span>Two ways</span></button>
+      <button class="chip" type="button" data-chapter-index="3" aria-pressed="false"><b>04</b><span>Route and recover</span></button></div>
+    <div class="takeaways" id="takeaways" hidden>
+      <div class="eyebrow">Takeaways</div>
+      <ul id="takeaway-list"></ul>
+    </div>
+  </section>
+  <section class="stage" aria-label="Interactive system map">
+    <svg id="diagram" viewBox="0 0 1600 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="LiteLLM system map">
+    <defs>
+    <marker id="arrow-flow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-control" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-data" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-dependency" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-relationship" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+  </defs>
+    <g id="scene">
+      <g class="group" data-group-id="litellm" data-depth="0" data-family="service">
+        <rect class="group-boundary" x="364" y="48" width="871.2" height="238" rx="12"/>
+        <text class="group-label" x="377" y="67">LiteLLM — one interface for many models</text>
+      </g>
+      <g class="edge" data-edge-id="app-to-sdk" data-from="your-app" data-to="python-sdk" data-kind="dependency" data-importance="primary">
+        <path class="edge-path" d="M272,167 L321,167 L321,129 L386,129" marker-end="url(#arrow-dependency)"/>
+        <rect class="edge-label-bg" x="326.2" y="118" width="54.6" height="17" rx="5"/>
+        <text class="edge-label" x="353.5" y="130" text-anchor="middle">imports</text>
+      </g>
+      <g class="edge" data-edge-id="app-to-proxy" data-from="your-app" data-to="proxy" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M272,167 L339.8,167 L339.8,231 L407.6,231" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="261.2" y="156" width="89.4" height="17" rx="5"/>
+        <text class="edge-label" x="305.9" y="168" text-anchor="middle">sends request</text>
+      </g>
+      <g class="edge" data-edge-id="sdk-to-unified" data-from="python-sdk" data-to="unified-api" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M595.6,129 L649.6,129 L649.6,180 L687.6,180" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="603.6" y="118" width="38" height="17" rx="5"/>
+        <text class="edge-label" x="622.6" y="130" text-anchor="middle">uses</text>
+      </g>
+      <g class="edge" data-edge-id="proxy-to-unified" data-from="proxy" data-to="unified-api" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M574,231 L622.8,231 L622.8,180 L687.6,180" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="636.2" y="169" width="38" height="17" rx="5"/>
+        <text class="edge-label" x="655.2" y="181" text-anchor="middle">uses</text>
+      </g>
+      <g class="edge" data-edge-id="unified-to-router" data-from="unified-api" data-to="router" data-kind="control" data-importance="primary">
+        <path class="edge-path" d="M904.4,180 L950.4,180 L950.4,129 L996.4,129" marker-end="url(#arrow-control)"/>
+        <rect class="edge-label-bg" x="899.9" y="143.5" width="101" height="17" rx="5"/>
+        <text class="edge-label" x="950.4" y="155.5" text-anchor="middle">selects backend</text>
+      </g>
+      <g class="edge" data-edge-id="router-to-providers" data-from="router" data-to="providers" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M1213.2,129 L1278.2,129 L1278.2,167 L1327.2,167" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="1215.5" y="118" width="60.4" height="17" rx="5"/>
+        <text class="edge-label" x="1245.7" y="130" text-anchor="middle">forwards</text>
+      </g>
+      <g class="edge" data-edge-id="unified-to-spend" data-from="unified-api" data-to="spend-logs" data-kind="data" data-importance="supporting">
+        <path class="edge-path" d="M904.4,180 L958.6,180 L958.6,231 L1028.8,231" marker-end="url(#arrow-data)"/>
+        <rect class="edge-label-bg" x="949" y="220" width="89.4" height="17" rx="5"/>
+        <text class="edge-label" x="993.7" y="232" text-anchor="middle">records usage</text>
+      </g>
+      <g class="node" data-node-id="your-app" data-type="actor" data-importance="primary" role="button" tabindex="0" aria-label="Your App: The code that needs a language model. It should speak one request shape, not a different SDK for every vendor.">
+        <rect class="node-bg" x="48" y="134" width="224" height="66" rx="8"/>
+        <rect class="node-stripe" x="48" y="134" width="4" height="66" rx="2"/>
+        <text class="node-label" x="66" y="161">Your App</text>
+        <text class="node-caption" x="66" y="181">chatbot, agent, or script</text>
+      </g>
+      <g class="node" data-node-id="python-sdk" data-type="service" data-importance="primary" role="button" tabindex="0" aria-label="Python SDK: A Python library you import. Your app calls one completion-style function; LiteLLM talks to the chosen provider from inside the same process.">
+        <rect class="node-bg" x="386" y="96" width="209.6" height="66" rx="8"/>
+        <rect class="node-stripe" x="386" y="96" width="4" height="66" rx="2"/>
+        <text class="node-label" x="404" y="123">Python SDK</text>
+        <text class="node-caption" x="404" y="143">library in your process</text>
+      </g>
+      <g class="node" data-node-id="proxy" data-type="service" data-importance="primary" role="button" tabindex="0" aria-label="Proxy Server: A self-hosted HTTP service. Any OpenAI-compatible client points at the proxy URL. Teams use this when many apps should share routing, keys, and spend tracking.">
+        <rect class="node-bg" x="407.6" y="198" width="166.4" height="66" rx="8"/>
+        <rect class="node-stripe" x="407.6" y="198" width="4" height="66" rx="2"/>
+        <text class="node-label" x="425.6" y="225">Proxy Server</text>
+        <text class="node-caption" x="425.6" y="245">shared AI gateway</text>
+      </g>
+      <g class="node" data-node-id="unified-api" data-type="process" data-importance="primary" role="button" tabindex="0" aria-label="Unified API: LiteLLM accepts the OpenAI request shape, translates it to the target provider, and returns a consistent OpenAI-shaped response. Switching models is a config or model-name change, not a rewrite of your client.">
+        <rect class="node-bg" x="687.6" y="147" width="216.8" height="66" rx="8"/>
+        <rect class="node-stripe" x="687.6" y="147" width="4" height="66" rx="2"/>
+        <text class="node-label" x="705.6" y="174">Unified API</text>
+        <text class="node-caption" x="705.6" y="194">OpenAI format in and out</text>
+      </g>
+      <g class="node" data-node-id="router" data-type="process" data-importance="primary" role="button" tabindex="0" aria-label="Router: The Router can send traffic across deployments, retry failures, and fall back to another model if a provider is down or rate-limited.">
+        <rect class="node-bg" x="996.4" y="96" width="216.8" height="66" rx="8"/>
+        <rect class="node-stripe" x="996.4" y="96" width="4" height="66" rx="2"/>
+        <text class="node-label" x="1014.4" y="123">Router</text>
+        <text class="node-caption" x="1014.4" y="143">retry, fallback, balance</text>
+      </g>
+      <g class="node" data-node-id="spend-logs" data-type="store" data-importance="supporting" role="button" tabindex="0" aria-label="Spend and Logs: LiteLLM can record usage and estimated cost per call, and emit logs or traces to observability tools. The proxy also attributes spend to teams and virtual keys.">
+        <rect class="node-bg" x="1028.8" y="198" width="152" height="66" rx="8"/>
+        <rect class="node-stripe" x="1028.8" y="198" width="4" height="66" rx="2"/>
+        <text class="node-label" x="1046.8" y="225">Spend and Logs</text>
+        <text class="node-caption" x="1046.8" y="245">cost and traces</text>
+      </g>
+      <g class="node" data-node-id="providers" data-type="infrastructure" data-importance="primary" role="button" tabindex="0" aria-label="Model Providers: The actual model vendors and hosted endpoints. LiteLLM keeps their different APIs behind one interface so your app does not integrate each one separately.">
+        <rect class="node-bg" x="1327.2" y="134" width="224" height="66" rx="8"/>
+        <rect class="node-stripe" x="1327.2" y="134" width="4" height="66" rx="2"/>
+        <text class="node-label" x="1345.2" y="161">Model Providers</text>
+        <text class="node-caption" x="1345.2" y="181">OpenAI, Anthropic, Bedrock, and more</text>
+      </g>
+    </g>
+  </svg>
+    <div class="tip" id="tip" role="tooltip" hidden></div>
+    <div class="foot">
+      <div class="legend" aria-label="Diagram legend">
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--external)"></span>Actors, inputs, and outputs</div>
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--service)"></span>Processes and services</div>
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--store)"></span>Stores</div>
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--infra)"></span>Infrastructure</div>
+  </div>
+      <div class="zoom" aria-label="Diagram zoom controls">
+        <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
+        <span class="zoom-output" id="zoom-output">100%</span>
+        <button id="zoom-in" type="button" aria-label="Zoom in">+</button>
+        <button id="zoom-reset" type="button" aria-label="Reset view">↺</button>
+      </div>
+    </div>
+  </section>
+  <div class="below">
+    
+    <div class="cards">
+    <section class="card">
+      <h2>How the pieces fit</h2>
+      <ul><li>Your app sends one OpenAI-style request.</li><li>The SDK or the proxy hands that request to LiteLLM&#39;s unified API.</li><li>The Router forwards the call to a model provider and LiteLLM can record the spend.</li></ul>
+    </section>
+    <section class="card">
+      <h2>What the neighbors do</h2>
+      <ul><li>The Python SDK is a library one app imports. The Proxy Server is a gateway many clients call.</li><li>The Router chooses among deployments and can retry or fall back.</li><li>Model providers are the vendors that actually run the models.</li></ul>
+    </section>
+    <section class="card">
+      <h2>Why this exists</h2>
+      <ul><li>Stop writing a new client for every vendor API.</li><li>Change models without starting a new application project.</li><li>Keep working if one provider fails, and see what each call cost.</li></ul>
+    </section>
+  </div>
+  </div>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script>window.__VISUALINK_SPEC__={"version":"1.0","concept":{"name":"LiteLLM","title":"LiteLLM: one interface for many language models","definition":"LiteLLM is an open-source toolkit that lets you call 100+ language-model providers through one OpenAI-compatible interface. Use it as a Python library in your app, or as a proxy so any OpenAI client can reach many backends.","problem":"Each model vendor has its own API, keys, errors, and request shape. Using several providers, or switching later, means rewriting application code and juggling separate integrations."},"nodes":[{"id":"your-app","label":"Your App","caption":"chatbot, agent, or script","type":"actor","description":"The code that needs a language model. It should speak one request shape, not a different SDK for every vendor.","layoutHint":{"rank":0,"order":0}},{"id":"python-sdk","label":"Python SDK","caption":"library in your process","type":"service","description":"A Python library you import. Your app calls one completion-style function; LiteLLM talks to the chosen provider from inside the same process.","layoutHint":{"rank":1,"order":0}},{"id":"proxy","label":"Proxy Server","caption":"shared AI gateway","type":"service","description":"A self-hosted HTTP service. Any OpenAI-compatible client points at the proxy URL. Teams use this when many apps should share routing, keys, and spend tracking.","layoutHint":{"rank":1,"order":1}},{"id":"unified-api","label":"Unified API","caption":"OpenAI format in and out","type":"process","description":"LiteLLM accepts the OpenAI request shape, translates it to the target provider, and returns a consistent OpenAI-shaped response. Switching models is a config or model-name change, not a rewrite of your client.","layoutHint":{"rank":2,"order":0}},{"id":"router","label":"Router","caption":"retry, fallback, balance","type":"process","description":"The Router can send traffic across deployments, retry failures, and fall back to another model if a provider is down or rate-limited.","layoutHint":{"rank":3,"order":0}},{"id":"spend-logs","label":"Spend and Logs","caption":"cost and traces","type":"store","importance":"supporting","description":"LiteLLM can record usage and estimated cost per call, and emit logs or traces to observability tools. The proxy also attributes spend to teams and virtual keys.","layoutHint":{"rank":3,"order":1}},{"id":"providers","label":"Model Providers","caption":"OpenAI, Anthropic, Bedrock, and more","type":"infrastructure","description":"The actual model vendors and hosted endpoints. LiteLLM keeps their different APIs behind one interface so your app does not integrate each one separately.","layoutHint":{"rank":4,"order":0}}],"edges":[{"id":"app-to-sdk","from":"your-app","to":"python-sdk","label":"imports","kind":"dependency","importance":"primary"},{"id":"app-to-proxy","from":"your-app","to":"proxy","label":"sends request","kind":"flow","importance":"primary"},{"id":"sdk-to-unified","from":"python-sdk","to":"unified-api","label":"uses","kind":"flow","importance":"primary"},{"id":"proxy-to-unified","from":"proxy","to":"unified-api","label":"uses","kind":"flow","importance":"primary"},{"id":"unified-to-router","from":"unified-api","to":"router","label":"selects backend","kind":"control","importance":"primary"},{"id":"router-to-providers","from":"router","to":"providers","label":"forwards","kind":"flow","importance":"primary"},{"id":"unified-to-spend","from":"unified-api","to":"spend-logs","label":"records usage","kind":"data"}],"groups":[{"id":"litellm","label":"LiteLLM — one interface for many models","description":"The SDK and the proxy both expose the same unified API. The Router and spend tracking sit behind that API.","nodes":["python-sdk","proxy","unified-api","router","spend-logs"]}],"chapters":[{"id":"the-gap","title":"Many models, many APIs","shortTitle":"The gap","explanation":"Your app needs language models from several vendors. Each vendor has its own request shape, authentication, and errors. Without a translator, every new provider is a new integration.","focusNodes":["your-app","providers"],"introducedNodes":["your-app","providers"],"takeaways":["Providers own the models","Their APIs are not the same","Your app should not speak all of them"]},{"id":"one-interface","title":"One OpenAI-compatible interface","shortTitle":"One interface","explanation":"LiteLLM sits in the middle. Your app sends an OpenAI-style request. LiteLLM translates it to the chosen provider and returns a consistent OpenAI-shaped response, so switching models does not mean rewriting the client.","focusNodes":["your-app","unified-api","router","providers"],"focusEdges":["unified-to-router","router-to-providers"],"focusGroups":["litellm"],"introducedNodes":["unified-api"],"takeaways":["OpenAI-compatible means one request and response shape","Translation is LiteLLM's core job"]},{"id":"two-ways","title":"Library or proxy","shortTitle":"Two ways","explanation":"There are two ways to use that interface. Import the Python SDK when one app wants a library. Run the Proxy Server when many apps, languages, or teams should share one OpenAI-compatible endpoint.","focusNodes":["your-app","python-sdk","proxy","unified-api"],"focusEdges":["app-to-sdk","app-to-proxy","sdk-to-unified","proxy-to-unified"],"focusGroups":["litellm"],"introducedNodes":["python-sdk","proxy"],"takeaways":["The SDK lives inside one Python process","The proxy is a shared HTTP gateway","Both present the same OpenAI-style API"]},{"id":"stay-up","title":"Route, recover, and see spend","shortTitle":"Route and recover","explanation":"The Router can retry a failed call and fall back to another model if a provider is down or rate-limited. LiteLLM can also record usage and cost. On the proxy, that spend can be attributed across apps and teams.","focusNodes":["unified-api","router","spend-logs","providers"],"focusEdges":["unified-to-router","router-to-providers","unified-to-spend"],"focusGroups":["litellm"],"introducedNodes":["router","spend-logs"],"takeaways":["Fallback is a reliability control","Spend logs answer what a call cost","The proxy can share that visibility across teams"]}],"contextCards":[{"id":"stack","title":"How the pieces fit","points":["Your app sends one OpenAI-style request.","The SDK or the proxy hands that request to LiteLLM's unified API.","The Router forwards the call to a model provider and LiteLLM can record the spend."]},{"id":"neighbors","title":"What the neighbors do","points":["The Python SDK is a library one app imports. The Proxy Server is a gateway many clients call.","The Router chooses among deployments and can retry or fall back.","Model providers are the vendors that actually run the models."]},{"id":"why","title":"Why this exists","points":["Stop writing a new client for every vendor API.","Change models without starting a new application project.","Keep working if one provider fails, and see what each call cost."]}],"layout":{"preferredDirection":"left-to-right"}};</script>
+<script>
+(() => {
+  "use strict";
+
+  const spec = window.__VISUALINK_SPEC__;
+  if (!spec) throw new Error("Visualink runtime could not find its embedded spec.");
+
+  const diagram = document.getElementById("diagram");
+  const scene = document.getElementById("scene");
+  const lede = document.getElementById("lede");
+  const eyebrow = document.getElementById("eyebrow");
+  const now = document.getElementById("now");
+  const takeaways = document.getElementById("takeaways");
+  const takeawayList = document.getElementById("takeaway-list");
+  const tip = document.getElementById("tip");
+  const toast = document.getElementById("toast");
+  const playButton = document.getElementById("play");
+  const chapterButtons = [...document.querySelectorAll(".chip")];
+  const nodes = [...document.querySelectorAll(".node")];
+  const groups = [...document.querySelectorAll(".group")];
+  const edges = [...document.querySelectorAll(".edge")];
+  const parts = [...nodes, ...groups];
+
+  const nodeById = new Map(spec.nodes.map((node) => [node.id, node]));
+  const groupById = new Map((spec.groups || []).map((group) => [group.id, group]));
+  const edgeById = new Map(spec.edges.map((edge) => [edge.id, edge]));
+  const groupParent = new Map();
+  const nodeGroup = new Map();
+
+  for (const group of spec.groups || []) {
+    for (const childId of group.groups || []) groupParent.set(childId, group.id);
+    for (const nodeId of group.nodes || []) nodeGroup.set(nodeId, group.id);
+  }
+  for (const node of spec.nodes) {
+    if (node.group) nodeGroup.set(node.id, node.group);
+  }
+
+  function groupAncestors(groupId) {
+    const result = new Set();
+    let current = groupId;
+    while (current) {
+      result.add(current);
+      current = groupParent.get(current);
+    }
+    return result;
+  }
+
+  function groupsForNodes(nodeIds) {
+    const result = new Set();
+    for (const nodeId of nodeIds) {
+      for (const groupId of groupAncestors(nodeGroup.get(nodeId))) result.add(groupId);
+    }
+    return result;
+  }
+
+  function descendantNodes(groupId, result = new Set()) {
+    const group = groupById.get(groupId);
+    if (!group) return result;
+    for (const nodeId of group.nodes || []) result.add(nodeId);
+    for (const node of spec.nodes) {
+      if (node.group === groupId) result.add(node.id);
+    }
+    for (const childId of group.groups || []) descendantNodes(childId, result);
+    return result;
+  }
+
+  let chapterIndex = -1;
+  let playTimer = null;
+  let toastTimer = null;
+
+  function stopPlayback() {
+    if (!playTimer) return;
+    clearInterval(playTimer);
+    playTimer = null;
+    playButton.textContent = "Play";
+    playButton.setAttribute("aria-label", "Play guided chapters");
+  }
+
+  function clearDiagramState() {
+    for (const element of [...parts, ...edges]) {
+      element.classList.remove("is-dim", "is-hot", "is-hover", "is-new");
+    }
+  }
+
+  function paintChapterButtons() {
+    chapterButtons.forEach((button, index) => {
+      const active = index === chapterIndex;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  }
+
+  function renderTakeaways(items) {
+    takeawayList.replaceChildren();
+    if (!items || items.length === 0) {
+      takeaways.hidden = true;
+      return;
+    }
+    for (const item of items) {
+      const li = document.createElement("li");
+      li.textContent = item;
+      takeawayList.appendChild(li);
+    }
+    takeaways.hidden = false;
+  }
+
+  function overviewMode() {
+    chapterIndex = -1;
+    eyebrow.textContent = "Overview";
+    now.textContent = "The whole picture";
+    lede.textContent = spec.concept.definition;
+    renderTakeaways([]);
+    paintChapterButtons();
+    clearDiagramState();
+    hideTip();
+  }
+
+  function focusChapter(index) {
+    chapterIndex = (index + spec.chapters.length) % spec.chapters.length;
+    const chapter = spec.chapters[chapterIndex];
+    const focusNodes = new Set(chapter.focusNodes || []);
+    const introducedNodes = new Set(chapter.introducedNodes || []);
+    for (const id of introducedNodes) focusNodes.add(id);
+
+    const relevantGroups = groupsForNodes(focusNodes);
+    for (const id of chapter.focusGroups || []) {
+      for (const ancestor of groupAncestors(id)) relevantGroups.add(ancestor);
+    }
+
+    let focusEdges;
+    if (Array.isArray(chapter.focusEdges)) {
+      focusEdges = new Set(chapter.focusEdges);
+    } else {
+      focusEdges = new Set(
+        spec.edges
+          .filter((edge) => focusNodes.has(edge.from) && focusNodes.has(edge.to))
+          .map((edge) => edge.id)
+      );
+    }
+
+    eyebrow.textContent = `Chapter ${chapterIndex + 1} of ${spec.chapters.length}`;
+    now.textContent = chapter.title;
+    lede.textContent = chapter.explanation;
+    renderTakeaways(chapter.takeaways || []);
+    paintChapterButtons();
+
+    const hasNodeFocus = focusNodes.size > 0;
+    for (const element of nodes) {
+      const id = element.dataset.nodeId;
+      const focused = !hasNodeFocus || focusNodes.has(id);
+      element.classList.toggle("is-hot", focused && hasNodeFocus);
+      element.classList.toggle("is-dim", !focused);
+      element.classList.toggle("is-new", introducedNodes.has(id));
+      element.classList.remove("is-hover");
+    }
+
+    for (const element of groups) {
+      const focused = relevantGroups.has(element.dataset.groupId);
+      element.classList.toggle("is-hot", focused);
+      element.classList.toggle("is-dim", relevantGroups.size > 0 && !focused);
+      element.classList.remove("is-hover");
+    }
+
+    for (const element of edges) {
+      const focused = focusEdges.has(element.dataset.edgeId);
+      element.classList.toggle("is-hot", focused);
+      element.classList.toggle("is-dim", !focused);
+      element.classList.remove("is-hover");
+    }
+    hideTip();
+  }
+
+  chapterButtons.forEach((button, index) => {
+    button.addEventListener("click", () => {
+      stopPlayback();
+      focusChapter(index);
+    });
+  });
+
+  playButton.addEventListener("click", () => {
+    if (playTimer) {
+      stopPlayback();
+      return;
+    }
+    playButton.textContent = "Pause";
+    playButton.setAttribute("aria-label", "Pause guided chapters");
+    if (chapterIndex < 0) focusChapter(0);
+    playTimer = setInterval(() => focusChapter(chapterIndex + 1), 3600);
+  });
+
+  function neighboringNodes(nodeId) {
+    const result = new Set([nodeId]);
+    for (const edge of spec.edges) {
+      if (edge.from === nodeId) result.add(edge.to);
+      if (edge.to === nodeId) result.add(edge.from);
+    }
+    return result;
+  }
+
+  function showTip(element, text) {
+    if (!text) return;
+    const stage = document.querySelector(".stage").getBoundingClientRect();
+    const bounds = element.getBoundingClientRect();
+    tip.textContent = text;
+    tip.hidden = false;
+    const tipWidth = tip.offsetWidth;
+    const tipHeight = tip.offsetHeight;
+    let left = bounds.left - stage.left;
+    let top = bounds.bottom - stage.top + 8;
+    if (left + tipWidth > stage.width - 12) left = stage.width - tipWidth - 12;
+    if (left < 12) left = 12;
+    if (top + tipHeight > stage.height - 12) top = bounds.top - stage.top - tipHeight - 8;
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+  }
+
+  function hideTip() {
+    tip.hidden = true;
+  }
+
+  function hoverNode(nodeId, element) {
+    const near = neighboringNodes(nodeId);
+    for (const node of nodes) {
+      const relevant = near.has(node.dataset.nodeId);
+      node.classList.toggle("is-hover", node.dataset.nodeId === nodeId);
+      if (chapterIndex < 0) node.classList.toggle("is-dim", !relevant);
+    }
+    for (const edge of edges) {
+      const semanticEdge = edgeById.get(edge.dataset.edgeId);
+      const relevant = semanticEdge.from === nodeId || semanticEdge.to === nodeId;
+      edge.classList.toggle("is-hover", relevant);
+      if (chapterIndex < 0) edge.classList.toggle("is-dim", !relevant);
+    }
+    if (chapterIndex < 0) {
+      const relatedGroups = groupsForNodes(near);
+      for (const group of groups) {
+        group.classList.toggle("is-dim", !relatedGroups.has(group.dataset.groupId));
+      }
+    }
+    showTip(element, nodeById.get(nodeId)?.description);
+  }
+
+  function hoverGroup(groupId, element) {
+    const members = descendantNodes(groupId);
+    for (const group of groups) {
+      group.classList.toggle("is-hover", group.dataset.groupId === groupId);
+      if (chapterIndex < 0) {
+        const related = groupAncestors(groupId).has(group.dataset.groupId) ||
+          groupAncestors(group.dataset.groupId).has(groupId);
+        group.classList.toggle("is-dim", !related);
+      }
+    }
+    if (chapterIndex < 0) {
+      for (const node of nodes) node.classList.toggle("is-dim", !members.has(node.dataset.nodeId));
+      for (const edge of edges) {
+        const semanticEdge = edgeById.get(edge.dataset.edgeId);
+        edge.classList.toggle(
+          "is-dim",
+          !(members.has(semanticEdge.from) && members.has(semanticEdge.to))
+        );
+      }
+    }
+    showTip(element, groupById.get(groupId)?.description);
+  }
+
+  function clearHover() {
+    for (const element of [...parts, ...edges]) element.classList.remove("is-hover");
+    if (chapterIndex < 0) {
+      for (const element of [...parts, ...edges]) element.classList.remove("is-dim");
+    }
+    hideTip();
+  }
+
+  function chapterForNode(nodeId) {
+    return spec.chapters.findIndex((chapter) =>
+      (chapter.focusNodes || []).includes(nodeId) ||
+      (chapter.introducedNodes || []).includes(nodeId)
+    );
+  }
+
+  for (const element of nodes) {
+    const nodeId = element.dataset.nodeId;
+    element.addEventListener("pointerenter", () => hoverNode(nodeId, element));
+    element.addEventListener("pointerleave", clearHover);
+    element.addEventListener("focus", () => hoverNode(nodeId, element));
+    element.addEventListener("blur", clearHover);
+    element.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const target = chapterForNode(nodeId);
+      if (target >= 0) {
+        stopPlayback();
+        focusChapter(target);
+      }
+    });
+    element.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        element.click();
+      }
+    });
+  }
+
+  for (const element of groups) {
+    const groupId = element.dataset.groupId;
+    element.addEventListener("pointerenter", () => hoverGroup(groupId, element));
+    element.addEventListener("pointerleave", clearHover);
+    element.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const target = spec.chapters.findIndex((chapter) =>
+        (chapter.focusGroups || []).includes(groupId)
+      );
+      if (target >= 0) {
+        stopPlayback();
+        focusChapter(target);
+      }
+    });
+  }
+
+  const themeButton = document.getElementById("theme");
+  const themeMenu = document.getElementById("theme-menu");
+  const themeLabel = document.getElementById("theme-label");
+  const themeIcon = document.getElementById("theme-icon");
+  const lightButton = document.getElementById("theme-light");
+  const darkButton = document.getElementById("theme-dark");
+  const moonIcon = '<path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/>';
+  const sunIcon = '<circle cx="8" cy="8" r="3.15" fill="currentColor"/><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1.2v1.7M8 13.1v1.7M1.2 8h1.7M13.1 8h1.7"/><path d="M3.15 3.15l1.2 1.2M11.65 11.65l1.2 1.2M3.15 12.85l1.2-1.2M11.65 4.35l1.2-1.2"/></g>';
+
+  function closeThemeMenu() {
+    themeMenu.hidden = true;
+    themeButton.setAttribute("aria-expanded", "false");
+  }
+
+  function setTheme(theme) {
+    document.body.dataset.theme = theme;
+    const dark = theme === "dark";
+    themeLabel.textContent = dark ? "Dark" : "Light";
+    themeIcon.innerHTML = dark ? moonIcon : sunIcon;
+    lightButton.setAttribute("aria-checked", String(!dark));
+    darkButton.setAttribute("aria-checked", String(dark));
+    closeThemeMenu();
+  }
+
+  themeButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const opening = themeMenu.hidden;
+    themeMenu.hidden = !opening;
+    themeButton.setAttribute("aria-expanded", String(opening));
+  });
+  themeMenu.addEventListener("click", (event) => event.stopPropagation());
+  lightButton.addEventListener("click", () => setTheme("light"));
+  darkButton.addEventListener("click", () => setTheme("dark"));
+
+  const exportButton = document.getElementById("export");
+  const exportMenu = document.getElementById("export-menu");
+
+  function closeExportMenu() {
+    exportMenu.hidden = true;
+    exportButton.setAttribute("aria-expanded", "false");
+  }
+
+  exportButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const opening = exportMenu.hidden;
+    exportMenu.hidden = !opening;
+    exportButton.setAttribute("aria-expanded", String(opening));
+  });
+  exportMenu.addEventListener("click", (event) => event.stopPropagation());
+
+  document.addEventListener("click", () => {
+    closeExportMenu();
+    closeThemeMenu();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeExportMenu();
+      closeThemeMenu();
+      hideTip();
+      return;
+    }
+    if (event.target.closest("button, [role='button']")) return;
+    if (event.key === "ArrowRight") {
+      stopPlayback();
+      focusChapter(chapterIndex < 0 ? 0 : chapterIndex + 1);
+    } else if (event.key === "ArrowLeft") {
+      stopPlayback();
+      if (chapterIndex <= 0) overviewMode();
+      else focusChapter(chapterIndex - 1);
+    }
+  });
+
+  function announce(message) {
+    toast.textContent = message;
+    toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.hidden = true;
+    }, 2300);
+  }
+
+  const viewBox = diagram.viewBox.baseVal;
+  let scale = 1;
+  let translateX = 0;
+  let translateY = 0;
+  let drag = null;
+
+  function applyView() {
+    scene.setAttribute(
+      "transform",
+      `translate(${translateX.toFixed(1)},${translateY.toFixed(1)}) scale(${scale.toFixed(3)})`
+    );
+    document.getElementById("zoom-output").textContent = `${Math.round(scale * 100)}%`;
+  }
+
+  function zoom(factor) {
+    const next = Math.min(2.6, Math.max(0.6, scale * factor));
+    const centerX = viewBox.x + viewBox.width / 2;
+    const centerY = viewBox.y + viewBox.height / 2;
+    translateX = centerX - (centerX - translateX) * (next / scale);
+    translateY = centerY - (centerY - translateY) * (next / scale);
+    scale = next;
+    applyView();
+  }
+
+  document.getElementById("zoom-in").addEventListener("click", () => zoom(1.18));
+  document.getElementById("zoom-out").addEventListener("click", () => zoom(1 / 1.18));
+  document.getElementById("zoom-reset").addEventListener("click", () => {
+    scale = 1;
+    translateX = 0;
+    translateY = 0;
+    applyView();
+  });
+  diagram.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    zoom(event.deltaY < 0 ? 1.08 : 1 / 1.08);
+  }, { passive: false });
+  diagram.addEventListener("pointerdown", (event) => {
+    if (event.target.closest(".node")) return;
+    drag = {
+      x: event.clientX,
+      y: event.clientY,
+      translateX,
+      translateY
+    };
+    diagram.classList.add("is-dragging");
+    diagram.setPointerCapture(event.pointerId);
+  });
+  diagram.addEventListener("pointermove", (event) => {
+    if (!drag) return;
+    const bounds = diagram.getBoundingClientRect();
+    translateX = drag.translateX + (event.clientX - drag.x) * (viewBox.width / bounds.width);
+    translateY = drag.translateY + (event.clientY - drag.y) * (viewBox.height / bounds.height);
+    applyView();
+  });
+  function endDrag() {
+    drag = null;
+    diagram.classList.remove("is-dragging");
+  }
+  diagram.addEventListener("pointerup", endDrag);
+  diagram.addEventListener("pointercancel", endDrag);
+
+  function cloneForExport() {
+    const clone = diagram.cloneNode(true);
+    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    clone.querySelector("#scene")?.removeAttribute("transform");
+    clone.querySelectorAll(".is-dim, .is-hot, .is-hover, .is-new").forEach((element) => {
+      element.classList.remove("is-dim", "is-hot", "is-hover", "is-new");
+    });
+
+    const sourceElements = [diagram, ...diagram.querySelectorAll("*")];
+    const cloneElements = [clone, ...clone.querySelectorAll("*")];
+    const properties = [
+      "fill",
+      "stroke",
+      "stroke-width",
+      "stroke-dasharray",
+      "stroke-linecap",
+      "stroke-linejoin",
+      "opacity",
+      "font-size",
+      "font-weight",
+      "font-family",
+      "letter-spacing",
+      "text-anchor"
+    ];
+    sourceElements.forEach((source, index) => {
+      const target = cloneElements[index];
+      if (!target) return;
+      const computed = getComputedStyle(source);
+      for (const property of properties) {
+        const value = computed.getPropertyValue(property).trim();
+        if (value && value !== "normal") target.style.setProperty(property, value);
+      }
+    });
+
+    const background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    background.setAttribute("x", String(viewBox.x));
+    background.setAttribute("y", String(viewBox.y));
+    background.setAttribute("width", String(viewBox.width));
+    background.setAttribute("height", String(viewBox.height));
+    background.setAttribute(
+      "fill",
+      getComputedStyle(document.body).getPropertyValue("--panel").trim()
+    );
+    clone.insertBefore(background, clone.firstChild);
+    return clone;
+  }
+
+  function rasterize() {
+    return new Promise((resolve, reject) => {
+      const clone = cloneForExport();
+      const width = 2080;
+      const height = Math.max(720, Math.round(width * viewBox.height / viewBox.width));
+      clone.setAttribute("width", String(width));
+      clone.setAttribute("height", String(height));
+      const xml = new XMLSerializer().serializeToString(clone);
+      const url = URL.createObjectURL(new Blob([xml], { type: "image/svg+xml;charset=utf-8" }));
+      const image = new Image();
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d");
+        context.fillStyle = getComputedStyle(document.body).getPropertyValue("--panel").trim();
+        context.fillRect(0, 0, width, height);
+        context.drawImage(image, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Could not build image."));
+        }, "image/png");
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Could not render diagram."));
+      };
+      image.src = url;
+    });
+  }
+
+  function downloadBlob(blob) {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    const slug = spec.concept.shortName || spec.concept.name;
+    link.download = `${slug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}.png`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  }
+
+  document.getElementById("copy-image").addEventListener("click", async (event) => {
+    event.stopPropagation();
+    closeExportMenu();
+    const blobPromise = rasterize();
+    try {
+      if (navigator.clipboard && window.ClipboardItem) {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blobPromise })]);
+        announce("Copied image");
+        return;
+      }
+    } catch {
+      // Clipboard access can be unavailable for local files; download is the portable fallback.
+    }
+    try {
+      downloadBlob(await blobPromise);
+      announce("Clipboard unavailable — downloaded PNG instead");
+    } catch {
+      announce("Could not export image");
+    }
+  });
+
+  document.getElementById("download-image").addEventListener("click", async (event) => {
+    event.stopPropagation();
+    closeExportMenu();
+    try {
+      downloadBlob(await rasterize());
+      announce("Downloaded PNG");
+    } catch {
+      announce("Could not download image");
+    }
+  });
+
+  overviewMode();
+  applyView();
+})();
+
+</script>
+</body>
+</html>

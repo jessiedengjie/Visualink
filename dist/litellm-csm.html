@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="generator" content="Visualink renderer 1.0"/>
+<title>LiteLLM, for Customer Success</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f3f7fc;
+  --panel: #ffffff;
+  --panel-2: #edf4fb;
+  --ink: #101828;
+  --ink-2: #475467;
+  --muted: #66758a;
+  --hair: #cbd8e8;
+  --hair-2: #8fa4bd;
+  --external: #d15f32;
+  --service: #008e87;
+  --model: #2b7fd3;
+  --store: #9b4cad;
+  --infra: #2d9b59;
+  --concept: #b7791f;
+  --focus: #d08b1e;
+  --edge-flow: #008e87;
+  --edge-control: #9b4cad;
+  --edge-data: #2d9b59;
+  --edge-dependency: #d15f32;
+  --edge-relationship: #718096;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+}
+
+body[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b0f14;
+  --panel: #131922;
+  --panel-2: #18212c;
+  --ink: #f8fafc;
+  --ink-2: #d3dbe6;
+  --muted: #a8b4c3;
+  --hair: #354153;
+  --hair-2: #607086;
+  --external: #f09a70;
+  --service: #64d2c8;
+  --model: #77b9ff;
+  --store: #d3a7df;
+  --infra: #83d39f;
+  --concept: #f2c66d;
+  --focus: #f2c66d;
+  --edge-flow: #64d2c8;
+  --edge-control: #d3a7df;
+  --edge-data: #83d39f;
+  --edge-dependency: #f09a70;
+  --edge-relationship: #91a0b4;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 20px 26px 24px;
+  display: grid;
+  grid-template-rows: auto auto minmax(410px, 1fr) auto;
+  gap: 14px;
+}
+
+.bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.title {
+  min-width: 0;
+}
+
+h1 {
+  max-width: 48rem;
+  font-size: clamp(24px, 3vw, 31px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.13;
+}
+
+.audience {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.lede {
+  max-width: 54rem;
+  margin-top: 8px;
+  color: var(--ink-2);
+  font-size: 14.5px;
+  line-height: 1.52;
+}
+
+.tools {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tool-button,
+.theme-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 15px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.tool-button:hover,
+.theme-trigger:hover,
+.tool-button:focus-visible,
+.theme-trigger:focus-visible {
+  border-color: var(--hair-2);
+  color: var(--ink);
+  outline: 2px solid color-mix(in srgb, var(--focus) 48%, transparent);
+  outline-offset: 2px;
+}
+
+.theme-icon,
+.chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.chevron {
+  width: 10px;
+  height: 10px;
+  transition: transform 160ms ease;
+}
+
+[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+.drop {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 172px;
+  padding: 4px;
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: 0 14px 34px rgba(4, 10, 20, 0.22);
+}
+
+.menu[hidden] {
+  display: none;
+}
+
+.menu button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.menu button:hover,
+.menu button:focus-visible,
+.menu button[aria-checked="true"] {
+  background: var(--panel-2);
+  outline: none;
+}
+
+.strip {
+  display: grid;
+  grid-template-columns: 235px 1fr;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 16px;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.strip-meta {
+  padding-right: 16px;
+  border-right: 1px solid var(--hair);
+}
+
+.eyebrow {
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.now {
+  margin-top: 5px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 550;
+  line-height: 1.1;
+  text-align: left;
+}
+
+.chip b {
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+}
+
+.chip:hover,
+.chip:focus-visible {
+  border-color: var(--hair-2);
+  background: var(--panel-2);
+  color: var(--ink);
+  outline: none;
+}
+
+.chip.is-active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--panel);
+}
+
+.chip.is-active b {
+  color: var(--focus);
+}
+
+.takeaways {
+  grid-column: 1 / -1;
+  padding-top: 10px;
+  border-top: 1px solid var(--hair);
+}
+
+.takeaways[hidden] {
+  display: none;
+}
+
+.takeaways ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 6px;
+  list-style: none;
+}
+
+.takeaways li {
+  position: relative;
+  padding-left: 11px;
+  color: var(--ink-2);
+  font-size: 11.5px;
+}
+
+.takeaways li::before {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--focus);
+  content: "";
+}
+
+.stage {
+  position: relative;
+  min-height: 410px;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+#diagram {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 390px;
+  cursor: grab;
+  touch-action: none;
+}
+
+#diagram.is-dragging {
+  cursor: grabbing;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 9px 16px;
+  border-top: 1px solid var(--hair);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 18px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink-2);
+  font-size: 11px;
+}
+
+.legend-swatch {
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--swatch);
+}
+
+.zoom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.zoom button {
+  width: 27px;
+  height: 25px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.zoom button:hover,
+.zoom button:focus-visible {
+  border-color: var(--hair-2);
+  background: var(--panel-2);
+  color: var(--ink);
+  outline: none;
+}
+
+.zoom-output {
+  min-width: 44px;
+  color: var(--muted);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.group,
+.node,
+.edge {
+  transition: opacity 240ms ease;
+}
+
+.group-boundary {
+  fill: color-mix(in srgb, var(--panel-2) 64%, transparent);
+  stroke: var(--hair-2);
+  stroke-width: 1.4;
+  stroke-dasharray: 7 5;
+}
+
+.group[data-family="external"] .group-boundary { stroke: var(--external); }
+.group[data-family="service"] .group-boundary { stroke: var(--service); }
+.group[data-family="model"] .group-boundary { stroke: var(--model); }
+.group[data-family="store"] .group-boundary { stroke: var(--store); }
+.group[data-family="infra"] .group-boundary { stroke: var(--infra); }
+.group[data-family="concept"] .group-boundary { stroke: var(--concept); }
+.group[data-depth="0"] .group-boundary {
+  fill: color-mix(in srgb, var(--panel-2) 78%, transparent);
+}
+
+.group[data-depth="1"] .group-boundary,
+.group[data-depth="2"] .group-boundary {
+  fill: color-mix(in srgb, var(--panel-2) 34%, transparent);
+}
+
+.group-label {
+  fill: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.group[data-family="external"] .group-label { fill: var(--external); }
+.group[data-family="service"] .group-label { fill: var(--service); }
+.group[data-family="model"] .group-label { fill: var(--model); }
+.group[data-family="store"] .group-label { fill: var(--store); }
+.group[data-family="infra"] .group-label { fill: var(--infra); }
+.group[data-family="concept"] .group-label { fill: var(--concept); }
+
+.group,
+.node {
+  cursor: pointer;
+}
+
+.node-bg {
+  fill: var(--panel);
+  stroke: var(--node-color, var(--hair-2));
+  stroke-width: 1.25;
+}
+
+.node-stripe {
+  fill: var(--node-color, var(--hair-2));
+}
+
+.node-label {
+  fill: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.node-caption {
+  fill: var(--muted);
+  font-size: 10.5px;
+}
+
+.node[data-type="actor"],
+.node[data-type="input"],
+.node[data-type="output"] {
+  --node-color: var(--external);
+}
+
+.node[data-type="process"],
+.node[data-type="service"] {
+  --node-color: var(--service);
+}
+
+.node[data-type="model"] {
+  --node-color: var(--model);
+}
+
+.node[data-type="store"] {
+  --node-color: var(--store);
+}
+
+.node[data-type="infrastructure"],
+.node[data-type="boundary"] {
+  --node-color: var(--infra);
+}
+
+.node[data-type="concept"] {
+  --node-color: var(--concept);
+}
+
+.edge-path {
+  fill: none;
+  stroke: var(--edge-color, var(--edge-relationship));
+  stroke-width: 1.45;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.edge[data-kind="flow"] {
+  --edge-color: var(--edge-flow);
+}
+
+.edge[data-kind="control"] {
+  --edge-color: var(--edge-control);
+}
+
+.edge[data-kind="data"] {
+  --edge-color: var(--edge-data);
+}
+
+.edge[data-kind="dependency"] {
+  --edge-color: var(--edge-dependency);
+}
+
+.edge[data-importance="primary"] .edge-path {
+  stroke-width: 2.3;
+}
+
+.edge-label-bg {
+  fill: var(--panel);
+  stroke: var(--hair);
+  stroke-width: 0.8;
+}
+
+.edge-label {
+  fill: var(--edge-color, var(--muted));
+  font-size: 9.5px;
+  font-weight: 650;
+}
+
+.is-dim {
+  opacity: 0.38;
+}
+
+.group.is-dim {
+  opacity: 0.45;
+}
+
+.node.is-hot .node-bg,
+.node.is-hover .node-bg,
+.node:focus-visible .node-bg {
+  stroke-width: 2.4;
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--node-color) 35%, transparent));
+}
+
+.group.is-hot .group-boundary,
+.group.is-hover .group-boundary {
+  stroke: var(--focus);
+  stroke-width: 2;
+}
+
+.edge.is-hot .edge-path,
+.edge.is-hover .edge-path {
+  stroke-width: 2.7;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--edge-color) 32%, transparent));
+}
+
+.node.is-new .node-bg {
+  stroke-width: 3;
+  stroke-dasharray: 5 3;
+}
+
+.node:focus-visible {
+  outline: none;
+}
+
+.tip {
+  position: absolute;
+  z-index: 10;
+  max-width: 280px;
+  padding: 8px 10px;
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  background: var(--ink);
+  box-shadow: 0 9px 26px rgba(0, 0, 0, 0.28);
+  color: var(--panel);
+  font-size: 12px;
+  line-height: 1.42;
+  pointer-events: none;
+}
+
+.tip[hidden],
+.toast[hidden] {
+  display: none;
+}
+
+.below {
+  display: grid;
+  gap: 14px;
+}
+
+.role-relevance {
+  padding: 14px 16px 16px;
+  border: 1px solid var(--hair);
+  border-left: 3px solid var(--focus);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.role-relevance h2,
+.card h2 {
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.role-relevance ul {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 28px;
+  margin-top: 10px;
+  list-style: none;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.card {
+  padding: 13px 16px 15px;
+  border: 1px solid var(--hair);
+  border-top: 2px solid var(--card-accent, var(--hair-2));
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.role-relevance li,
+.card li {
+  position: relative;
+  padding-left: 12px;
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.role-relevance li::before,
+.card li::before {
+  position: absolute;
+  top: 7px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--focus);
+  content: "";
+}
+
+.card ul {
+  display: grid;
+  gap: 7px;
+  margin-top: 9px;
+  list-style: none;
+}
+
+.card:nth-child(4n + 1) {
+  --card-accent: var(--external);
+}
+
+.card:nth-child(4n + 2) {
+  --card-accent: var(--store);
+}
+
+.card:nth-child(4n + 3) {
+  --card-accent: var(--service);
+}
+
+.card:nth-child(4n) {
+  --card-accent: var(--infra);
+}
+
+.toast {
+  position: fixed;
+  z-index: 40;
+  bottom: 22px;
+  left: 50%;
+  padding: 9px 14px;
+  transform: translateX(-50%);
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--panel);
+  font-size: 12.5px;
+  pointer-events: none;
+}
+
+body[data-theme="dark"] .node-bg {
+  fill: #151c25;
+}
+
+body[data-theme="dark"] .node-label {
+  fill: #ffffff;
+}
+
+body[data-theme="dark"] .node-caption {
+  fill: #b7c2d0;
+}
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-rows: auto auto minmax(440px, auto) auto;
+    padding: 16px;
+  }
+
+  .bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tools {
+    flex-wrap: wrap;
+  }
+
+  .strip {
+    grid-template-columns: 1fr;
+  }
+
+  .strip-meta {
+    padding: 0 0 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--hair);
+  }
+
+  .cards,
+  .role-relevance ul {
+    grid-template-columns: 1fr;
+  }
+
+  .foot {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #diagram {
+    min-height: 420px;
+  }
+}
+
+@media (max-width: 520px) {
+  .app {
+    padding: 12px;
+  }
+
+  .chips {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .chip {
+    width: 100%;
+  }
+
+  .legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+</style>
+</head>
+<body data-theme="dark">
+<main class="app">
+  <header class="bar">
+    <div class="title">
+      <h1>LiteLLM, for Customer Success</h1>
+      <p class="audience">For Customer Success Managers</p>
+      <p class="lede" id="lede">LiteLLM is a self-hosted AI gateway that sits between a customer&#39;s applications and many model providers. Apps send one OpenAI-style request; LiteLLM routes it, tracks spend, and controls who can use which models.</p>
+    </div>
+    <div class="tools">
+    <button class="tool-button" id="play" type="button" aria-label="Play guided chapters">Play</button>
+    <div class="drop">
+      <button class="tool-button" id="export" type="button" aria-haspopup="menu" aria-expanded="false">Export</button>
+      <div class="menu" id="export-menu" role="menu" hidden>
+        <button type="button" id="copy-image" role="menuitem">Copy image</button>
+        <button type="button" id="download-image" role="menuitem">Download PNG</button>
+      </div>
+    </div>
+    <div class="drop">
+      <button class="theme-trigger" id="theme" type="button" aria-haspopup="menu" aria-expanded="false">
+        <svg class="theme-icon" id="theme-icon" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/></svg>
+        <span id="theme-label">Dark</span>
+        <svg class="chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="menu" id="theme-menu" role="menu" hidden>
+        <button type="button" id="theme-light" role="menuitemradio" aria-checked="false">
+          <svg class="theme-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3.15" fill="currentColor"/><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1.2v1.7M8 13.1v1.7M1.2 8h1.7M13.1 8h1.7"/><path d="M3.15 3.15l1.2 1.2M11.65 11.65l1.2 1.2M3.15 12.85l1.2-1.2M11.65 4.35l1.2-1.2"/></g></svg>
+          Light
+        </button>
+        <button type="button" id="theme-dark" role="menuitemradio" aria-checked="true">
+          <svg class="theme-icon" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/></svg>
+          Dark
+        </button>
+      </div>
+    </div>
+  </div>
+  </header>
+  <section class="strip" aria-label="Guided chapters">
+    <div class="strip-meta">
+      <div class="eyebrow" id="eyebrow">Overview</div>
+      <div class="now" id="now">The whole picture</div>
+    </div>
+    <div class="chips"><button class="chip" type="button" data-chapter-index="0" aria-pressed="false"><b>01</b><span>Where it sits</span></button>
+      <button class="chip" type="button" data-chapter-index="1" aria-pressed="false"><b>02</b><span>One request</span></button>
+      <button class="chip" type="button" data-chapter-index="2" aria-pressed="false"><b>03</b><span>Virtual keys</span></button>
+      <button class="chip" type="button" data-chapter-index="3" aria-pressed="false"><b>04</b><span>Reliability and cost</span></button></div>
+    <div class="takeaways" id="takeaways" hidden>
+      <div class="eyebrow">Takeaways</div>
+      <ul id="takeaway-list"></ul>
+    </div>
+  </section>
+  <section class="stage" aria-label="Interactive system map">
+    <svg id="diagram" viewBox="0 0 1764 436" preserveAspectRatio="xMidYMid meet" role="img" aria-label="LiteLLM system map for Customer Success Managers">
+    <defs>
+    <marker id="arrow-flow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-control" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-data" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-dependency" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-relationship" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+  </defs>
+    <g id="scene">
+      <g class="group" data-group-id="litellm" data-depth="0" data-family="service">
+        <rect class="group-boundary" x="349.6" y="48" width="1049.6" height="340" rx="12"/>
+        <text class="group-label" x="362.6" y="67">LiteLLM — one gateway for many models</text>
+      </g>
+      <g class="edge" data-edge-id="apps-to-keys" data-from="customer-apps" data-to="virtual-keys" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M257.6,218 L306.6,218 L306.6,231 L371.6,231" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="308.9" y="220" width="60.4" height="17" rx="5"/>
+        <text class="edge-label" x="339.1" y="232" text-anchor="middle">presents</text>
+      </g>
+      <g class="edge" data-edge-id="keys-to-gateway" data-from="virtual-keys" data-to="litellm-gateway" data-kind="control" data-importance="primary">
+        <path class="edge-path" d="M545.2,231 L637.2,231" marker-end="url(#arrow-control)"/>
+        <rect class="edge-label-bg" x="555.2" y="220" width="72" height="17" rx="5"/>
+        <text class="edge-label" x="591.2" y="232" text-anchor="middle">authorizes</text>
+      </g>
+      <g class="edge" data-edge-id="apps-to-gateway" data-from="customer-apps" data-to="litellm-gateway" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M257.6,218 L455.4,218 L455.4,231 L637.2,231" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="311.8" y="207" width="89.4" height="17" rx="5"/>
+        <text class="edge-label" x="356.5" y="219" text-anchor="middle">sends request</text>
+      </g>
+      <g class="edge" data-edge-id="gateway-to-routing" data-from="litellm-gateway" data-to="routing" data-kind="control" data-importance="primary">
+        <path class="edge-path" d="M861.2,231 L899.2,231 L899.2,129 L953.2,129" marker-end="url(#arrow-control)"/>
+        <rect class="edge-label-bg" x="854.5" y="169" width="89.4" height="17" rx="5"/>
+        <text class="edge-label" x="899.2" y="181" text-anchor="middle">selects model</text>
+      </g>
+      <g class="edge" data-edge-id="routing-to-providers" data-from="routing" data-to="model-providers" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M1141.2,129 L1316.2,129 L1316.2,218 L1491.2,218" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="1373.5" y="207" width="60.4" height="17" rx="5"/>
+        <text class="edge-label" x="1403.7" y="219" text-anchor="middle">forwards</text>
+      </g>
+      <g class="edge" data-edge-id="gateway-to-spend" data-from="litellm-gateway" data-to="spend-control" data-kind="data" data-importance="primary">
+        <path class="edge-path" d="M861.2,231 L960.4,231" marker-end="url(#arrow-data)"/>
+        <rect class="edge-label-bg" x="866.1" y="220" width="89.4" height="17" rx="5"/>
+        <text class="edge-label" x="910.8" y="232" text-anchor="middle">records usage</text>
+      </g>
+      <g class="edge" data-edge-id="keys-to-spend" data-from="virtual-keys" data-to="spend-control" data-kind="control" data-importance="supporting">
+        <path class="edge-path" d="M545.2,231 L960.4,231" marker-end="url(#arrow-control)"/>
+        <rect class="edge-label-bg" x="713.9" y="220" width="77.8" height="17" rx="5"/>
+        <text class="edge-label" x="752.8" y="232" text-anchor="middle">sets budget</text>
+      </g>
+      <g class="edge" data-edge-id="spend-to-admin" data-from="spend-control" data-to="admin-view" data-kind="data" data-importance="supporting">
+        <path class="edge-path" d="M1134,231 L1233.2,231" marker-end="url(#arrow-data)"/>
+        <rect class="edge-label-bg" x="1162.1" y="220" width="43" height="17" rx="5"/>
+        <text class="edge-label" x="1183.6" y="232" text-anchor="middle">shows</text>
+      </g>
+      <g class="edge" data-edge-id="gateway-to-guardrails" data-from="litellm-gateway" data-to="guardrails" data-kind="control" data-importance="supporting">
+        <path class="edge-path" d="M861.2,231 L926.2,231 L926.2,333 L975.2,333" marker-end="url(#arrow-control)"/>
+        <rect class="edge-label-bg" x="901.8" y="271" width="48.8" height="17" rx="5"/>
+        <text class="edge-label" x="926.2" y="283" text-anchor="middle">checks</text>
+      </g>
+      <g class="node" data-node-id="customer-apps" data-type="input" data-importance="primary" role="button" tabindex="0" aria-label="Customer&#39;s AI Apps: The products teams ship that need language models. They should call one gateway instead of every vendor API.">
+        <rect class="node-bg" x="48" y="185" width="209.6" height="66" rx="8"/>
+        <rect class="node-stripe" x="48" y="185" width="4" height="66" rx="2"/>
+        <text class="node-label" x="66" y="212">Customer&#39;s AI Apps</text>
+        <text class="node-caption" x="66" y="232">chatbots, agents, tools</text>
+      </g>
+      <g class="node" data-node-id="virtual-keys" data-type="concept" data-importance="primary" role="button" tabindex="0" aria-label="Virtual Keys: LiteLLM issues its own keys to teams and apps. A virtual key can allow specific models, set a budget, and be revoked without rotating the real vendor keys.">
+        <rect class="node-bg" x="371.6" y="198" width="173.6" height="66" rx="8"/>
+        <rect class="node-stripe" x="371.6" y="198" width="4" height="66" rx="2"/>
+        <text class="node-label" x="389.6" y="225">Virtual Keys</text>
+        <text class="node-caption" x="389.6" y="245">access with limits</text>
+      </g>
+      <g class="node" data-node-id="litellm-gateway" data-type="service" data-importance="primary" role="button" tabindex="0" aria-label="LiteLLM Gateway: A self-hosted proxy that accepts OpenAI-compatible requests and talks to the configured providers. Customers usually mean this service when they say they use LiteLLM.">
+        <rect class="node-bg" x="637.2" y="198" width="224" height="66" rx="8"/>
+        <rect class="node-stripe" x="637.2" y="198" width="4" height="66" rx="2"/>
+        <text class="node-label" x="655.2" y="225">LiteLLM Gateway</text>
+        <text class="node-caption" x="655.2" y="245">one endpoint for many models</text>
+      </g>
+      <g class="node" data-node-id="routing" data-type="process" data-importance="primary" role="button" tabindex="0" aria-label="Route and Fallback: LiteLLM can send traffic across providers or regions, retry failures, and fall back to another model if one is down or rate-limited.">
+        <rect class="node-bg" x="953.2" y="96" width="188" height="66" rx="8"/>
+        <rect class="node-stripe" x="953.2" y="96" width="4" height="66" rx="2"/>
+        <text class="node-label" x="971.2" y="123">Route and Fallback</text>
+        <text class="node-caption" x="971.2" y="143">pick a working model</text>
+      </g>
+      <g class="node" data-node-id="spend-control" data-type="store" data-importance="primary" role="button" tabindex="0" aria-label="Spend and Budgets: Every request can be attributed to a key, team, or user. Budgets can stop new requests when a limit is reached, instead of discovering the bill later.">
+        <rect class="node-bg" x="960.4" y="198" width="173.6" height="66" rx="8"/>
+        <rect class="node-stripe" x="960.4" y="198" width="4" height="66" rx="2"/>
+        <text class="node-label" x="978.4" y="225">Spend and Budgets</text>
+        <text class="node-caption" x="978.4" y="245">track and cap cost</text>
+      </g>
+      <g class="node" data-node-id="guardrails" data-type="process" data-importance="supporting" role="button" tabindex="0" aria-label="Guardrails: Optional checks such as PII masking or prompt-injection filters that can run on a model call. Not every customer enables them.">
+        <rect class="node-bg" x="975.2" y="300" width="144" height="66" rx="8"/>
+        <rect class="node-stripe" x="975.2" y="300" width="4" height="66" rx="2"/>
+        <text class="node-label" x="993.2" y="327">Guardrails</text>
+        <text class="node-caption" x="993.2" y="347">policy checks</text>
+      </g>
+      <g class="node" data-node-id="model-providers" data-type="infrastructure" data-importance="primary" role="button" tabindex="0" aria-label="Model Providers: The actual model vendors and hosted endpoints. LiteLLM keeps their different APIs behind one interface so apps do not integrate each one separately.">
+        <rect class="node-bg" x="1491.2" y="185" width="224" height="66" rx="8"/>
+        <rect class="node-stripe" x="1491.2" y="185" width="4" height="66" rx="2"/>
+        <text class="node-label" x="1509.2" y="212">Model Providers</text>
+        <text class="node-caption" x="1509.2" y="232">OpenAI, Anthropic, Bedrock, and more</text>
+      </g>
+      <g class="node" data-node-id="admin-view" data-type="output" data-importance="supporting" role="button" tabindex="0" aria-label="Admin View: The LiteLLM dashboard for keys, teams, spend, and request health. Operations and finance often use this to see AI usage.">
+        <rect class="node-bg" x="1233.2" y="198" width="144" height="66" rx="8"/>
+        <rect class="node-stripe" x="1233.2" y="198" width="4" height="66" rx="2"/>
+        <text class="node-label" x="1251.2" y="225">Admin View</text>
+        <text class="node-caption" x="1251.2" y="245">who used what</text>
+      </g>
+    </g>
+  </svg>
+    <div class="tip" id="tip" role="tooltip" hidden></div>
+    <div class="foot">
+      <div class="legend" aria-label="Diagram legend">
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--external)"></span>Actors, inputs, and outputs</div>
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--concept)"></span>Concepts</div>
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--service)"></span>Processes and services</div>
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--store)"></span>Stores</div>
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--infra)"></span>Infrastructure</div>
+  </div>
+      <div class="zoom" aria-label="Diagram zoom controls">
+        <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
+        <span class="zoom-output" id="zoom-output">100%</span>
+        <button id="zoom-in" type="button" aria-label="Zoom in">+</button>
+        <button id="zoom-reset" type="button" aria-label="Reset view">↺</button>
+      </div>
+    </div>
+  </section>
+  <div class="below">
+    <section class="role-relevance" aria-labelledby="role-relevance-title">
+    <div class="eyebrow">Your role</div>
+    <h2 id="role-relevance-title">Why this matters for a Customer Success Manager</h2>
+    <ul><li>When a customer says they use LiteLLM, they usually mean a shared gateway, not a Python library inside one app.</li><li>Ask whether apps call vendors directly or go through the gateway. That changes how you diagnose outages, spend spikes, and model-switch requests.</li><li>Spend questions belong on virtual keys, teams, and the admin view, not on each application&#39;s logs.</li><li>An Anthropic or OpenAI outage may not be a product incident if fallback is already configured in the gateway.</li><li>SSO, audit logs, and contracted support are LiteLLM Enterprise add-ons. The open-source gateway already covers unified access, virtual keys, budgets, and routing.</li></ul>
+  </section>
+    <div class="cards">
+    <section class="card">
+      <h2>How the pieces fit</h2>
+      <ul><li>Apps send one OpenAI-style request to LiteLLM.</li><li>A virtual key authorizes the call and can carry a budget.</li><li>LiteLLM routes the call to a model provider and records the spend.</li></ul>
+    </section>
+    <section class="card">
+      <h2>Terms customers may use</h2>
+      <ul><li>Proxy, AI gateway, and LiteLLM often mean the same shared service.</li><li>The Python SDK is a library one app can import. The gateway is what the whole organization calls.</li><li>OpenAI-compatible means apps keep the OpenAI request shape even when the backend is Anthropic, Bedrock, or Azure.</li></ul>
+    </section>
+    <section class="card">
+      <h2>Why customers use it</h2>
+      <ul><li>Stop integrating every vendor API in every app.</li><li>See and cap AI spend before the invoice arrives.</li><li>Change models without starting a new application project.</li></ul>
+    </section>
+  </div>
+  </div>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script>window.__VISUALINK_SPEC__={"version":"1.0","concept":{"name":"LiteLLM","title":"LiteLLM, for Customer Success","definition":"LiteLLM is a self-hosted AI gateway that sits between a customer's applications and many model providers. Apps send one OpenAI-style request; LiteLLM routes it, tracks spend, and controls who can use which models.","problem":"Without a gateway, each app talks to each vendor separately. Keys scatter, spend is hard to explain, switching models means changing application code, and an outage at one provider can stop the product."},"audience":{"role":"Customer Success Managers","technicalLevel":"intermediate","goals":["understand customer architecture discussions about LiteLLM","explain the gateway accurately to customers","recognize spend, access, and reliability implications"]},"nodes":[{"id":"customer-apps","label":"Customer's AI Apps","caption":"chatbots, agents, tools","type":"input","description":"The products teams ship that need language models. They should call one gateway instead of every vendor API.","layoutHint":{"rank":0,"order":0}},{"id":"virtual-keys","label":"Virtual Keys","caption":"access with limits","type":"concept","description":"LiteLLM issues its own keys to teams and apps. A virtual key can allow specific models, set a budget, and be revoked without rotating the real vendor keys.","layoutHint":{"rank":1,"order":0}},{"id":"litellm-gateway","label":"LiteLLM Gateway","caption":"one endpoint for many models","type":"service","description":"A self-hosted proxy that accepts OpenAI-compatible requests and talks to the configured providers. Customers usually mean this service when they say they use LiteLLM.","layoutHint":{"rank":2,"order":0}},{"id":"routing","label":"Route and Fallback","caption":"pick a working model","type":"process","description":"LiteLLM can send traffic across providers or regions, retry failures, and fall back to another model if one is down or rate-limited.","layoutHint":{"rank":3,"order":0}},{"id":"spend-control","label":"Spend and Budgets","caption":"track and cap cost","type":"store","description":"Every request can be attributed to a key, team, or user. Budgets can stop new requests when a limit is reached, instead of discovering the bill later.","layoutHint":{"rank":3,"order":1}},{"id":"guardrails","label":"Guardrails","caption":"policy checks","type":"process","importance":"supporting","description":"Optional checks such as PII masking or prompt-injection filters that can run on a model call. Not every customer enables them.","layoutHint":{"rank":3,"order":2}},{"id":"model-providers","label":"Model Providers","caption":"OpenAI, Anthropic, Bedrock, and more","type":"infrastructure","description":"The actual model vendors and hosted endpoints. LiteLLM keeps their different APIs behind one interface so apps do not integrate each one separately.","layoutHint":{"rank":4,"order":0}},{"id":"admin-view","label":"Admin View","caption":"who used what","type":"output","importance":"supporting","description":"The LiteLLM dashboard for keys, teams, spend, and request health. Operations and finance often use this to see AI usage.","layoutHint":{"rank":4,"order":2}}],"edges":[{"id":"apps-to-keys","from":"customer-apps","to":"virtual-keys","label":"presents","kind":"flow","importance":"primary"},{"id":"keys-to-gateway","from":"virtual-keys","to":"litellm-gateway","label":"authorizes","kind":"control","importance":"primary"},{"id":"apps-to-gateway","from":"customer-apps","to":"litellm-gateway","label":"sends request","kind":"flow","importance":"primary"},{"id":"gateway-to-routing","from":"litellm-gateway","to":"routing","label":"selects model","kind":"control","importance":"primary"},{"id":"routing-to-providers","from":"routing","to":"model-providers","label":"forwards","kind":"flow","importance":"primary"},{"id":"gateway-to-spend","from":"litellm-gateway","to":"spend-control","label":"records usage","kind":"data","importance":"primary"},{"id":"keys-to-spend","from":"virtual-keys","to":"spend-control","label":"sets budget","kind":"control"},{"id":"spend-to-admin","from":"spend-control","to":"admin-view","label":"shows","kind":"data"},{"id":"gateway-to-guardrails","from":"litellm-gateway","to":"guardrails","label":"checks","kind":"control"}],"groups":[{"id":"litellm","label":"LiteLLM — one gateway for many models","description":"The self-hosted AI gateway customers place in front of model providers to unify access, routing, and spend control.","nodes":["virtual-keys","litellm-gateway","routing","spend-control","guardrails","admin-view"]}],"chapters":[{"id":"where-it-sits","title":"Where LiteLLM sits","shortTitle":"Where it sits","explanation":"A customer's AI apps need models from several vendors. LiteLLM sits in the middle as one gateway, so those apps do not each integrate OpenAI, Anthropic, Bedrock, and the rest separately.","focusNodes":["customer-apps","litellm-gateway","routing","model-providers"],"focusEdges":["apps-to-gateway","gateway-to-routing","routing-to-providers"],"focusGroups":["litellm"],"introducedNodes":["litellm-gateway"],"takeaways":["The app is the product","LiteLLM is the gateway in front of models","Providers own the models"]},{"id":"one-request","title":"One request, many models","shortTitle":"One request","explanation":"Apps send an OpenAI-compatible request to LiteLLM. The gateway translates that request to the chosen provider and returns a consistent response, so switching models is a gateway change, not an application rewrite.","focusNodes":["customer-apps","litellm-gateway","routing","model-providers"],"focusEdges":["apps-to-gateway","gateway-to-routing","routing-to-providers"],"introducedNodes":["routing"],"takeaways":["OpenAI-compatible means one request shape","Model swaps stay in the gateway"]},{"id":"access-with-keys","title":"Access with virtual keys","shortTitle":"Virtual keys","explanation":"Teams do not need a copy of every vendor API key. LiteLLM issues virtual keys that can limit models, budgets, and rate limits. Revoking a virtual key cuts off an app without rotating the real provider credentials.","focusNodes":["customer-apps","virtual-keys","litellm-gateway","spend-control"],"focusEdges":["apps-to-keys","keys-to-gateway","keys-to-spend"],"introducedNodes":["virtual-keys"],"takeaways":["A virtual key is LiteLLM access, not a vendor password","Budgets and model permissions live on the key"]},{"id":"reliability-and-cost","title":"Stay up and stay in budget","shortTitle":"Reliability and cost","explanation":"If a provider fails or rate-limits, LiteLLM can retry or fall back to another model. At the same time it attributes spend to keys and teams, and can stop requests when a budget is reached. The admin view is how operators and finance see that activity.","focusNodes":["litellm-gateway","routing","spend-control","admin-view","model-providers","guardrails"],"focusEdges":["routing-to-providers","gateway-to-spend","spend-to-admin","gateway-to-guardrails"],"focusGroups":["litellm"],"introducedNodes":["spend-control","admin-view"],"takeaways":["Fallback is a reliability control","Budgets are a cost control","The admin view answers who spent what"]}],"roleRelevance":{"title":"Why this matters for a Customer Success Manager","points":["When a customer says they use LiteLLM, they usually mean a shared gateway, not a Python library inside one app.","Ask whether apps call vendors directly or go through the gateway. That changes how you diagnose outages, spend spikes, and model-switch requests.","Spend questions belong on virtual keys, teams, and the admin view, not on each application's logs.","An Anthropic or OpenAI outage may not be a product incident if fallback is already configured in the gateway.","SSO, audit logs, and contracted support are LiteLLM Enterprise add-ons. The open-source gateway already covers unified access, virtual keys, budgets, and routing."]},"contextCards":[{"id":"stack","title":"How the pieces fit","points":["Apps send one OpenAI-style request to LiteLLM.","A virtual key authorizes the call and can carry a budget.","LiteLLM routes the call to a model provider and records the spend."]},{"id":"customer-language","title":"Terms customers may use","points":["Proxy, AI gateway, and LiteLLM often mean the same shared service.","The Python SDK is a library one app can import. The gateway is what the whole organization calls.","OpenAI-compatible means apps keep the OpenAI request shape even when the backend is Anthropic, Bedrock, or Azure."]},{"id":"value","title":"Why customers use it","points":["Stop integrating every vendor API in every app.","See and cap AI spend before the invoice arrives.","Change models without starting a new application project."]}],"layout":{"preferredDirection":"left-to-right"}};</script>
+<script>
+(() => {
+  "use strict";
+
+  const spec = window.__VISUALINK_SPEC__;
+  if (!spec) throw new Error("Visualink runtime could not find its embedded spec.");
+
+  const diagram = document.getElementById("diagram");
+  const scene = document.getElementById("scene");
+  const lede = document.getElementById("lede");
+  const eyebrow = document.getElementById("eyebrow");
+  const now = document.getElementById("now");
+  const takeaways = document.getElementById("takeaways");
+  const takeawayList = document.getElementById("takeaway-list");
+  const tip = document.getElementById("tip");
+  const toast = document.getElementById("toast");
+  const playButton = document.getElementById("play");
+  const chapterButtons = [...document.querySelectorAll(".chip")];
+  const nodes = [...document.querySelectorAll(".node")];
+  const groups = [...document.querySelectorAll(".group")];
+  const edges = [...document.querySelectorAll(".edge")];
+  const parts = [...nodes, ...groups];
+
+  const nodeById = new Map(spec.nodes.map((node) => [node.id, node]));
+  const groupById = new Map((spec.groups || []).map((group) => [group.id, group]));
+  const edgeById = new Map(spec.edges.map((edge) => [edge.id, edge]));
+  const groupParent = new Map();
+  const nodeGroup = new Map();
+
+  for (const group of spec.groups || []) {
+    for (const childId of group.groups || []) groupParent.set(childId, group.id);
+    for (const nodeId of group.nodes || []) nodeGroup.set(nodeId, group.id);
+  }
+  for (const node of spec.nodes) {
+    if (node.group) nodeGroup.set(node.id, node.group);
+  }
+
+  function groupAncestors(groupId) {
+    const result = new Set();
+    let current = groupId;
+    while (current) {
+      result.add(current);
+      current = groupParent.get(current);
+    }
+    return result;
+  }
+
+  function groupsForNodes(nodeIds) {
+    const result = new Set();
+    for (const nodeId of nodeIds) {
+      for (const groupId of groupAncestors(nodeGroup.get(nodeId))) result.add(groupId);
+    }
+    return result;
+  }
+
+  function descendantNodes(groupId, result = new Set()) {
+    const group = groupById.get(groupId);
+    if (!group) return result;
+    for (const nodeId of group.nodes || []) result.add(nodeId);
+    for (const node of spec.nodes) {
+      if (node.group === groupId) result.add(node.id);
+    }
+    for (const childId of group.groups || []) descendantNodes(childId, result);
+    return result;
+  }
+
+  let chapterIndex = -1;
+  let playTimer = null;
+  let toastTimer = null;
+
+  function stopPlayback() {
+    if (!playTimer) return;
+    clearInterval(playTimer);
+    playTimer = null;
+    playButton.textContent = "Play";
+    playButton.setAttribute("aria-label", "Play guided chapters");
+  }
+
+  function clearDiagramState() {
+    for (const element of [...parts, ...edges]) {
+      element.classList.remove("is-dim", "is-hot", "is-hover", "is-new");
+    }
+  }
+
+  function paintChapterButtons() {
+    chapterButtons.forEach((button, index) => {
+      const active = index === chapterIndex;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  }
+
+  function renderTakeaways(items) {
+    takeawayList.replaceChildren();
+    if (!items || items.length === 0) {
+      takeaways.hidden = true;
+      return;
+    }
+    for (const item of items) {
+      const li = document.createElement("li");
+      li.textContent = item;
+      takeawayList.appendChild(li);
+    }
+    takeaways.hidden = false;
+  }
+
+  function overviewMode() {
+    chapterIndex = -1;
+    eyebrow.textContent = "Overview";
+    now.textContent = "The whole picture";
+    lede.textContent = spec.concept.definition;
+    renderTakeaways([]);
+    paintChapterButtons();
+    clearDiagramState();
+    hideTip();
+  }
+
+  function focusChapter(index) {
+    chapterIndex = (index + spec.chapters.length) % spec.chapters.length;
+    const chapter = spec.chapters[chapterIndex];
+    const focusNodes = new Set(chapter.focusNodes || []);
+    const introducedNodes = new Set(chapter.introducedNodes || []);
+    for (const id of introducedNodes) focusNodes.add(id);
+
+    const relevantGroups = groupsForNodes(focusNodes);
+    for (const id of chapter.focusGroups || []) {
+      for (const ancestor of groupAncestors(id)) relevantGroups.add(ancestor);
+    }
+
+    let focusEdges;
+    if (Array.isArray(chapter.focusEdges)) {
+      focusEdges = new Set(chapter.focusEdges);
+    } else {
+      focusEdges = new Set(
+        spec.edges
+          .filter((edge) => focusNodes.has(edge.from) && focusNodes.has(edge.to))
+          .map((edge) => edge.id)
+      );
+    }
+
+    eyebrow.textContent = `Chapter ${chapterIndex + 1} of ${spec.chapters.length}`;
+    now.textContent = chapter.title;
+    lede.textContent = chapter.explanation;
+    renderTakeaways(chapter.takeaways || []);
+    paintChapterButtons();
+
+    const hasNodeFocus = focusNodes.size > 0;
+    for (const element of nodes) {
+      const id = element.dataset.nodeId;
+      const focused = !hasNodeFocus || focusNodes.has(id);
+      element.classList.toggle("is-hot", focused && hasNodeFocus);
+      element.classList.toggle("is-dim", !focused);
+      element.classList.toggle("is-new", introducedNodes.has(id));
+      element.classList.remove("is-hover");
+    }
+
+    for (const element of groups) {
+      const focused = relevantGroups.has(element.dataset.groupId);
+      element.classList.toggle("is-hot", focused);
+      element.classList.toggle("is-dim", relevantGroups.size > 0 && !focused);
+      element.classList.remove("is-hover");
+    }
+
+    for (const element of edges) {
+      const focused = focusEdges.has(element.dataset.edgeId);
+      element.classList.toggle("is-hot", focused);
+      element.classList.toggle("is-dim", !focused);
+      element.classList.remove("is-hover");
+    }
+    hideTip();
+  }
+
+  chapterButtons.forEach((button, index) => {
+    button.addEventListener("click", () => {
+      stopPlayback();
+      focusChapter(index);
+    });
+  });
+
+  playButton.addEventListener("click", () => {
+    if (playTimer) {
+      stopPlayback();
+      return;
+    }
+    playButton.textContent = "Pause";
+    playButton.setAttribute("aria-label", "Pause guided chapters");
+    if (chapterIndex < 0) focusChapter(0);
+    playTimer = setInterval(() => focusChapter(chapterIndex + 1), 3600);
+  });
+
+  function neighboringNodes(nodeId) {
+    const result = new Set([nodeId]);
+    for (const edge of spec.edges) {
+      if (edge.from === nodeId) result.add(edge.to);
+      if (edge.to === nodeId) result.add(edge.from);
+    }
+    return result;
+  }
+
+  function showTip(element, text) {
+    if (!text) return;
+    const stage = document.querySelector(".stage").getBoundingClientRect();
+    const bounds = element.getBoundingClientRect();
+    tip.textContent = text;
+    tip.hidden = false;
+    const tipWidth = tip.offsetWidth;
+    const tipHeight = tip.offsetHeight;
+    let left = bounds.left - stage.left;
+    let top = bounds.bottom - stage.top + 8;
+    if (left + tipWidth > stage.width - 12) left = stage.width - tipWidth - 12;
+    if (left < 12) left = 12;
+    if (top + tipHeight > stage.height - 12) top = bounds.top - stage.top - tipHeight - 8;
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+  }
+
+  function hideTip() {
+    tip.hidden = true;
+  }
+
+  function hoverNode(nodeId, element) {
+    const near = neighboringNodes(nodeId);
+    for (const node of nodes) {
+      const relevant = near.has(node.dataset.nodeId);
+      node.classList.toggle("is-hover", node.dataset.nodeId === nodeId);
+      if (chapterIndex < 0) node.classList.toggle("is-dim", !relevant);
+    }
+    for (const edge of edges) {
+      const semanticEdge = edgeById.get(edge.dataset.edgeId);
+      const relevant = semanticEdge.from === nodeId || semanticEdge.to === nodeId;
+      edge.classList.toggle("is-hover", relevant);
+      if (chapterIndex < 0) edge.classList.toggle("is-dim", !relevant);
+    }
+    if (chapterIndex < 0) {
+      const relatedGroups = groupsForNodes(near);
+      for (const group of groups) {
+        group.classList.toggle("is-dim", !relatedGroups.has(group.dataset.groupId));
+      }
+    }
+    showTip(element, nodeById.get(nodeId)?.description);
+  }
+
+  function hoverGroup(groupId, element) {
+    const members = descendantNodes(groupId);
+    for (const group of groups) {
+      group.classList.toggle("is-hover", group.dataset.groupId === groupId);
+      if (chapterIndex < 0) {
+        const related = groupAncestors(groupId).has(group.dataset.groupId) ||
+          groupAncestors(group.dataset.groupId).has(groupId);
+        group.classList.toggle("is-dim", !related);
+      }
+    }
+    if (chapterIndex < 0) {
+      for (const node of nodes) node.classList.toggle("is-dim", !members.has(node.dataset.nodeId));
+      for (const edge of edges) {
+        const semanticEdge = edgeById.get(edge.dataset.edgeId);
+        edge.classList.toggle(
+          "is-dim",
+          !(members.has(semanticEdge.from) && members.has(semanticEdge.to))
+        );
+      }
+    }
+    showTip(element, groupById.get(groupId)?.description);
+  }
+
+  function clearHover() {
+    for (const element of [...parts, ...edges]) element.classList.remove("is-hover");
+    if (chapterIndex < 0) {
+      for (const element of [...parts, ...edges]) element.classList.remove("is-dim");
+    }
+    hideTip();
+  }
+
+  function chapterForNode(nodeId) {
+    return spec.chapters.findIndex((chapter) =>
+      (chapter.focusNodes || []).includes(nodeId) ||
+      (chapter.introducedNodes || []).includes(nodeId)
+    );
+  }
+
+  for (const element of nodes) {
+    const nodeId = element.dataset.nodeId;
+    element.addEventListener("pointerenter", () => hoverNode(nodeId, element));
+    element.addEventListener("pointerleave", clearHover);
+    element.addEventListener("focus", () => hoverNode(nodeId, element));
+    element.addEventListener("blur", clearHover);
+    element.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const target = chapterForNode(nodeId);
+      if (target >= 0) {
+        stopPlayback();
+        focusChapter(target);
+      }
+    });
+    element.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        element.click();
+      }
+    });
+  }
+
+  for (const element of groups) {
+    const groupId = element.dataset.groupId;
+    element.addEventListener("pointerenter", () => hoverGroup(groupId, element));
+    element.addEventListener("pointerleave", clearHover);
+    element.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const target = spec.chapters.findIndex((chapter) =>
+        (chapter.focusGroups || []).includes(groupId)
+      );
+      if (target >= 0) {
+        stopPlayback();
+        focusChapter(target);
+      }
+    });
+  }
+
+  const themeButton = document.getElementById("theme");
+  const themeMenu = document.getElementById("theme-menu");
+  const themeLabel = document.getElementById("theme-label");
+  const themeIcon = document.getElementById("theme-icon");
+  const lightButton = document.getElementById("theme-light");
+  const darkButton = document.getElementById("theme-dark");
+  const moonIcon = '<path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/>';
+  const sunIcon = '<circle cx="8" cy="8" r="3.15" fill="currentColor"/><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1.2v1.7M8 13.1v1.7M1.2 8h1.7M13.1 8h1.7"/><path d="M3.15 3.15l1.2 1.2M11.65 11.65l1.2 1.2M3.15 12.85l1.2-1.2M11.65 4.35l1.2-1.2"/></g>';
+
+  function closeThemeMenu() {
+    themeMenu.hidden = true;
+    themeButton.setAttribute("aria-expanded", "false");
+  }
+
+  function setTheme(theme) {
+    document.body.dataset.theme = theme;
+    const dark = theme === "dark";
+    themeLabel.textContent = dark ? "Dark" : "Light";
+    themeIcon.innerHTML = dark ? moonIcon : sunIcon;
+    lightButton.setAttribute("aria-checked", String(!dark));
+    darkButton.setAttribute("aria-checked", String(dark));
+    closeThemeMenu();
+  }
+
+  themeButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const opening = themeMenu.hidden;
+    themeMenu.hidden = !opening;
+    themeButton.setAttribute("aria-expanded", String(opening));
+  });
+  themeMenu.addEventListener("click", (event) => event.stopPropagation());
+  lightButton.addEventListener("click", () => setTheme("light"));
+  darkButton.addEventListener("click", () => setTheme("dark"));
+
+  const exportButton = document.getElementById("export");
+  const exportMenu = document.getElementById("export-menu");
+
+  function closeExportMenu() {
+    exportMenu.hidden = true;
+    exportButton.setAttribute("aria-expanded", "false");
+  }
+
+  exportButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const opening = exportMenu.hidden;
+    exportMenu.hidden = !opening;
+    exportButton.setAttribute("aria-expanded", String(opening));
+  });
+  exportMenu.addEventListener("click", (event) => event.stopPropagation());
+
+  document.addEventListener("click", () => {
+    closeExportMenu();
+    closeThemeMenu();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeExportMenu();
+      closeThemeMenu();
+      hideTip();
+      return;
+    }
+    if (event.target.closest("button, [role='button']")) return;
+    if (event.key === "ArrowRight") {
+      stopPlayback();
+      focusChapter(chapterIndex < 0 ? 0 : chapterIndex + 1);
+    } else if (event.key === "ArrowLeft") {
+      stopPlayback();
+      if (chapterIndex <= 0) overviewMode();
+      else focusChapter(chapterIndex - 1);
+    }
+  });
+
+  function announce(message) {
+    toast.textContent = message;
+    toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.hidden = true;
+    }, 2300);
+  }
+
+  const viewBox = diagram.viewBox.baseVal;
+  let scale = 1;
+  let translateX = 0;
+  let translateY = 0;
+  let drag = null;
+
+  function applyView() {
+    scene.setAttribute(
+      "transform",
+      `translate(${translateX.toFixed(1)},${translateY.toFixed(1)}) scale(${scale.toFixed(3)})`
+    );
+    document.getElementById("zoom-output").textContent = `${Math.round(scale * 100)}%`;
+  }
+
+  function zoom(factor) {
+    const next = Math.min(2.6, Math.max(0.6, scale * factor));
+    const centerX = viewBox.x + viewBox.width / 2;
+    const centerY = viewBox.y + viewBox.height / 2;
+    translateX = centerX - (centerX - translateX) * (next / scale);
+    translateY = centerY - (centerY - translateY) * (next / scale);
+    scale = next;
+    applyView();
+  }
+
+  document.getElementById("zoom-in").addEventListener("click", () => zoom(1.18));
+  document.getElementById("zoom-out").addEventListener("click", () => zoom(1 / 1.18));
+  document.getElementById("zoom-reset").addEventListener("click", () => {
+    scale = 1;
+    translateX = 0;
+    translateY = 0;
+    applyView();
+  });
+  diagram.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    zoom(event.deltaY < 0 ? 1.08 : 1 / 1.08);
+  }, { passive: false });
+  diagram.addEventListener("pointerdown", (event) => {
+    if (event.target.closest(".node")) return;
+    drag = {
+      x: event.clientX,
+      y: event.clientY,
+      translateX,
+      translateY
+    };
+    diagram.classList.add("is-dragging");
+    diagram.setPointerCapture(event.pointerId);
+  });
+  diagram.addEventListener("pointermove", (event) => {
+    if (!drag) return;
+    const bounds = diagram.getBoundingClientRect();
+    translateX = drag.translateX + (event.clientX - drag.x) * (viewBox.width / bounds.width);
+    translateY = drag.translateY + (event.clientY - drag.y) * (viewBox.height / bounds.height);
+    applyView();
+  });
+  function endDrag() {
+    drag = null;
+    diagram.classList.remove("is-dragging");
+  }
+  diagram.addEventListener("pointerup", endDrag);
+  diagram.addEventListener("pointercancel", endDrag);
+
+  function cloneForExport() {
+    const clone = diagram.cloneNode(true);
+    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    clone.querySelector("#scene")?.removeAttribute("transform");
+    clone.querySelectorAll(".is-dim, .is-hot, .is-hover, .is-new").forEach((element) => {
+      element.classList.remove("is-dim", "is-hot", "is-hover", "is-new");
+    });
+
+    const sourceElements = [diagram, ...diagram.querySelectorAll("*")];
+    const cloneElements = [clone, ...clone.querySelectorAll("*")];
+    const properties = [
+      "fill",
+      "stroke",
+      "stroke-width",
+      "stroke-dasharray",
+      "stroke-linecap",
+      "stroke-linejoin",
+      "opacity",
+      "font-size",
+      "font-weight",
+      "font-family",
+      "letter-spacing",
+      "text-anchor"
+    ];
+    sourceElements.forEach((source, index) => {
+      const target = cloneElements[index];
+      if (!target) return;
+      const computed = getComputedStyle(source);
+      for (const property of properties) {
+        const value = computed.getPropertyValue(property).trim();
+        if (value && value !== "normal") target.style.setProperty(property, value);
+      }
+    });
+
+    const background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    background.setAttribute("x", String(viewBox.x));
+    background.setAttribute("y", String(viewBox.y));
+    background.setAttribute("width", String(viewBox.width));
+    background.setAttribute("height", String(viewBox.height));
+    background.setAttribute(
+      "fill",
+      getComputedStyle(document.body).getPropertyValue("--panel").trim()
+    );
+    clone.insertBefore(background, clone.firstChild);
+    return clone;
+  }
+
+  function rasterize() {
+    return new Promise((resolve, reject) => {
+      const clone = cloneForExport();
+      const width = 2080;
+      const height = Math.max(720, Math.round(width * viewBox.height / viewBox.width));
+      clone.setAttribute("width", String(width));
+      clone.setAttribute("height", String(height));
+      const xml = new XMLSerializer().serializeToString(clone);
+      const url = URL.createObjectURL(new Blob([xml], { type: "image/svg+xml;charset=utf-8" }));
+      const image = new Image();
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d");
+        context.fillStyle = getComputedStyle(document.body).getPropertyValue("--panel").trim();
+        context.fillRect(0, 0, width, height);
+        context.drawImage(image, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Could not build image."));
+        }, "image/png");
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Could not render diagram."));
+      };
+      image.src = url;
+    });
+  }
+
+  function downloadBlob(blob) {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    const slug = spec.concept.shortName || spec.concept.name;
+    link.download = `${slug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}.png`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  }
+
+  document.getElementById("copy-image").addEventListener("click", async (event) => {
+    event.stopPropagation();
+    closeExportMenu();
+    const blobPromise = rasterize();
+    try {
+      if (navigator.clipboard && window.ClipboardItem) {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blobPromise })]);
+        announce("Copied image");
+        return;
+      }
+    } catch {
+      // Clipboard access can be unavailable for local files; download is the portable fallback.
+    }
+    try {
+      downloadBlob(await blobPromise);
+      announce("Clipboard unavailable — downloaded PNG instead");
+    } catch {
+      announce("Could not export image");
+    }
+  });
+
+  document.getElementById("download-image").addEventListener("click", async (event) => {
+    event.stopPropagation();
+    closeExportMenu();
+    try {
+      downloadBlob(await rasterize());
+      announce("Downloaded PNG");
+    } catch {
+      announce("Could not download image");
+    }
+  });
+
+  overviewMode();
+  applyView();
+})();
+
+</script>
+</body>
+</html>

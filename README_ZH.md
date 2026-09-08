@@ -157,22 +157,19 @@ Visualink 会先创建并校验 `VisualinkSpec`，再生成一个独立 HTML 文
 
 > 合适的解释取决于学习者是谁。Visualink 会根据你的角色，调整心智模型、术语、深度、例子和学习路径。
 
-CSM、销售、产品经理、软件工程师、解决方案架构师、管理者和初学者都可能问「Explain Kubernetes。」他们不应该得到同一张图。
+先问「Explain what LiteLLM is」，再以 Customer Success Manager 的身份问一次。你不应该得到同一张图。
 
 角色会改变 Visualink 强调什么、哪些组件成为主节点、章节如何排序、术语深入到哪一层，以及这个概念对这份工作为什么重要。它不会编造一套不同的系统。
 
-比较同一个概念的两条学习路径：
+比较同一个概念：
 
-- [给 Customer Success Manager 的 Kubernetes](https://jessiedengjie.github.io/Visualink/kubernetes-csm.html) —— 应用 → 容器 → Kubernetes；部署、扩缩、恢复。
-- [给软件工程师的 Kubernetes](https://jessiedengjie.github.io/Visualink/kubernetes-engineer.html) —— Deployment → ReplicaSet → Pods → Nodes，以及 API Server 与 Scheduler。
-
-[通用 Kubernetes 示例](https://jessiedengjie.github.io/Visualink/kubernetes-explained.html) 是未指定角色时的默认结果。
+- [LiteLLM 是什么](https://jessiedengjie.github.io/Visualink/litellm.html) —— 未指定角色：一个 OpenAI 兼容接口，可在应用里当 Python 库，也可以当 proxy。
+- [给 Customer Success Manager 的 LiteLLM](https://jessiedengjie.github.io/Visualink/litellm-csm.html) —— 把 LiteLLM 看成客户的 AI gateway：它在栈里的位置、virtual keys、花费与可靠性，以及 **Why this matters for a Customer Success Manager** 一节。
 
 不需要正式职位名称，相关背景就够了：
 
 ```text
-I work with enterprise AI customers but I'm not an engineer.
-Use Visualink to explain RAG.
+I am a Customer Success Manager. Explain what LiteLLM is.
 ```
 
 ## 你会得到什么
@@ -201,7 +198,7 @@ npm run visualink -- dev examples/rag.json
 
 默认输出到 `dist/`。生成的文件会内联公共 CSS 和运行时代码，生成后仍然可以独立打开和分享。详细格式请参阅 [VisualinkSpec 贡献者指南](docs/visualink-spec.md)和公开的 [JSON Schema](.cursor/skills/visualink/schema/visualink.schema.json)。
 
-仓库包含通用 Kubernetes、面向 CSM 的 Kubernetes、面向工程师的 Kubernetes、RAG 和 OAuth 结构化示例。根目录原有的三个 Kubernetes HTML 保持不变，作为迁移和回归参照；新渲染结果统一放在 `dist/`。
+仓库包含 Kubernetes、LiteLLM（通用版与 Customer Success 版）、RAG 和 OAuth 结构化示例。根目录原有的三个 Kubernetes HTML 保持不变，作为迁移和回归参照；新渲染结果统一放在 `dist/`。根目录的 LiteLLM HTML 是上面链接的在线 Demo。
 
 ## Visualink 的解释方式
 
@@ -269,6 +266,7 @@ Visualink/
 ├── tests/                              # 无依赖 Node 测试
 ├── docs/visualink-spec.md              # 贡献者指南
 ├── kubernetes-*.html                   # 旧版/参照 Demo
+├── litellm*.html                       # LiteLLM 角色 Demo
 ├── package.json                        # 本地 CLI 与脚本
 └── README_ZH.md                        # 中文使用引导
 ```

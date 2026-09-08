@@ -10,7 +10,7 @@
   "scripts": {
     "visualink": "node .cursor/skills/visualink/bin/visualink.mjs",
     "test": "node --test",
-    "render:examples": "node .cursor/skills/visualink/bin/visualink.mjs render examples/kubernetes.json && node .cursor/skills/visualink/bin/visualink.mjs render examples/kubernetes-csm.json && node .cursor/skills/visualink/bin/visualink.mjs render examples/kubernetes-engineer.json && node .cursor/skills/visualink/bin/visualink.mjs render examples/rag.json && node .cursor/skills/visualink/bin/visualink.mjs render examples/oauth.json",
+    "render:examples": "node .cursor/skills/visualink/bin/visualink.mjs render examples/kubernetes.json && node .cursor/skills/visualink/bin/visualink.mjs render examples/kubernetes-csm.json && node .cursor/skills/visualink/bin/visualink.mjs render examples/kubernetes-engineer.json && node .cursor/skills/visualink/bin/visualink.mjs render examples/rag.json && node .cursor/skills/visualink/bin/visualink.mjs render examples/oauth.json && node .cursor/skills/visualink/bin/visualink.mjs render examples/litellm.json && node .cursor/skills/visualink/bin/visualink.mjs render examples/litellm-csm.json",
     "check": "npm test && npm run render:examples"
   },
   "engines": {

@@ -1,0 +1,230 @@
+{
+  "version": "1.0",
+  "concept": {
+    "name": "LiteLLM",
+    "title": "LiteLLM: one interface for many language models",
+    "definition": "LiteLLM is an open-source toolkit that lets you call 100+ language-model providers through one OpenAI-compatible interface. Use it as a Python library in your app, or as a proxy so any OpenAI client can reach many backends.",
+    "problem": "Each model vendor has its own API, keys, errors, and request shape. Using several providers, or switching later, means rewriting application code and juggling separate integrations."
+  },
+  "nodes": [
+    {
+      "id": "your-app",
+      "label": "Your App",
+      "caption": "chatbot, agent, or script",
+      "type": "actor",
+      "description": "The code that needs a language model. It should speak one request shape, not a different SDK for every vendor.",
+      "layoutHint": { "rank": 0, "order": 0 }
+    },
+    {
+      "id": "python-sdk",
+      "label": "Python SDK",
+      "caption": "library in your process",
+      "type": "service",
+      "description": "A Python library you import. Your app calls one completion-style function; LiteLLM talks to the chosen provider from inside the same process.",
+      "layoutHint": { "rank": 1, "order": 0 }
+    },
+    {
+      "id": "proxy",
+      "label": "Proxy Server",
+      "caption": "shared AI gateway",
+      "type": "service",
+      "description": "A self-hosted HTTP service. Any OpenAI-compatible client points at the proxy URL. Teams use this when many apps should share routing, keys, and spend tracking.",
+      "layoutHint": { "rank": 1, "order": 1 }
+    },
+    {
+      "id": "unified-api",
+      "label": "Unified API",
+      "caption": "OpenAI format in and out",
+      "type": "process",
+      "description": "LiteLLM accepts the OpenAI request shape, translates it to the target provider, and returns a consistent OpenAI-shaped response. Switching models is a config or model-name change, not a rewrite of your client.",
+      "layoutHint": { "rank": 2, "order": 0 }
+    },
+    {
+      "id": "router",
+      "label": "Router",
+      "caption": "retry, fallback, balance",
+      "type": "process",
+      "description": "The Router can send traffic across deployments, retry failures, and fall back to another model if a provider is down or rate-limited.",
+      "layoutHint": { "rank": 3, "order": 0 }
+    },
+    {
+      "id": "spend-logs",
+      "label": "Spend and Logs",
+      "caption": "cost and traces",
+      "type": "store",
+      "importance": "supporting",
+      "description": "LiteLLM can record usage and estimated cost per call, and emit logs or traces to observability tools. The proxy also attributes spend to teams and virtual keys.",
+      "layoutHint": { "rank": 3, "order": 1 }
+    },
+    {
+      "id": "providers",
+      "label": "Model Providers",
+      "caption": "OpenAI, Anthropic, Bedrock, and more",
+      "type": "infrastructure",
+      "description": "The actual model vendors and hosted endpoints. LiteLLM keeps their different APIs behind one interface so your app does not integrate each one separately.",
+      "layoutHint": { "rank": 4, "order": 0 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "app-to-sdk",
+      "from": "your-app",
+      "to": "python-sdk",
+      "label": "imports",
+      "kind": "dependency",
+      "importance": "primary"
+    },
+    {
+      "id": "app-to-proxy",
+      "from": "your-app",
+      "to": "proxy",
+      "label": "sends request",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "sdk-to-unified",
+      "from": "python-sdk",
+      "to": "unified-api",
+      "label": "uses",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "proxy-to-unified",
+      "from": "proxy",
+      "to": "unified-api",
+      "label": "uses",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "unified-to-router",
+      "from": "unified-api",
+      "to": "router",
+      "label": "selects backend",
+      "kind": "control",
+      "importance": "primary"
+    },
+    {
+      "id": "router-to-providers",
+      "from": "router",
+      "to": "providers",
+      "label": "forwards",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "unified-to-spend",
+      "from": "unified-api",
+      "to": "spend-logs",
+      "label": "records usage",
+      "kind": "data"
+    }
+  ],
+  "groups": [
+    {
+      "id": "litellm",
+      "label": "LiteLLM — one interface for many models",
+      "description": "The SDK and the proxy both expose the same unified API. The Router and spend tracking sit behind that API.",
+      "nodes": [
+        "python-sdk",
+        "proxy",
+        "unified-api",
+        "router",
+        "spend-logs"
+      ]
+    }
+  ],
+  "chapters": [
+    {
+      "id": "the-gap",
+      "title": "Many models, many APIs",
+      "shortTitle": "The gap",
+      "explanation": "Your app needs language models from several vendors. Each vendor has its own request shape, authentication, and errors. Without a translator, every new provider is a new integration.",
+      "focusNodes": ["your-app", "providers"],
+      "introducedNodes": ["your-app", "providers"],
+      "takeaways": [
+        "Providers own the models",
+        "Their APIs are not the same",
+        "Your app should not speak all of them"
+      ]
+    },
+    {
+      "id": "one-interface",
+      "title": "One OpenAI-compatible interface",
+      "shortTitle": "One interface",
+      "explanation": "LiteLLM sits in the middle. Your app sends an OpenAI-style request. LiteLLM translates it to the chosen provider and returns a consistent OpenAI-shaped response, so switching models does not mean rewriting the client.",
+      "focusNodes": ["your-app", "unified-api", "router", "providers"],
+      "focusEdges": ["unified-to-router", "router-to-providers"],
+      "focusGroups": ["litellm"],
+      "introducedNodes": ["unified-api"],
+      "takeaways": [
+        "OpenAI-compatible means one request and response shape",
+        "Translation is LiteLLM's core job"
+      ]
+    },
+    {
+      "id": "two-ways",
+      "title": "Library or proxy",
+      "shortTitle": "Two ways",
+      "explanation": "There are two ways to use that interface. Import the Python SDK when one app wants a library. Run the Proxy Server when many apps, languages, or teams should share one OpenAI-compatible endpoint.",
+      "focusNodes": ["your-app", "python-sdk", "proxy", "unified-api"],
+      "focusEdges": ["app-to-sdk", "app-to-proxy", "sdk-to-unified", "proxy-to-unified"],
+      "focusGroups": ["litellm"],
+      "introducedNodes": ["python-sdk", "proxy"],
+      "takeaways": [
+        "The SDK lives inside one Python process",
+        "The proxy is a shared HTTP gateway",
+        "Both present the same OpenAI-style API"
+      ]
+    },
+    {
+      "id": "stay-up",
+      "title": "Route, recover, and see spend",
+      "shortTitle": "Route and recover",
+      "explanation": "The Router can retry a failed call and fall back to another model if a provider is down or rate-limited. LiteLLM can also record usage and cost. On the proxy, that spend can be attributed across apps and teams.",
+      "focusNodes": ["unified-api", "router", "spend-logs", "providers"],
+      "focusEdges": ["unified-to-router", "router-to-providers", "unified-to-spend"],
+      "focusGroups": ["litellm"],
+      "introducedNodes": ["router", "spend-logs"],
+      "takeaways": [
+        "Fallback is a reliability control",
+        "Spend logs answer what a call cost",
+        "The proxy can share that visibility across teams"
+      ]
+    }
+  ],
+  "contextCards": [
+    {
+      "id": "stack",
+      "title": "How the pieces fit",
+      "points": [
+        "Your app sends one OpenAI-style request.",
+        "The SDK or the proxy hands that request to LiteLLM's unified API.",
+        "The Router forwards the call to a model provider and LiteLLM can record the spend."
+      ]
+    },
+    {
+      "id": "neighbors",
+      "title": "What the neighbors do",
+      "points": [
+        "The Python SDK is a library one app imports. The Proxy Server is a gateway many clients call.",
+        "The Router chooses among deployments and can retry or fall back.",
+        "Model providers are the vendors that actually run the models."
+      ]
+    },
+    {
+      "id": "why",
+      "title": "Why this exists",
+      "points": [
+        "Stop writing a new client for every vendor API.",
+        "Change models without starting a new application project.",
+        "Keep working if one provider fails, and see what each call cost."
+      ]
+    }
+  ],
+  "layout": {
+    "preferredDirection": "left-to-right"
+  }
+}
