@@ -1,0 +1,297 @@
+{
+  "version": "1.0",
+  "concept": {
+    "name": "OAuth 2.0 Authorization Code Flow",
+    "shortName": "OAuth",
+    "title": "OAuth: delegated access without sharing a password",
+    "definition": "OAuth lets a user authorize one application to call another service on their behalf. The client receives a limited access token instead of the user's password.",
+    "problem": "An application needs delegated access to a user's data without collecting the user's credentials or receiving unlimited permission."
+  },
+  "audience": {
+    "role": "Product Managers",
+    "technicalLevel": "intermediate",
+    "goals": [
+      "understand the authorization journey",
+      "separate user-facing consent from backend token exchange",
+      "avoid describing OAuth as authentication"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "user",
+      "label": "User",
+      "caption": "owns the data",
+      "type": "actor",
+      "description": "The resource owner deciding whether the client application may access protected data.",
+      "layoutHint": { "rank": 0, "order": 0 }
+    },
+    {
+      "id": "client-app",
+      "label": "Client App",
+      "caption": "requests delegated access",
+      "type": "service",
+      "description": "The product asking for limited access to another service on the user's behalf.",
+      "layoutHint": { "rank": 1, "order": 0 }
+    },
+    {
+      "id": "consent",
+      "label": "Login and Consent",
+      "caption": "user-facing decision",
+      "type": "process",
+      "description": "The authorization server verifies the user and shows which permissions the client requests.",
+      "layoutHint": { "rank": 2, "order": 0 }
+    },
+    {
+      "id": "authorization-server",
+      "label": "Authorization Server",
+      "caption": "issues grants and tokens",
+      "type": "service",
+      "description": "The trusted system that runs consent, validates the client, and issues short-lived credentials.",
+      "layoutHint": { "rank": 3, "order": 0 }
+    },
+    {
+      "id": "access-token",
+      "label": "Access Token",
+      "caption": "limited delegated credential",
+      "type": "concept",
+      "description": "A time-limited credential with specific scopes. It is for API authorization and is not the user's password.",
+      "layoutHint": { "rank": 3, "order": 3 }
+    },
+    {
+      "id": "resource-server",
+      "label": "Resource Server",
+      "caption": "the protected API",
+      "type": "service",
+      "description": "The API that validates the access token and enforces its scopes before returning protected data.",
+      "layoutHint": { "rank": 4, "order": 2 }
+    },
+    {
+      "id": "protected-data",
+      "label": "Protected Data",
+      "caption": "the permitted result",
+      "type": "output",
+      "description": "Only the data and actions permitted by the access token's scopes should be available.",
+      "layoutHint": { "rank": 5, "order": 2 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "user-to-client",
+      "from": "user",
+      "to": "client-app",
+      "label": "starts connection",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "client-to-authorization",
+      "from": "client-app",
+      "to": "authorization-server",
+      "label": "redirects browser",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "authorization-to-consent",
+      "from": "authorization-server",
+      "to": "consent",
+      "label": "shows request",
+      "kind": "control",
+      "importance": "primary"
+    },
+    {
+      "id": "user-to-consent",
+      "from": "user",
+      "to": "consent",
+      "label": "approves scopes",
+      "kind": "control",
+      "importance": "primary"
+    },
+    {
+      "id": "consent-to-authorization",
+      "from": "consent",
+      "to": "authorization-server",
+      "label": "records grant",
+      "kind": "control"
+    },
+    {
+      "id": "authorization-to-client",
+      "from": "authorization-server",
+      "to": "client-app",
+      "label": "returns one-time code",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "client-to-token-exchange",
+      "from": "client-app",
+      "to": "authorization-server",
+      "label": "exchanges code",
+      "kind": "control",
+      "importance": "primary"
+    },
+    {
+      "id": "authorization-to-token",
+      "from": "authorization-server",
+      "to": "access-token",
+      "label": "issues",
+      "kind": "control",
+      "importance": "primary"
+    },
+    {
+      "id": "token-to-client",
+      "from": "access-token",
+      "to": "client-app",
+      "label": "returns securely",
+      "kind": "flow"
+    },
+    {
+      "id": "client-to-resource",
+      "from": "client-app",
+      "to": "resource-server",
+      "label": "calls with token",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "token-to-resource",
+      "from": "access-token",
+      "to": "resource-server",
+      "label": "authorizes scopes",
+      "kind": "dependency"
+    },
+    {
+      "id": "resource-to-data",
+      "from": "resource-server",
+      "to": "protected-data",
+      "label": "returns allowed data",
+      "kind": "data",
+      "importance": "primary"
+    },
+    {
+      "id": "data-to-client",
+      "from": "protected-data",
+      "to": "client-app",
+      "label": "completes request",
+      "kind": "data"
+    }
+  ],
+  "groups": [
+    {
+      "id": "authorization-boundary",
+      "label": "Authorization Boundary",
+      "description": "The trusted service where the user signs in, sees requested scopes, and grants access.",
+      "nodes": ["consent", "authorization-server"]
+    },
+    {
+      "id": "api-boundary",
+      "label": "Protected API Boundary",
+      "description": "The service that validates access tokens and applies scope checks to protected data.",
+      "nodes": ["resource-server", "protected-data"]
+    }
+  ],
+  "chapters": [
+    {
+      "id": "request-access",
+      "title": "The client requests access",
+      "shortTitle": "Request access",
+      "explanation": "The user starts a connection in the client app. The client redirects the browser to the trusted authorization server with requested scopes.",
+      "focusNodes": ["user", "client-app", "authorization-server"],
+      "focusEdges": ["user-to-client", "client-to-authorization"],
+      "focusGroups": ["authorization-boundary"],
+      "introducedNodes": ["client-app", "authorization-server"],
+      "takeaways": ["The client asks for scopes", "The authorization server owns the login surface"]
+    },
+    {
+      "id": "consent",
+      "title": "The user reviews and approves",
+      "shortTitle": "Login and consent",
+      "explanation": "The authorization server authenticates the user and presents the requested permissions. The user can approve or reject them.",
+      "focusNodes": ["user", "consent", "authorization-server"],
+      "focusEdges": ["authorization-to-consent", "user-to-consent", "consent-to-authorization"],
+      "focusGroups": ["authorization-boundary"],
+      "introducedNodes": ["consent"],
+      "takeaways": ["Consent should name the requested access", "The user's password stays with the authorization server"]
+    },
+    {
+      "id": "authorization-code",
+      "title": "A one-time code returns",
+      "shortTitle": "Return a code",
+      "explanation": "After approval, the browser returns to the client with a short-lived authorization code. The code is not the API credential.",
+      "focusNodes": ["client-app", "authorization-server"],
+      "focusEdges": ["authorization-to-client"],
+      "focusGroups": ["authorization-boundary"]
+    },
+    {
+      "id": "token-exchange",
+      "title": "The backend exchanges the code",
+      "shortTitle": "Exchange for token",
+      "explanation": "The client backend sends the code to the authorization server through a direct channel and receives a limited access token.",
+      "focusNodes": ["client-app", "authorization-server", "access-token"],
+      "focusEdges": [
+        "client-to-token-exchange",
+        "authorization-to-token",
+        "token-to-client"
+      ],
+      "focusGroups": ["authorization-boundary"],
+      "introducedNodes": ["access-token"],
+      "takeaways": ["The token exchange belongs on a trusted backend", "Access tokens need short lifetimes and narrow scopes"]
+    },
+    {
+      "id": "call-api",
+      "title": "The client calls the protected API",
+      "shortTitle": "Call the API",
+      "explanation": "The client presents the access token to the resource server. The API validates it, enforces scopes, and returns only the permitted data.",
+      "focusNodes": ["client-app", "access-token", "resource-server", "protected-data"],
+      "focusEdges": [
+        "client-to-resource",
+        "token-to-resource",
+        "resource-to-data",
+        "data-to-client"
+      ],
+      "focusGroups": ["api-boundary"],
+      "introducedNodes": ["resource-server", "protected-data"]
+    }
+  ],
+  "roleRelevance": {
+    "title": "Why this matters for a Product Manager",
+    "points": [
+      "Design requested scopes as a product trust decision, not only an engineering setting.",
+      "Make the redirect and consent journey understandable before asking the user to approve.",
+      "Treat reconnect, expiry, revocation, and denied consent as explicit product states.",
+      "Use OpenID Connect when the product also needs a standardized sign-in identity layer."
+    ]
+  },
+  "contextCards": [
+    {
+      "id": "not-authentication",
+      "title": "Authorization, not identity",
+      "points": [
+        "OAuth answers what a client may access.",
+        "OAuth alone does not standardize who signed in.",
+        "OpenID Connect adds identity claims on top of OAuth."
+      ]
+    },
+    {
+      "id": "token-safety",
+      "title": "Token safety",
+      "points": [
+        "Use short-lived, narrowly scoped access tokens.",
+        "Keep backend exchanges out of browser-visible secrets.",
+        "Support revocation and clear reconnection flows."
+      ]
+    },
+    {
+      "id": "user-experience",
+      "title": "User experience states",
+      "points": [
+        "Explain why each permission is needed.",
+        "Handle rejected consent without a dead end.",
+        "Show when access expires or must be reauthorized."
+      ]
+    }
+  ],
+  "layout": {
+    "preferredDirection": "left-to-right"
+  }
+}

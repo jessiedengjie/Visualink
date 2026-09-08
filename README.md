@@ -6,7 +6,7 @@
 
 **Turn difficult technical concepts into interactive maps you can actually understand.**
 
-Visualink is an Agent Skill for anyone learning an unfamiliar technical concept. Ask in your own words and get a direct answer, a complete visual map, and the related concepts you may not have known to ask about—especially useful when you do not have a technical background.
+Visualink is an Agent Skill and structured renderer for anyone learning an unfamiliar technical concept. Ask in your own words and get a direct answer, a complete visual map, and the related concepts you may not have known to ask about. When you say who you are, Visualink adapts the explanation to that role.
 
 ![Agent Skill](https://img.shields.io/badge/Agent-Skill-7C3AED?style=flat-square)
 ![Output](https://img.shields.io/badge/output-single_HTML-0891B2?style=flat-square)
@@ -17,6 +17,8 @@ Visualink is an Agent Skill for anyone learning an unfamiliar technical concept.
 
 <p align="center">
   <a href="https://jessiedengjie.github.io/Visualink/kubernetes-explained.html"><strong>Try the live demo →</strong></a>
+  ·
+  <a href="#explain-it-for-my-role">Same concept, different roles</a>
   ·
   <a href="#quick-start">Install Visualink</a>
   ·
@@ -60,15 +62,36 @@ Same question. Now the answer, the whole system, and the path through it are vis
 
 Kubernetes is only the demonstration. Ask about networking, AI systems, developer tools, or another concept with components and a flow, and you should get the same kind of map.
 
+The right explanation also depends on **who is learning**. Visualink adapts the mental model, terminology, depth, examples, and learning path to your role.
+
 That is the difference Visualink is built for:
 
 - **Answer first** — understand the core idea in one or two sentences.
 - **See the whole system** — begin with the complete map, not an isolated fragment.
 - **Learn top-down** — move through guided chapters only when you are ready.
 - **Discover the missing questions** — understand the components, dependencies, boundaries, and flows you did not yet know to ask about.
+- **Explain it for your role** — the same concept becomes a different map for a CSM, an engineer, a PM, or an executive.
 - **Keep the mental model** — copy or download the diagram as an image.
 
 ![How Visualink turns a question into understanding](docs/assets/visualink-flow.svg)
+
+## How it works
+
+Visualink separates explanation from presentation:
+
+```text
+User request
+↓
+Agent reasons about the concept and audience
+↓
+VisualinkSpec 1.0 (semantic JSON)
+↓
+Validation + automatic layered layout + shared renderer
+↓
+Standalone interactive HTML
+```
+
+The spec contains concepts, semantic nodes and edges, boundaries, chapters, and audience relevance—not pixel coordinates, CSS, SVG paths, or JavaScript. One dependency-free renderer owns nested compound layout and interaction, so explainers stay consistent while their mental models remain concept- and role-specific.
 
 ## Quick start
 
@@ -95,7 +118,7 @@ Clone or download this repository, then copy the Skill into your agent's persona
 # Replace this with one of the directories listed above.
 SKILL_DIR="$HOME/.cursor/skills/visualink"
 mkdir -p "$SKILL_DIR"
-cp .cursor/skills/visualink/SKILL.md "$SKILL_DIR/SKILL.md"
+cp -R .cursor/skills/visualink/. "$SKILL_DIR/"
 ```
 
 For project-only use, copy the Skill into `.cursor/skills/visualink/`, `.claude/skills/visualink/`, or `.agents/skills/visualink/`.
@@ -108,33 +131,77 @@ For project-only use, copy the Skill into `.cursor/skills/visualink/`, `.claude/
 
 ```text
 Use Visualink to explain [a technical concept] to me.
-Assume I do not have a technical background.
 ```
 
-You can also be more specific:
+If you do not name a role, Visualink uses a general technical-learner default.
+
+You can also say who you are:
 
 ```text
-I keep hearing the term [technical term] at work, but I do not understand it.
-Use Visualink to show me what it means, how it works, what it connects to,
-and why it matters in my role.
+Explain Kubernetes for a Customer Success Manager.
+```
+
+```text
+I'm a product manager. Help me understand OAuth.
+```
+
+```text
+Explain RAG to me as a solutions architect.
 ```
 
 ### 3. Open the result
 
-Visualink creates one portable HTML file and opens it in your browser. No framework, build step, or design knowledge is required.
+Visualink creates a `VisualinkSpec`, validates it, renders one portable HTML file, and opens it in your browser. No frontend framework, backend service, or design knowledge is required to view the result.
+
+## Explain it for my role
+
+> The right explanation depends on who is learning. Visualink adapts the mental model, terminology, depth, examples, and learning path to your role.
+
+A CSM, salesperson, PM, software engineer, solutions architect, executive, and beginner may all ask "Explain Kubernetes." They should not get the same map.
+
+The role changes what Visualink emphasizes, which components become primary nodes, how chapters are ordered, how deep the terminology goes, and why the concept matters in that work. It does not invent a different system.
+
+Compare the same concept for two audiences:
+
+- [Kubernetes for a Customer Success Manager](https://jessiedengjie.github.io/Visualink/kubernetes-csm.html) — application → container → Kubernetes; deploy, scale, recover.
+- [Kubernetes for a software engineer](https://jessiedengjie.github.io/Visualink/kubernetes-engineer.html) — Deployment → ReplicaSet → Pods → Nodes, with the API Server and Scheduler.
+
+The [general Kubernetes example](https://jessiedengjie.github.io/Visualink/kubernetes-explained.html) is what you get when no role is specified.
+
+Informal context is enough. You do not have to use a job title:
+
+```text
+I work with enterprise AI customers but I'm not an engineer.
+Use Visualink to explain RAG.
+```
 
 ## What you get
 
 Every explainer is designed around the same learning flow:
 
-1. A direct definition of the concept
-2. The complete system map
-3. Numbered chapters that reveal the system step by step
+1. A direct definition of the concept, in language that fits the audience
+2. The complete system map for that audience — not one generic diagram with different captions
+3. Numbered chapters that reveal the system from that learner's starting point
 4. Labeled connections that explain what moves where
-5. Short cards covering structure, neighboring concepts, and purpose
-6. Hover explanations, zoom, pan, and guided playback
-7. Light and Dark themes
-8. Copy image and Download PNG
+5. When a role is given, a "Why this matters for [role]" section
+6. Short cards covering structure, neighboring concepts, and purpose
+7. Hover explanations, zoom, pan, and guided playback
+8. Light and Dark themes
+9. Copy image and Download PNG
+
+## Structured renderer workflow
+
+Contributors can validate, render, and preview specs directly:
+
+```bash
+npm run visualink -- validate examples/rag.json
+npm run visualink -- render examples/rag.json
+npm run visualink -- dev examples/rag.json
+```
+
+Rendered files are written to `dist/` by default. They inline the shared CSS and runtime and remain fully portable after generation. See the [VisualinkSpec contributor guide](docs/visualink-spec.md) and the public [JSON Schema](.cursor/skills/visualink/schema/visualink.schema.json).
+
+The repository includes structured examples for general Kubernetes, Kubernetes for CSMs, Kubernetes for engineers, RAG, and OAuth. The three existing root Kubernetes HTML files remain unchanged as migration and regression references; new renderer output lives under `dist/`.
 
 ## The Visualink approach
 
@@ -191,20 +258,29 @@ Browser-based verification and image export testing depend on the tools availabl
 
 ```text
 Visualink/
-├── .cursor/skills/visualink/SKILL.md   # The reusable Agent Skill
-├── docs/assets/                        # GitHub onboarding visuals
-├── kubernetes-explained.html           # Interactive example
-├── LICENSE                             # MIT License
-├── README.md                           # English onboarding
+├── .cursor/skills/visualink/
+│   ├── SKILL.md                        # Spec-first Agent Skill
+│   ├── schema/visualink.schema.json    # VisualinkSpec 1.0 contract
+│   ├── lib/                            # Validation, layout, and rendering
+│   ├── renderer/                       # Shared styles and browser runtime
+│   └── bin/visualink.mjs               # validate, render, and dev CLI
+├── examples/                           # Semantic VisualinkSpec sources
+├── dist/                               # Generated standalone HTML
+├── tests/                              # Dependency-free Node tests
+├── docs/visualink-spec.md              # Contributor guide
+├── kubernetes-*.html                   # Legacy/reference demos
+├── package.json                        # Local CLI and scripts
 └── README_ZH.md                        # Chinese onboarding
 ```
 
 ## Design principles
 
 - Start from the learner, not the system vocabulary.
+- Adapt the map to the learner's role; do not reuse one generic architecture.
 - Show only the components needed to understand the question.
 - Use visual hierarchy to reduce cognitive load.
 - Make every important connection directional and named.
+- Keep semantic reasoning in the spec and presentation behavior in the renderer.
 - Prefer one self-contained file that is easy to open and share.
 - Verify the experience in the browser instead of trusting source code alone.
 

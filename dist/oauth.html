@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="generator" content="Visualink renderer 1.0"/>
+<title>OAuth: delegated access without sharing a password</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f3f7fc;
+  --panel: #ffffff;
+  --panel-2: #edf4fb;
+  --ink: #101828;
+  --ink-2: #475467;
+  --muted: #66758a;
+  --hair: #cbd8e8;
+  --hair-2: #8fa4bd;
+  --external: #d15f32;
+  --service: #008e87;
+  --model: #2b7fd3;
+  --store: #9b4cad;
+  --infra: #2d9b59;
+  --concept: #b7791f;
+  --focus: #d08b1e;
+  --edge-flow: #008e87;
+  --edge-control: #9b4cad;
+  --edge-data: #2d9b59;
+  --edge-dependency: #d15f32;
+  --edge-relationship: #718096;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+}
+
+body[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b0f14;
+  --panel: #131922;
+  --panel-2: #18212c;
+  --ink: #f8fafc;
+  --ink-2: #d3dbe6;
+  --muted: #a8b4c3;
+  --hair: #354153;
+  --hair-2: #607086;
+  --external: #f09a70;
+  --service: #64d2c8;
+  --model: #77b9ff;
+  --store: #d3a7df;
+  --infra: #83d39f;
+  --concept: #f2c66d;
+  --focus: #f2c66d;
+  --edge-flow: #64d2c8;
+  --edge-control: #d3a7df;
+  --edge-data: #83d39f;
+  --edge-dependency: #f09a70;
+  --edge-relationship: #91a0b4;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 20px 26px 24px;
+  display: grid;
+  grid-template-rows: auto auto minmax(410px, 1fr) auto;
+  gap: 14px;
+}
+
+.bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.title {
+  min-width: 0;
+}
+
+h1 {
+  max-width: 48rem;
+  font-size: clamp(24px, 3vw, 31px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.13;
+}
+
+.audience {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.lede {
+  max-width: 54rem;
+  margin-top: 8px;
+  color: var(--ink-2);
+  font-size: 14.5px;
+  line-height: 1.52;
+}
+
+.tools {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tool-button,
+.theme-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 15px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.tool-button:hover,
+.theme-trigger:hover,
+.tool-button:focus-visible,
+.theme-trigger:focus-visible {
+  border-color: var(--hair-2);
+  color: var(--ink);
+  outline: 2px solid color-mix(in srgb, var(--focus) 48%, transparent);
+  outline-offset: 2px;
+}
+
+.theme-icon,
+.chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.chevron {
+  width: 10px;
+  height: 10px;
+  transition: transform 160ms ease;
+}
+
+[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+.drop {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 172px;
+  padding: 4px;
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: 0 14px 34px rgba(4, 10, 20, 0.22);
+}
+
+.menu[hidden] {
+  display: none;
+}
+
+.menu button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.menu button:hover,
+.menu button:focus-visible,
+.menu button[aria-checked="true"] {
+  background: var(--panel-2);
+  outline: none;
+}
+
+.strip {
+  display: grid;
+  grid-template-columns: 235px 1fr;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 16px;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.strip-meta {
+  padding-right: 16px;
+  border-right: 1px solid var(--hair);
+}
+
+.eyebrow {
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.now {
+  margin-top: 5px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 550;
+  line-height: 1.1;
+  text-align: left;
+}
+
+.chip b {
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+}
+
+.chip:hover,
+.chip:focus-visible {
+  border-color: var(--hair-2);
+  background: var(--panel-2);
+  color: var(--ink);
+  outline: none;
+}
+
+.chip.is-active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--panel);
+}
+
+.chip.is-active b {
+  color: var(--focus);
+}
+
+.takeaways {
+  grid-column: 1 / -1;
+  padding-top: 10px;
+  border-top: 1px solid var(--hair);
+}
+
+.takeaways[hidden] {
+  display: none;
+}
+
+.takeaways ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 6px;
+  list-style: none;
+}
+
+.takeaways li {
+  position: relative;
+  padding-left: 11px;
+  color: var(--ink-2);
+  font-size: 11.5px;
+}
+
+.takeaways li::before {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--focus);
+  content: "";
+}
+
+.stage {
+  position: relative;
+  min-height: 410px;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+#diagram {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 390px;
+  cursor: grab;
+  touch-action: none;
+}
+
+#diagram.is-dragging {
+  cursor: grabbing;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 9px 16px;
+  border-top: 1px solid var(--hair);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 18px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink-2);
+  font-size: 11px;
+}
+
+.legend-swatch {
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--swatch);
+}
+
+.zoom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.zoom button {
+  width: 27px;
+  height: 25px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.zoom button:hover,
+.zoom button:focus-visible {
+  border-color: var(--hair-2);
+  background: var(--panel-2);
+  color: var(--ink);
+  outline: none;
+}
+
+.zoom-output {
+  min-width: 44px;
+  color: var(--muted);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.group,
+.node,
+.edge {
+  transition: opacity 240ms ease;
+}
+
+.group-boundary {
+  fill: color-mix(in srgb, var(--panel-2) 64%, transparent);
+  stroke: var(--hair-2);
+  stroke-width: 1.4;
+  stroke-dasharray: 7 5;
+}
+
+.group[data-family="external"] .group-boundary { stroke: var(--external); }
+.group[data-family="service"] .group-boundary { stroke: var(--service); }
+.group[data-family="model"] .group-boundary { stroke: var(--model); }
+.group[data-family="store"] .group-boundary { stroke: var(--store); }
+.group[data-family="infra"] .group-boundary { stroke: var(--infra); }
+.group[data-family="concept"] .group-boundary { stroke: var(--concept); }
+.group[data-depth="0"] .group-boundary {
+  fill: color-mix(in srgb, var(--panel-2) 78%, transparent);
+}
+
+.group[data-depth="1"] .group-boundary,
+.group[data-depth="2"] .group-boundary {
+  fill: color-mix(in srgb, var(--panel-2) 34%, transparent);
+}
+
+.group-label {
+  fill: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.group[data-family="external"] .group-label { fill: var(--external); }
+.group[data-family="service"] .group-label { fill: var(--service); }
+.group[data-family="model"] .group-label { fill: var(--model); }
+.group[data-family="store"] .group-label { fill: var(--store); }
+.group[data-family="infra"] .group-label { fill: var(--infra); }
+.group[data-family="concept"] .group-label { fill: var(--concept); }
+
+.group,
+.node {
+  cursor: pointer;
+}
+
+.node-bg {
+  fill: var(--panel);
+  stroke: var(--node-color, var(--hair-2));
+  stroke-width: 1.25;
+}
+
+.node-stripe {
+  fill: var(--node-color, var(--hair-2));
+}
+
+.node-label {
+  fill: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.node-caption {
+  fill: var(--muted);
+  font-size: 10.5px;
+}
+
+.node[data-type="actor"],
+.node[data-type="input"],
+.node[data-type="output"] {
+  --node-color: var(--external);
+}
+
+.node[data-type="process"],
+.node[data-type="service"] {
+  --node-color: var(--service);
+}
+
+.node[data-type="model"] {
+  --node-color: var(--model);
+}
+
+.node[data-type="store"] {
+  --node-color: var(--store);
+}
+
+.node[data-type="infrastructure"],
+.node[data-type="boundary"] {
+  --node-color: var(--infra);
+}
+
+.node[data-type="concept"] {
+  --node-color: var(--concept);
+}
+
+.edge-path {
+  fill: none;
+  stroke: var(--edge-color, var(--edge-relationship));
+  stroke-width: 1.45;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.edge[data-kind="flow"] {
+  --edge-color: var(--edge-flow);
+}
+
+.edge[data-kind="control"] {
+  --edge-color: var(--edge-control);
+}
+
+.edge[data-kind="data"] {
+  --edge-color: var(--edge-data);
+}
+
+.edge[data-kind="dependency"] {
+  --edge-color: var(--edge-dependency);
+}
+
+.edge[data-importance="primary"] .edge-path {
+  stroke-width: 2.3;
+}
+
+.edge-label-bg {
+  fill: var(--panel);
+  stroke: var(--hair);
+  stroke-width: 0.8;
+}
+
+.edge-label {
+  fill: var(--edge-color, var(--muted));
+  font-size: 9.5px;
+  font-weight: 650;
+}
+
+.is-dim {
+  opacity: 0.38;
+}
+
+.group.is-dim {
+  opacity: 0.45;
+}
+
+.node.is-hot .node-bg,
+.node.is-hover .node-bg,
+.node:focus-visible .node-bg {
+  stroke-width: 2.4;
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--node-color) 35%, transparent));
+}
+
+.group.is-hot .group-boundary,
+.group.is-hover .group-boundary {
+  stroke: var(--focus);
+  stroke-width: 2;
+}
+
+.edge.is-hot .edge-path,
+.edge.is-hover .edge-path {
+  stroke-width: 2.7;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--edge-color) 32%, transparent));
+}
+
+.node.is-new .node-bg {
+  stroke-width: 3;
+  stroke-dasharray: 5 3;
+}
+
+.node:focus-visible {
+  outline: none;
+}
+
+.tip {
+  position: absolute;
+  z-index: 10;
+  max-width: 280px;
+  padding: 8px 10px;
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  background: var(--ink);
+  box-shadow: 0 9px 26px rgba(0, 0, 0, 0.28);
+  color: var(--panel);
+  font-size: 12px;
+  line-height: 1.42;
+  pointer-events: none;
+}
+
+.tip[hidden],
+.toast[hidden] {
+  display: none;
+}
+
+.below {
+  display: grid;
+  gap: 14px;
+}
+
+.role-relevance {
+  padding: 14px 16px 16px;
+  border: 1px solid var(--hair);
+  border-left: 3px solid var(--focus);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.role-relevance h2,
+.card h2 {
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.role-relevance ul {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 28px;
+  margin-top: 10px;
+  list-style: none;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.card {
+  padding: 13px 16px 15px;
+  border: 1px solid var(--hair);
+  border-top: 2px solid var(--card-accent, var(--hair-2));
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.role-relevance li,
+.card li {
+  position: relative;
+  padding-left: 12px;
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.role-relevance li::before,
+.card li::before {
+  position: absolute;
+  top: 7px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--focus);
+  content: "";
+}
+
+.card ul {
+  display: grid;
+  gap: 7px;
+  margin-top: 9px;
+  list-style: none;
+}
+
+.card:nth-child(4n + 1) {
+  --card-accent: var(--external);
+}
+
+.card:nth-child(4n + 2) {
+  --card-accent: var(--store);
+}
+
+.card:nth-child(4n + 3) {
+  --card-accent: var(--service);
+}
+
+.card:nth-child(4n) {
+  --card-accent: var(--infra);
+}
+
+.toast {
+  position: fixed;
+  z-index: 40;
+  bottom: 22px;
+  left: 50%;
+  padding: 9px 14px;
+  transform: translateX(-50%);
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--panel);
+  font-size: 12.5px;
+  pointer-events: none;
+}
+
+body[data-theme="dark"] .node-bg {
+  fill: #151c25;
+}
+
+body[data-theme="dark"] .node-label {
+  fill: #ffffff;
+}
+
+body[data-theme="dark"] .node-caption {
+  fill: #b7c2d0;
+}
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-rows: auto auto minmax(440px, auto) auto;
+    padding: 16px;
+  }
+
+  .bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tools {
+    flex-wrap: wrap;
+  }
+
+  .strip {
+    grid-template-columns: 1fr;
+  }
+
+  .strip-meta {
+    padding: 0 0 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--hair);
+  }
+
+  .cards,
+  .role-relevance ul {
+    grid-template-columns: 1fr;
+  }
+
+  .foot {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #diagram {
+    min-height: 420px;
+  }
+}
+
+@media (max-width: 520px) {
+  .app {
+    padding: 12px;
+  }
+
+  .chips {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .chip {
+    width: 100%;
+  }
+
+  .legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+</style>
+</head>
+<body data-theme="dark">
+<main class="app">
+  <header class="bar">
+    <div class="title">
+      <h1>OAuth: delegated access without sharing a password</h1>
+      <p class="audience">For Product Managers</p>
+      <p class="lede" id="lede">OAuth lets a user authorize one application to call another service on their behalf. The client receives a limited access token instead of the user&#39;s password.</p>
+    </div>
+    <div class="tools">
+    <button class="tool-button" id="play" type="button" aria-label="Play guided chapters">Play</button>
+    <div class="drop">
+      <button class="tool-button" id="export" type="button" aria-haspopup="menu" aria-expanded="false">Export</button>
+      <div class="menu" id="export-menu" role="menu" hidden>
+        <button type="button" id="copy-image" role="menuitem">Copy image</button>
+        <button type="button" id="download-image" role="menuitem">Download PNG</button>
+      </div>
+    </div>
+    <div class="drop">
+      <button class="theme-trigger" id="theme" type="button" aria-haspopup="menu" aria-expanded="false">
+        <svg class="theme-icon" id="theme-icon" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/></svg>
+        <span id="theme-label">Dark</span>
+        <svg class="chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="menu" id="theme-menu" role="menu" hidden>
+        <button type="button" id="theme-light" role="menuitemradio" aria-checked="false">
+          <svg class="theme-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3.15" fill="currentColor"/><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1.2v1.7M8 13.1v1.7M1.2 8h1.7M13.1 8h1.7"/><path d="M3.15 3.15l1.2 1.2M11.65 11.65l1.2 1.2M3.15 12.85l1.2-1.2M11.65 4.35l1.2-1.2"/></g></svg>
+          Light
+        </button>
+        <button type="button" id="theme-dark" role="menuitemradio" aria-checked="true">
+          <svg class="theme-icon" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/></svg>
+          Dark
+        </button>
+      </div>
+    </div>
+  </div>
+  </header>
+  <section class="strip" aria-label="Guided chapters">
+    <div class="strip-meta">
+      <div class="eyebrow" id="eyebrow">Overview</div>
+      <div class="now" id="now">The whole picture</div>
+    </div>
+    <div class="chips"><button class="chip" type="button" data-chapter-index="0" aria-pressed="false"><b>01</b><span>Request access</span></button>
+      <button class="chip" type="button" data-chapter-index="1" aria-pressed="false"><b>02</b><span>Login and consent</span></button>
+      <button class="chip" type="button" data-chapter-index="2" aria-pressed="false"><b>03</b><span>Return a code</span></button>
+      <button class="chip" type="button" data-chapter-index="3" aria-pressed="false"><b>04</b><span>Exchange for token</span></button>
+      <button class="chip" type="button" data-chapter-index="4" aria-pressed="false"><b>05</b><span>Call the API</span></button></div>
+    <div class="takeaways" id="takeaways" hidden>
+      <div class="eyebrow">Takeaways</div>
+      <ul id="takeaway-list"></ul>
+    </div>
+  </section>
+  <section class="stage" aria-label="Interactive system map">
+    <svg id="diagram" viewBox="0 0 1189 474" preserveAspectRatio="xMidYMid meet" role="img" aria-label="OAuth 2.0 Authorization Code Flow system map for Product Managers">
+    <defs>
+    <marker id="arrow-flow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-control" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-data" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-dependency" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-relationship" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+  </defs>
+    <g id="scene">
+      <g class="group" data-group-id="api-boundary" data-depth="0" data-family="service">
+        <rect class="group-boundary" x="309.2" y="290" width="490.4" height="136" rx="12"/>
+        <text class="group-label" x="322.2" y="309">Protected API Boundary</text>
+      </g>
+      <g class="group" data-group-id="authorization-boundary" data-depth="0" data-family="service">
+        <rect class="group-boundary" x="284" y="134" width="540.8" height="136" rx="12"/>
+        <text class="group-label" x="297" y="153">Authorization Boundary</text>
+      </g>
+      <g class="edge" data-edge-id="user-to-client" data-from="user" data-to="client-app" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M192,237 L309.2,237 L309.2,81 L442.4,81" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="252.9" y="148" width="112.6" height="17" rx="5"/>
+        <text class="edge-label" x="309.2" y="160" text-anchor="middle">starts connection</text>
+      </g>
+      <g class="edge" data-edge-id="client-to-authorization" data-from="client-app" data-to="authorization-server" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M666.4,81 L626.2,81 L626.2,215 L586,215" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="569.9" y="137" width="112.6" height="17" rx="5"/>
+        <text class="edge-label" x="626.2" y="149" text-anchor="middle">redirects browser</text>
+      </g>
+      <g class="edge" data-edge-id="authorization-to-consent" data-from="authorization-server" data-to="consent" data-kind="control" data-importance="primary">
+        <path class="edge-path" d="M586,215 L494,215" marker-end="url(#arrow-control)"/>
+        <rect class="edge-label-bg" x="495.3" y="204" width="89.4" height="17" rx="5"/>
+        <text class="edge-label" x="540" y="216" text-anchor="middle">shows request</text>
+      </g>
+      <g class="edge" data-edge-id="user-to-consent" data-from="user" data-to="consent" data-kind="control" data-importance="primary">
+        <path class="edge-path" d="M192,237 L241,237 L241,215 L306,215" marker-end="url(#arrow-control)"/>
+        <rect class="edge-label-bg" x="223" y="204" width="101" height="17" rx="5"/>
+        <text class="edge-label" x="273.5" y="216" text-anchor="middle">approves scopes</text>
+      </g>
+      <g class="edge" data-edge-id="consent-to-authorization" data-from="consent" data-to="authorization-server" data-kind="control" data-importance="supporting">
+        <path class="edge-path" d="M494,215 L586,215" marker-end="url(#arrow-control)"/>
+        <rect class="edge-label-bg" x="495.3" y="204" width="89.4" height="17" rx="5"/>
+        <text class="edge-label" x="540" y="216" text-anchor="middle">records grant</text>
+      </g>
+      <g class="edge" data-edge-id="authorization-to-client" data-from="authorization-server" data-to="client-app" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M586,215 L514,215 L514,81 L666.4,81" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="522.3" y="70" width="135.8" height="17" rx="5"/>
+        <text class="edge-label" x="590.2" y="82" text-anchor="middle">returns one-time code</text>
+      </g>
+      <g class="edge" data-edge-id="client-to-token-exchange" data-from="client-app" data-to="authorization-server" data-kind="control" data-importance="primary">
+        <path class="edge-path" d="M666.4,81 L618.2,81 L618.2,215 L586,215" marker-end="url(#arrow-control)"/>
+        <rect class="edge-label-bg" x="570.6" y="137" width="95.2" height="17" rx="5"/>
+        <text class="edge-label" x="618.2" y="149" text-anchor="middle">exchanges code</text>
+      </g>
+      <g class="edge" data-edge-id="authorization-to-token" data-from="authorization-server" data-to="access-token" data-kind="control" data-importance="primary">
+        <path class="edge-path" d="M802.8,215 L859.8,215 L859.8,237 L916.8,237" marker-end="url(#arrow-control)"/>
+        <rect class="edge-label-bg" x="806.9" y="204" width="48.8" height="17" rx="5"/>
+        <text class="edge-label" x="831.3" y="216" text-anchor="middle">issues</text>
+      </g>
+      <g class="edge" data-edge-id="token-to-client" data-from="access-token" data-to="client-app" data-kind="flow" data-importance="supporting">
+        <path class="edge-path" d="M916.8,237 L594.4,237 L594.4,81 L666.4,81" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="702.2" y="226" width="106.8" height="17" rx="5"/>
+        <text class="edge-label" x="755.6" y="238" text-anchor="middle">returns securely</text>
+      </g>
+      <g class="edge" data-edge-id="client-to-resource" data-from="client-app" data-to="resource-server" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M442.4,81 L394.4,81 L394.4,371 L497.6,371" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="341" y="215" width="106.8" height="17" rx="5"/>
+        <text class="edge-label" x="394.4" y="227" text-anchor="middle">calls with token</text>
+      </g>
+      <g class="edge" data-edge-id="token-to-resource" data-from="access-token" data-to="resource-server" data-kind="dependency" data-importance="supporting">
+        <path class="edge-path" d="M916.8,237 L437.6,237 L437.6,371 L497.6,371" marker-end="url(#arrow-dependency)"/>
+        <rect class="edge-label-bg" x="620.9" y="226" width="112.6" height="17" rx="5"/>
+        <text class="edge-label" x="677.2" y="238" text-anchor="middle">authorizes scopes</text>
+      </g>
+      <g class="edge" data-edge-id="resource-to-data" data-from="resource-server" data-to="protected-data" data-kind="data" data-importance="primary">
+        <path class="edge-path" d="M497.6,371 L589.6,371" marker-end="url(#arrow-data)"/>
+        <rect class="edge-label-bg" x="478.6" y="360" width="130" height="17" rx="5"/>
+        <text class="edge-label" x="543.6" y="372" text-anchor="middle">returns allowed data</text>
+      </g>
+      <g class="edge" data-edge-id="data-to-client" data-from="protected-data" data-to="client-app" data-kind="data" data-importance="supporting">
+        <path class="edge-path" d="M589.6,371 L541.6,371 L541.6,81 L666.4,81" marker-end="url(#arrow-data)"/>
+        <rect class="edge-label-bg" x="485.3" y="215" width="112.6" height="17" rx="5"/>
+        <text class="edge-label" x="541.6" y="227" text-anchor="middle">completes request</text>
+      </g>
+      <g class="node" data-node-id="user" data-type="actor" data-importance="primary" role="button" tabindex="0" aria-label="User: The resource owner deciding whether the client application may access protected data.">
+        <rect class="node-bg" x="48" y="204" width="144" height="66" rx="8"/>
+        <rect class="node-stripe" x="48" y="204" width="4" height="66" rx="2"/>
+        <text class="node-label" x="66" y="231">User</text>
+        <text class="node-caption" x="66" y="251">owns the data</text>
+      </g>
+      <g class="node" data-node-id="client-app" data-type="service" data-importance="primary" role="button" tabindex="0" aria-label="Client App: The product asking for limited access to another service on the user&#39;s behalf.">
+        <rect class="node-bg" x="442.4" y="48" width="224" height="66" rx="8"/>
+        <rect class="node-stripe" x="442.4" y="48" width="4" height="66" rx="2"/>
+        <text class="node-label" x="460.4" y="75">Client App</text>
+        <text class="node-caption" x="460.4" y="95">requests delegated access</text>
+      </g>
+      <g class="node" data-node-id="consent" data-type="process" data-importance="primary" role="button" tabindex="0" aria-label="Login and Consent: The authorization server verifies the user and shows which permissions the client requests.">
+        <rect class="node-bg" x="306" y="182" width="188" height="66" rx="8"/>
+        <rect class="node-stripe" x="306" y="182" width="4" height="66" rx="2"/>
+        <text class="node-label" x="324" y="209">Login and Consent</text>
+        <text class="node-caption" x="324" y="229">user-facing decision</text>
+      </g>
+      <g class="node" data-node-id="authorization-server" data-type="service" data-importance="primary" role="button" tabindex="0" aria-label="Authorization Server: The trusted system that runs consent, validates the client, and issues short-lived credentials.">
+        <rect class="node-bg" x="586" y="182" width="216.8" height="66" rx="8"/>
+        <rect class="node-stripe" x="586" y="182" width="4" height="66" rx="2"/>
+        <text class="node-label" x="604" y="209">Authorization Server</text>
+        <text class="node-caption" x="604" y="229">issues grants and tokens</text>
+      </g>
+      <g class="node" data-node-id="access-token" data-type="concept" data-importance="primary" role="button" tabindex="0" aria-label="Access Token: A time-limited credential with specific scopes. It is for API authorization and is not the user&#39;s password.">
+        <rect class="node-bg" x="916.8" y="204" width="224" height="66" rx="8"/>
+        <rect class="node-stripe" x="916.8" y="204" width="4" height="66" rx="2"/>
+        <text class="node-label" x="934.8" y="231">Access Token</text>
+        <text class="node-caption" x="934.8" y="251">limited delegated credential</text>
+      </g>
+      <g class="node" data-node-id="resource-server" data-type="service" data-importance="primary" role="button" tabindex="0" aria-label="Resource Server: The API that validates the access token and enforces its scopes before returning protected data.">
+        <rect class="node-bg" x="331.2" y="338" width="166.4" height="66" rx="8"/>
+        <rect class="node-stripe" x="331.2" y="338" width="4" height="66" rx="2"/>
+        <text class="node-label" x="349.2" y="365">Resource Server</text>
+        <text class="node-caption" x="349.2" y="385">the protected API</text>
+      </g>
+      <g class="node" data-node-id="protected-data" data-type="output" data-importance="primary" role="button" tabindex="0" aria-label="Protected Data: Only the data and actions permitted by the access token&#39;s scopes should be available.">
+        <rect class="node-bg" x="589.6" y="338" width="188" height="66" rx="8"/>
+        <rect class="node-stripe" x="589.6" y="338" width="4" height="66" rx="2"/>
+        <text class="node-label" x="607.6" y="365">Protected Data</text>
+        <text class="node-caption" x="607.6" y="385">the permitted result</text>
+      </g>
+    </g>
+  </svg>
+    <div class="tip" id="tip" role="tooltip" hidden></div>
+    <div class="foot">
+      <div class="legend" aria-label="Diagram legend">
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--external)"></span>Actors, inputs, and outputs</div>
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--service)"></span>Processes and services</div>
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--concept)"></span>Concepts</div>
+  </div>
+      <div class="zoom" aria-label="Diagram zoom controls">
+        <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
+        <span class="zoom-output" id="zoom-output">100%</span>
+        <button id="zoom-in" type="button" aria-label="Zoom in">+</button>
+        <button id="zoom-reset" type="button" aria-label="Reset view">↺</button>
+      </div>
+    </div>
+  </section>
+  <div class="below">
+    <section class="role-relevance" aria-labelledby="role-relevance-title">
+    <div class="eyebrow">Your role</div>
+    <h2 id="role-relevance-title">Why this matters for a Product Manager</h2>
+    <ul><li>Design requested scopes as a product trust decision, not only an engineering setting.</li><li>Make the redirect and consent journey understandable before asking the user to approve.</li><li>Treat reconnect, expiry, revocation, and denied consent as explicit product states.</li><li>Use OpenID Connect when the product also needs a standardized sign-in identity layer.</li></ul>
+  </section>
+    <div class="cards">
+    <section class="card">
+      <h2>Authorization, not identity</h2>
+      <ul><li>OAuth answers what a client may access.</li><li>OAuth alone does not standardize who signed in.</li><li>OpenID Connect adds identity claims on top of OAuth.</li></ul>
+    </section>
+    <section class="card">
+      <h2>Token safety</h2>
+      <ul><li>Use short-lived, narrowly scoped access tokens.</li><li>Keep backend exchanges out of browser-visible secrets.</li><li>Support revocation and clear reconnection flows.</li></ul>
+    </section>
+    <section class="card">
+      <h2>User experience states</h2>
+      <ul><li>Explain why each permission is needed.</li><li>Handle rejected consent without a dead end.</li><li>Show when access expires or must be reauthorized.</li></ul>
+    </section>
+  </div>
+  </div>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script>window.__VISUALINK_SPEC__={"version":"1.0","concept":{"name":"OAuth 2.0 Authorization Code Flow","shortName":"OAuth","title":"OAuth: delegated access without sharing a password","definition":"OAuth lets a user authorize one application to call another service on their behalf. The client receives a limited access token instead of the user's password.","problem":"An application needs delegated access to a user's data without collecting the user's credentials or receiving unlimited permission."},"audience":{"role":"Product Managers","technicalLevel":"intermediate","goals":["understand the authorization journey","separate user-facing consent from backend token exchange","avoid describing OAuth as authentication"]},"nodes":[{"id":"user","label":"User","caption":"owns the data","type":"actor","description":"The resource owner deciding whether the client application may access protected data.","layoutHint":{"rank":0,"order":0}},{"id":"client-app","label":"Client App","caption":"requests delegated access","type":"service","description":"The product asking for limited access to another service on the user's behalf.","layoutHint":{"rank":1,"order":0}},{"id":"consent","label":"Login and Consent","caption":"user-facing decision","type":"process","description":"The authorization server verifies the user and shows which permissions the client requests.","layoutHint":{"rank":2,"order":0}},{"id":"authorization-server","label":"Authorization Server","caption":"issues grants and tokens","type":"service","description":"The trusted system that runs consent, validates the client, and issues short-lived credentials.","layoutHint":{"rank":3,"order":0}},{"id":"access-token","label":"Access Token","caption":"limited delegated credential","type":"concept","description":"A time-limited credential with specific scopes. It is for API authorization and is not the user's password.","layoutHint":{"rank":3,"order":3}},{"id":"resource-server","label":"Resource Server","caption":"the protected API","type":"service","description":"The API that validates the access token and enforces its scopes before returning protected data.","layoutHint":{"rank":4,"order":2}},{"id":"protected-data","label":"Protected Data","caption":"the permitted result","type":"output","description":"Only the data and actions permitted by the access token's scopes should be available.","layoutHint":{"rank":5,"order":2}}],"edges":[{"id":"user-to-client","from":"user","to":"client-app","label":"starts connection","kind":"flow","importance":"primary"},{"id":"client-to-authorization","from":"client-app","to":"authorization-server","label":"redirects browser","kind":"flow","importance":"primary"},{"id":"authorization-to-consent","from":"authorization-server","to":"consent","label":"shows request","kind":"control","importance":"primary"},{"id":"user-to-consent","from":"user","to":"consent","label":"approves scopes","kind":"control","importance":"primary"},{"id":"consent-to-authorization","from":"consent","to":"authorization-server","label":"records grant","kind":"control"},{"id":"authorization-to-client","from":"authorization-server","to":"client-app","label":"returns one-time code","kind":"flow","importance":"primary"},{"id":"client-to-token-exchange","from":"client-app","to":"authorization-server","label":"exchanges code","kind":"control","importance":"primary"},{"id":"authorization-to-token","from":"authorization-server","to":"access-token","label":"issues","kind":"control","importance":"primary"},{"id":"token-to-client","from":"access-token","to":"client-app","label":"returns securely","kind":"flow"},{"id":"client-to-resource","from":"client-app","to":"resource-server","label":"calls with token","kind":"flow","importance":"primary"},{"id":"token-to-resource","from":"access-token","to":"resource-server","label":"authorizes scopes","kind":"dependency"},{"id":"resource-to-data","from":"resource-server","to":"protected-data","label":"returns allowed data","kind":"data","importance":"primary"},{"id":"data-to-client","from":"protected-data","to":"client-app","label":"completes request","kind":"data"}],"groups":[{"id":"authorization-boundary","label":"Authorization Boundary","description":"The trusted service where the user signs in, sees requested scopes, and grants access.","nodes":["consent","authorization-server"]},{"id":"api-boundary","label":"Protected API Boundary","description":"The service that validates access tokens and applies scope checks to protected data.","nodes":["resource-server","protected-data"]}],"chapters":[{"id":"request-access","title":"The client requests access","shortTitle":"Request access","explanation":"The user starts a connection in the client app. The client redirects the browser to the trusted authorization server with requested scopes.","focusNodes":["user","client-app","authorization-server"],"focusEdges":["user-to-client","client-to-authorization"],"focusGroups":["authorization-boundary"],"introducedNodes":["client-app","authorization-server"],"takeaways":["The client asks for scopes","The authorization server owns the login surface"]},{"id":"consent","title":"The user reviews and approves","shortTitle":"Login and consent","explanation":"The authorization server authenticates the user and presents the requested permissions. The user can approve or reject them.","focusNodes":["user","consent","authorization-server"],"focusEdges":["authorization-to-consent","user-to-consent","consent-to-authorization"],"focusGroups":["authorization-boundary"],"introducedNodes":["consent"],"takeaways":["Consent should name the requested access","The user's password stays with the authorization server"]},{"id":"authorization-code","title":"A one-time code returns","shortTitle":"Return a code","explanation":"After approval, the browser returns to the client with a short-lived authorization code. The code is not the API credential.","focusNodes":["client-app","authorization-server"],"focusEdges":["authorization-to-client"],"focusGroups":["authorization-boundary"]},{"id":"token-exchange","title":"The backend exchanges the code","shortTitle":"Exchange for token","explanation":"The client backend sends the code to the authorization server through a direct channel and receives a limited access token.","focusNodes":["client-app","authorization-server","access-token"],"focusEdges":["client-to-token-exchange","authorization-to-token","token-to-client"],"focusGroups":["authorization-boundary"],"introducedNodes":["access-token"],"takeaways":["The token exchange belongs on a trusted backend","Access tokens need short lifetimes and narrow scopes"]},{"id":"call-api","title":"The client calls the protected API","shortTitle":"Call the API","explanation":"The client presents the access token to the resource server. The API validates it, enforces scopes, and returns only the permitted data.","focusNodes":["client-app","access-token","resource-server","protected-data"],"focusEdges":["client-to-resource","token-to-resource","resource-to-data","data-to-client"],"focusGroups":["api-boundary"],"introducedNodes":["resource-server","protected-data"]}],"roleRelevance":{"title":"Why this matters for a Product Manager","points":["Design requested scopes as a product trust decision, not only an engineering setting.","Make the redirect and consent journey understandable before asking the user to approve.","Treat reconnect, expiry, revocation, and denied consent as explicit product states.","Use OpenID Connect when the product also needs a standardized sign-in identity layer."]},"contextCards":[{"id":"not-authentication","title":"Authorization, not identity","points":["OAuth answers what a client may access.","OAuth alone does not standardize who signed in.","OpenID Connect adds identity claims on top of OAuth."]},{"id":"token-safety","title":"Token safety","points":["Use short-lived, narrowly scoped access tokens.","Keep backend exchanges out of browser-visible secrets.","Support revocation and clear reconnection flows."]},{"id":"user-experience","title":"User experience states","points":["Explain why each permission is needed.","Handle rejected consent without a dead end.","Show when access expires or must be reauthorized."]}],"layout":{"preferredDirection":"left-to-right"}};</script>
+<script>
+(() => {
+  "use strict";
+
+  const spec = window.__VISUALINK_SPEC__;
+  if (!spec) throw new Error("Visualink runtime could not find its embedded spec.");
+
+  const diagram = document.getElementById("diagram");
+  const scene = document.getElementById("scene");
+  const lede = document.getElementById("lede");
+  const eyebrow = document.getElementById("eyebrow");
+  const now = document.getElementById("now");
+  const takeaways = document.getElementById("takeaways");
+  const takeawayList = document.getElementById("takeaway-list");
+  const tip = document.getElementById("tip");
+  const toast = document.getElementById("toast");
+  const playButton = document.getElementById("play");
+  const chapterButtons = [...document.querySelectorAll(".chip")];
+  const nodes = [...document.querySelectorAll(".node")];
+  const groups = [...document.querySelectorAll(".group")];
+  const edges = [...document.querySelectorAll(".edge")];
+  const parts = [...nodes, ...groups];
+
+  const nodeById = new Map(spec.nodes.map((node) => [node.id, node]));
+  const groupById = new Map((spec.groups || []).map((group) => [group.id, group]));
+  const edgeById = new Map(spec.edges.map((edge) => [edge.id, edge]));
+  const groupParent = new Map();
+  const nodeGroup = new Map();
+
+  for (const group of spec.groups || []) {
+    for (const childId of group.groups || []) groupParent.set(childId, group.id);
+    for (const nodeId of group.nodes || []) nodeGroup.set(nodeId, group.id);
+  }
+  for (const node of spec.nodes) {
+    if (node.group) nodeGroup.set(node.id, node.group);
+  }
+
+  function groupAncestors(groupId) {
+    const result = new Set();
+    let current = groupId;
+    while (current) {
+      result.add(current);
+      current = groupParent.get(current);
+    }
+    return result;
+  }
+
+  function groupsForNodes(nodeIds) {
+    const result = new Set();
+    for (const nodeId of nodeIds) {
+      for (const groupId of groupAncestors(nodeGroup.get(nodeId))) result.add(groupId);
+    }
+    return result;
+  }
+
+  function descendantNodes(groupId, result = new Set()) {
+    const group = groupById.get(groupId);
+    if (!group) return result;
+    for (const nodeId of group.nodes || []) result.add(nodeId);
+    for (const node of spec.nodes) {
+      if (node.group === groupId) result.add(node.id);
+    }
+    for (const childId of group.groups || []) descendantNodes(childId, result);
+    return result;
+  }
+
+  let chapterIndex = -1;
+  let playTimer = null;
+  let toastTimer = null;
+
+  function stopPlayback() {
+    if (!playTimer) return;
+    clearInterval(playTimer);
+    playTimer = null;
+    playButton.textContent = "Play";
+    playButton.setAttribute("aria-label", "Play guided chapters");
+  }
+
+  function clearDiagramState() {
+    for (const element of [...parts, ...edges]) {
+      element.classList.remove("is-dim", "is-hot", "is-hover", "is-new");
+    }
+  }
+
+  function paintChapterButtons() {
+    chapterButtons.forEach((button, index) => {
+      const active = index === chapterIndex;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  }
+
+  function renderTakeaways(items) {
+    takeawayList.replaceChildren();
+    if (!items || items.length === 0) {
+      takeaways.hidden = true;
+      return;
+    }
+    for (const item of items) {
+      const li = document.createElement("li");
+      li.textContent = item;
+      takeawayList.appendChild(li);
+    }
+    takeaways.hidden = false;
+  }
+
+  function overviewMode() {
+    chapterIndex = -1;
+    eyebrow.textContent = "Overview";
+    now.textContent = "The whole picture";
+    lede.textContent = spec.concept.definition;
+    renderTakeaways([]);
+    paintChapterButtons();
+    clearDiagramState();
+    hideTip();
+  }
+
+  function focusChapter(index) {
+    chapterIndex = (index + spec.chapters.length) % spec.chapters.length;
+    const chapter = spec.chapters[chapterIndex];
+    const focusNodes = new Set(chapter.focusNodes || []);
+    const introducedNodes = new Set(chapter.introducedNodes || []);
+    for (const id of introducedNodes) focusNodes.add(id);
+
+    const relevantGroups = groupsForNodes(focusNodes);
+    for (const id of chapter.focusGroups || []) {
+      for (const ancestor of groupAncestors(id)) relevantGroups.add(ancestor);
+    }
+
+    let focusEdges;
+    if (Array.isArray(chapter.focusEdges)) {
+      focusEdges = new Set(chapter.focusEdges);
+    } else {
+      focusEdges = new Set(
+        spec.edges
+          .filter((edge) => focusNodes.has(edge.from) && focusNodes.has(edge.to))
+          .map((edge) => edge.id)
+      );
+    }
+
+    eyebrow.textContent = `Chapter ${chapterIndex + 1} of ${spec.chapters.length}`;
+    now.textContent = chapter.title;
+    lede.textContent = chapter.explanation;
+    renderTakeaways(chapter.takeaways || []);
+    paintChapterButtons();
+
+    const hasNodeFocus = focusNodes.size > 0;
+    for (const element of nodes) {
+      const id = element.dataset.nodeId;
+      const focused = !hasNodeFocus || focusNodes.has(id);
+      element.classList.toggle("is-hot", focused && hasNodeFocus);
+      element.classList.toggle("is-dim", !focused);
+      element.classList.toggle("is-new", introducedNodes.has(id));
+      element.classList.remove("is-hover");
+    }
+
+    for (const element of groups) {
+      const focused = relevantGroups.has(element.dataset.groupId);
+      element.classList.toggle("is-hot", focused);
+      element.classList.toggle("is-dim", relevantGroups.size > 0 && !focused);
+      element.classList.remove("is-hover");
+    }
+
+    for (const element of edges) {
+      const focused = focusEdges.has(element.dataset.edgeId);
+      element.classList.toggle("is-hot", focused);
+      element.classList.toggle("is-dim", !focused);
+      element.classList.remove("is-hover");
+    }
+    hideTip();
+  }
+
+  chapterButtons.forEach((button, index) => {
+    button.addEventListener("click", () => {
+      stopPlayback();
+      focusChapter(index);
+    });
+  });
+
+  playButton.addEventListener("click", () => {
+    if (playTimer) {
+      stopPlayback();
+      return;
+    }
+    playButton.textContent = "Pause";
+    playButton.setAttribute("aria-label", "Pause guided chapters");
+    if (chapterIndex < 0) focusChapter(0);
+    playTimer = setInterval(() => focusChapter(chapterIndex + 1), 3600);
+  });
+
+  function neighboringNodes(nodeId) {
+    const result = new Set([nodeId]);
+    for (const edge of spec.edges) {
+      if (edge.from === nodeId) result.add(edge.to);
+      if (edge.to === nodeId) result.add(edge.from);
+    }
+    return result;
+  }
+
+  function showTip(element, text) {
+    if (!text) return;
+    const stage = document.querySelector(".stage").getBoundingClientRect();
+    const bounds = element.getBoundingClientRect();
+    tip.textContent = text;
+    tip.hidden = false;
+    const tipWidth = tip.offsetWidth;
+    const tipHeight = tip.offsetHeight;
+    let left = bounds.left - stage.left;
+    let top = bounds.bottom - stage.top + 8;
+    if (left + tipWidth > stage.width - 12) left = stage.width - tipWidth - 12;
+    if (left < 12) left = 12;
+    if (top + tipHeight > stage.height - 12) top = bounds.top - stage.top - tipHeight - 8;
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+  }
+
+  function hideTip() {
+    tip.hidden = true;
+  }
+
+  function hoverNode(nodeId, element) {
+    const near = neighboringNodes(nodeId);
+    for (const node of nodes) {
+      const relevant = near.has(node.dataset.nodeId);
+      node.classList.toggle("is-hover", node.dataset.nodeId === nodeId);
+      if (chapterIndex < 0) node.classList.toggle("is-dim", !relevant);
+    }
+    for (const edge of edges) {
+      const semanticEdge = edgeById.get(edge.dataset.edgeId);
+      const relevant = semanticEdge.from === nodeId || semanticEdge.to === nodeId;
+      edge.classList.toggle("is-hover", relevant);
+      if (chapterIndex < 0) edge.classList.toggle("is-dim", !relevant);
+    }
+    if (chapterIndex < 0) {
+      const relatedGroups = groupsForNodes(near);
+      for (const group of groups) {
+        group.classList.toggle("is-dim", !relatedGroups.has(group.dataset.groupId));
+      }
+    }
+    showTip(element, nodeById.get(nodeId)?.description);
+  }
+
+  function hoverGroup(groupId, element) {
+    const members = descendantNodes(groupId);
+    for (const group of groups) {
+      group.classList.toggle("is-hover", group.dataset.groupId === groupId);
+      if (chapterIndex < 0) {
+        const related = groupAncestors(groupId).has(group.dataset.groupId) ||
+          groupAncestors(group.dataset.groupId).has(groupId);
+        group.classList.toggle("is-dim", !related);
+      }
+    }
+    if (chapterIndex < 0) {
+      for (const node of nodes) node.classList.toggle("is-dim", !members.has(node.dataset.nodeId));
+      for (const edge of edges) {
+        const semanticEdge = edgeById.get(edge.dataset.edgeId);
+        edge.classList.toggle(
+          "is-dim",
+          !(members.has(semanticEdge.from) && members.has(semanticEdge.to))
+        );
+      }
+    }
+    showTip(element, groupById.get(groupId)?.description);
+  }
+
+  function clearHover() {
+    for (const element of [...parts, ...edges]) element.classList.remove("is-hover");
+    if (chapterIndex < 0) {
+      for (const element of [...parts, ...edges]) element.classList.remove("is-dim");
+    }
+    hideTip();
+  }
+
+  function chapterForNode(nodeId) {
+    return spec.chapters.findIndex((chapter) =>
+      (chapter.focusNodes || []).includes(nodeId) ||
+      (chapter.introducedNodes || []).includes(nodeId)
+    );
+  }
+
+  for (const element of nodes) {
+    const nodeId = element.dataset.nodeId;
+    element.addEventListener("pointerenter", () => hoverNode(nodeId, element));
+    element.addEventListener("pointerleave", clearHover);
+    element.addEventListener("focus", () => hoverNode(nodeId, element));
+    element.addEventListener("blur", clearHover);
+    element.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const target = chapterForNode(nodeId);
+      if (target >= 0) {
+        stopPlayback();
+        focusChapter(target);
+      }
+    });
+    element.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        element.click();
+      }
+    });
+  }
+
+  for (const element of groups) {
+    const groupId = element.dataset.groupId;
+    element.addEventListener("pointerenter", () => hoverGroup(groupId, element));
+    element.addEventListener("pointerleave", clearHover);
+    element.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const target = spec.chapters.findIndex((chapter) =>
+        (chapter.focusGroups || []).includes(groupId)
+      );
+      if (target >= 0) {
+        stopPlayback();
+        focusChapter(target);
+      }
+    });
+  }
+
+  const themeButton = document.getElementById("theme");
+  const themeMenu = document.getElementById("theme-menu");
+  const themeLabel = document.getElementById("theme-label");
+  const themeIcon = document.getElementById("theme-icon");
+  const lightButton = document.getElementById("theme-light");
+  const darkButton = document.getElementById("theme-dark");
+  const moonIcon = '<path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/>';
+  const sunIcon = '<circle cx="8" cy="8" r="3.15" fill="currentColor"/><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1.2v1.7M8 13.1v1.7M1.2 8h1.7M13.1 8h1.7"/><path d="M3.15 3.15l1.2 1.2M11.65 11.65l1.2 1.2M3.15 12.85l1.2-1.2M11.65 4.35l1.2-1.2"/></g>';
+
+  function closeThemeMenu() {
+    themeMenu.hidden = true;
+    themeButton.setAttribute("aria-expanded", "false");
+  }
+
+  function setTheme(theme) {
+    document.body.dataset.theme = theme;
+    const dark = theme === "dark";
+    themeLabel.textContent = dark ? "Dark" : "Light";
+    themeIcon.innerHTML = dark ? moonIcon : sunIcon;
+    lightButton.setAttribute("aria-checked", String(!dark));
+    darkButton.setAttribute("aria-checked", String(dark));
+    closeThemeMenu();
+  }
+
+  themeButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const opening = themeMenu.hidden;
+    themeMenu.hidden = !opening;
+    themeButton.setAttribute("aria-expanded", String(opening));
+  });
+  themeMenu.addEventListener("click", (event) => event.stopPropagation());
+  lightButton.addEventListener("click", () => setTheme("light"));
+  darkButton.addEventListener("click", () => setTheme("dark"));
+
+  const exportButton = document.getElementById("export");
+  const exportMenu = document.getElementById("export-menu");
+
+  function closeExportMenu() {
+    exportMenu.hidden = true;
+    exportButton.setAttribute("aria-expanded", "false");
+  }
+
+  exportButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const opening = exportMenu.hidden;
+    exportMenu.hidden = !opening;
+    exportButton.setAttribute("aria-expanded", String(opening));
+  });
+  exportMenu.addEventListener("click", (event) => event.stopPropagation());
+
+  document.addEventListener("click", () => {
+    closeExportMenu();
+    closeThemeMenu();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeExportMenu();
+      closeThemeMenu();
+      hideTip();
+      return;
+    }
+    if (event.target.closest("button, [role='button']")) return;
+    if (event.key === "ArrowRight") {
+      stopPlayback();
+      focusChapter(chapterIndex < 0 ? 0 : chapterIndex + 1);
+    } else if (event.key === "ArrowLeft") {
+      stopPlayback();
+      if (chapterIndex <= 0) overviewMode();
+      else focusChapter(chapterIndex - 1);
+    }
+  });
+
+  function announce(message) {
+    toast.textContent = message;
+    toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.hidden = true;
+    }, 2300);
+  }
+
+  const viewBox = diagram.viewBox.baseVal;
+  let scale = 1;
+  let translateX = 0;
+  let translateY = 0;
+  let drag = null;
+
+  function applyView() {
+    scene.setAttribute(
+      "transform",
+      `translate(${translateX.toFixed(1)},${translateY.toFixed(1)}) scale(${scale.toFixed(3)})`
+    );
+    document.getElementById("zoom-output").textContent = `${Math.round(scale * 100)}%`;
+  }
+
+  function zoom(factor) {
+    const next = Math.min(2.6, Math.max(0.6, scale * factor));
+    const centerX = viewBox.x + viewBox.width / 2;
+    const centerY = viewBox.y + viewBox.height / 2;
+    translateX = centerX - (centerX - translateX) * (next / scale);
+    translateY = centerY - (centerY - translateY) * (next / scale);
+    scale = next;
+    applyView();
+  }
+
+  document.getElementById("zoom-in").addEventListener("click", () => zoom(1.18));
+  document.getElementById("zoom-out").addEventListener("click", () => zoom(1 / 1.18));
+  document.getElementById("zoom-reset").addEventListener("click", () => {
+    scale = 1;
+    translateX = 0;
+    translateY = 0;
+    applyView();
+  });
+  diagram.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    zoom(event.deltaY < 0 ? 1.08 : 1 / 1.08);
+  }, { passive: false });
+  diagram.addEventListener("pointerdown", (event) => {
+    if (event.target.closest(".node")) return;
+    drag = {
+      x: event.clientX,
+      y: event.clientY,
+      translateX,
+      translateY
+    };
+    diagram.classList.add("is-dragging");
+    diagram.setPointerCapture(event.pointerId);
+  });
+  diagram.addEventListener("pointermove", (event) => {
+    if (!drag) return;
+    const bounds = diagram.getBoundingClientRect();
+    translateX = drag.translateX + (event.clientX - drag.x) * (viewBox.width / bounds.width);
+    translateY = drag.translateY + (event.clientY - drag.y) * (viewBox.height / bounds.height);
+    applyView();
+  });
+  function endDrag() {
+    drag = null;
+    diagram.classList.remove("is-dragging");
+  }
+  diagram.addEventListener("pointerup", endDrag);
+  diagram.addEventListener("pointercancel", endDrag);
+
+  function cloneForExport() {
+    const clone = diagram.cloneNode(true);
+    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    clone.querySelector("#scene")?.removeAttribute("transform");
+    clone.querySelectorAll(".is-dim, .is-hot, .is-hover, .is-new").forEach((element) => {
+      element.classList.remove("is-dim", "is-hot", "is-hover", "is-new");
+    });
+
+    const sourceElements = [diagram, ...diagram.querySelectorAll("*")];
+    const cloneElements = [clone, ...clone.querySelectorAll("*")];
+    const properties = [
+      "fill",
+      "stroke",
+      "stroke-width",
+      "stroke-dasharray",
+      "stroke-linecap",
+      "stroke-linejoin",
+      "opacity",
+      "font-size",
+      "font-weight",
+      "font-family",
+      "letter-spacing",
+      "text-anchor"
+    ];
+    sourceElements.forEach((source, index) => {
+      const target = cloneElements[index];
+      if (!target) return;
+      const computed = getComputedStyle(source);
+      for (const property of properties) {
+        const value = computed.getPropertyValue(property).trim();
+        if (value && value !== "normal") target.style.setProperty(property, value);
+      }
+    });
+
+    const background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    background.setAttribute("x", String(viewBox.x));
+    background.setAttribute("y", String(viewBox.y));
+    background.setAttribute("width", String(viewBox.width));
+    background.setAttribute("height", String(viewBox.height));
+    background.setAttribute(
+      "fill",
+      getComputedStyle(document.body).getPropertyValue("--panel").trim()
+    );
+    clone.insertBefore(background, clone.firstChild);
+    return clone;
+  }
+
+  function rasterize() {
+    return new Promise((resolve, reject) => {
+      const clone = cloneForExport();
+      const width = 2080;
+      const height = Math.max(720, Math.round(width * viewBox.height / viewBox.width));
+      clone.setAttribute("width", String(width));
+      clone.setAttribute("height", String(height));
+      const xml = new XMLSerializer().serializeToString(clone);
+      const url = URL.createObjectURL(new Blob([xml], { type: "image/svg+xml;charset=utf-8" }));
+      const image = new Image();
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d");
+        context.fillStyle = getComputedStyle(document.body).getPropertyValue("--panel").trim();
+        context.fillRect(0, 0, width, height);
+        context.drawImage(image, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Could not build image."));
+        }, "image/png");
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Could not render diagram."));
+      };
+      image.src = url;
+    });
+  }
+
+  function downloadBlob(blob) {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    const slug = spec.concept.shortName || spec.concept.name;
+    link.download = `${slug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}.png`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  }
+
+  document.getElementById("copy-image").addEventListener("click", async (event) => {
+    event.stopPropagation();
+    closeExportMenu();
+    const blobPromise = rasterize();
+    try {
+      if (navigator.clipboard && window.ClipboardItem) {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blobPromise })]);
+        announce("Copied image");
+        return;
+      }
+    } catch {
+      // Clipboard access can be unavailable for local files; download is the portable fallback.
+    }
+    try {
+      downloadBlob(await blobPromise);
+      announce("Clipboard unavailable — downloaded PNG instead");
+    } catch {
+      announce("Could not export image");
+    }
+  });
+
+  document.getElementById("download-image").addEventListener("click", async (event) => {
+    event.stopPropagation();
+    closeExportMenu();
+    try {
+      downloadBlob(await rasterize());
+      announce("Downloaded PNG");
+    } catch {
+      announce("Could not download image");
+    }
+  });
+
+  overviewMode();
+  applyView();
+})();
+
+</script>
+</body>
+</html>

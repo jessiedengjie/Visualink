@@ -1,0 +1,298 @@
+{
+  "version": "1.0",
+  "concept": {
+    "name": "Kubernetes",
+    "title": "Kubernetes, for Software Engineers",
+    "definition": "Kubernetes reconciles desired state with actual state: a Deployment owns a ReplicaSet, the ReplicaSet keeps Pods alive, the Scheduler places them on Nodes, and a Service routes traffic to them.",
+    "problem": "Engineers need repeatable deployment, recovery, placement, and stable networking across a changing pool of machines and processes."
+  },
+  "audience": {
+    "role": "Software Engineers",
+    "technicalLevel": "advanced",
+    "goals": [
+      "understand the Kubernetes object model",
+      "debug desired state versus actual state",
+      "identify the layer where a failure occurs"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "kubectl",
+      "label": "kubectl / CI",
+      "caption": "declares desired state",
+      "type": "actor",
+      "description": "kubectl, CI, and controllers create or update Kubernetes objects through the API Server.",
+      "layoutHint": { "rank": 0, "order": 0 }
+    },
+    {
+      "id": "client",
+      "label": "Client",
+      "caption": "application traffic",
+      "type": "actor",
+      "description": "A browser, service, or test calling the workload through a Service rather than a Pod IP.",
+      "layoutHint": { "rank": 0, "order": 4 }
+    },
+    {
+      "id": "api-server",
+      "label": "API Server",
+      "caption": "control-plane front door",
+      "type": "service",
+      "description": "The API Server authenticates, validates, and stores Kubernetes objects. Every control-plane participant goes through it.",
+      "layoutHint": { "rank": 1, "order": 0 }
+    },
+    {
+      "id": "service",
+      "label": "Service",
+      "caption": "stable virtual IP",
+      "type": "service",
+      "description": "A Service selects matching Pods and provides a stable virtual address while Pod IPs change.",
+      "layoutHint": { "rank": 1, "order": 4 }
+    },
+    {
+      "id": "deployment",
+      "label": "Deployment",
+      "caption": "replicas + Pod template",
+      "type": "process",
+      "description": "A Deployment expresses the desired replica count and Pod template, and manages rollout through ReplicaSets.",
+      "layoutHint": { "rank": 2, "order": 0 }
+    },
+    {
+      "id": "scheduler",
+      "label": "Scheduler",
+      "caption": "chooses a Node",
+      "type": "process",
+      "description": "The Scheduler watches for unbound Pods and selects a Node that satisfies resources and placement constraints.",
+      "layoutHint": { "rank": 2, "order": 2 }
+    },
+    {
+      "id": "replica-set",
+      "label": "ReplicaSet",
+      "caption": "keeps N matching Pods",
+      "type": "process",
+      "description": "The ReplicaSet controller creates or deletes Pods until actual replicas match the desired count.",
+      "layoutHint": { "rank": 3, "order": 0 }
+    },
+    {
+      "id": "pod-a",
+      "label": "Pod A",
+      "caption": "scheduled unit",
+      "type": "infrastructure",
+      "description": "A Pod is the unit the Scheduler binds to a Node and kubelet runs.",
+      "layoutHint": { "rank": 4, "order": 0 }
+    },
+    {
+      "id": "pod-b",
+      "label": "Pod B",
+      "caption": "another replica",
+      "type": "infrastructure",
+      "description": "Another live replica owned by the same ReplicaSet and independently scheduled.",
+      "layoutHint": { "rank": 4, "order": 2 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "kubectl-to-api",
+      "from": "kubectl",
+      "to": "api-server",
+      "label": "submits objects",
+      "kind": "control",
+      "importance": "primary"
+    },
+    {
+      "id": "api-to-deployment",
+      "from": "api-server",
+      "to": "deployment",
+      "label": "stores spec",
+      "kind": "control",
+      "importance": "primary"
+    },
+    {
+      "id": "api-to-scheduler",
+      "from": "api-server",
+      "to": "scheduler",
+      "label": "reports pending Pods",
+      "kind": "control"
+    },
+    {
+      "id": "deployment-to-replica-set",
+      "from": "deployment",
+      "to": "replica-set",
+      "label": "owns",
+      "kind": "control",
+      "importance": "primary"
+    },
+    {
+      "id": "replica-set-to-pod-a",
+      "from": "replica-set",
+      "to": "pod-a",
+      "label": "creates",
+      "kind": "control",
+      "importance": "primary"
+    },
+    {
+      "id": "replica-set-to-pod-b",
+      "from": "replica-set",
+      "to": "pod-b",
+      "label": "creates",
+      "kind": "control"
+    },
+    {
+      "id": "scheduler-to-pod-a",
+      "from": "scheduler",
+      "to": "pod-a",
+      "label": "binds to Node",
+      "kind": "control"
+    },
+    {
+      "id": "scheduler-to-pod-b",
+      "from": "scheduler",
+      "to": "pod-b",
+      "label": "binds to Node",
+      "kind": "control"
+    },
+    {
+      "id": "client-to-service",
+      "from": "client",
+      "to": "service",
+      "label": "calls",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "service-to-pod-a",
+      "from": "service",
+      "to": "pod-a",
+      "label": "routes to",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "service-to-pod-b",
+      "from": "service",
+      "to": "pod-b",
+      "label": "routes to",
+      "kind": "flow"
+    }
+  ],
+  "groups": [
+    {
+      "id": "cluster",
+      "label": "Cluster",
+      "description": "Control-plane components plus the Nodes that run workloads.",
+      "nodes": ["deployment", "replica-set", "service"],
+      "groups": ["control-plane", "worker-node"]
+    },
+    {
+      "id": "control-plane",
+      "label": "Control Plane",
+      "description": "The API-driven control loop that stores desired state and decides placement.",
+      "nodes": ["api-server", "scheduler"]
+    },
+    {
+      "id": "worker-node",
+      "label": "Worker Node — kubelet runs the Pods",
+      "description": "One machine where kubelet starts and monitors the bound Pods.",
+      "nodes": ["pod-a", "pod-b"]
+    }
+  ],
+  "chapters": [
+    {
+      "id": "desired-state",
+      "title": "Declare desired state",
+      "shortTitle": "Desired state",
+      "explanation": "You submit a Deployment through the API Server. Its replica count and Pod template describe what should exist, not a one-time sequence of commands.",
+      "focusNodes": ["kubectl", "api-server", "deployment"],
+      "focusEdges": ["kubectl-to-api", "api-to-deployment"],
+      "focusGroups": ["control-plane", "cluster"],
+      "introducedNodes": ["api-server", "deployment"],
+      "takeaways": ["Objects describe state", "API Server is the control-plane front door"]
+    },
+    {
+      "id": "replicas",
+      "title": "ReplicaSet keeps Pods alive",
+      "shortTitle": "ReplicaSet and Pods",
+      "explanation": "The Deployment owns a ReplicaSet. The ReplicaSet controller creates and replaces Pods until the live count matches desired state.",
+      "focusNodes": ["deployment", "replica-set", "pod-a", "pod-b"],
+      "focusEdges": [
+        "deployment-to-replica-set",
+        "replica-set-to-pod-a",
+        "replica-set-to-pod-b"
+      ],
+      "introducedNodes": ["replica-set", "pod-a", "pod-b"],
+      "takeaways": ["Deleting a Pod does not change desired replicas", "The controller recreates missing Pods"]
+    },
+    {
+      "id": "scheduling",
+      "title": "Scheduler places Pods on Nodes",
+      "shortTitle": "Scheduler and Nodes",
+      "explanation": "New Pods are unbound. The Scheduler selects a Node for each Pod; a Pending Pod often means resources or constraints prevent this step.",
+      "focusNodes": ["api-server", "scheduler", "pod-a", "pod-b"],
+      "focusEdges": ["api-to-scheduler", "scheduler-to-pod-a", "scheduler-to-pod-b"],
+      "focusGroups": ["control-plane", "worker-node"],
+      "introducedNodes": ["scheduler"]
+    },
+    {
+      "id": "reconciliation",
+      "title": "Reconcile actual state",
+      "shortTitle": "Reconciliation",
+      "explanation": "Controllers repeatedly observe objects through the API Server and move actual state toward desired state. Kubernetes is a set of control loops, not a single deploy script.",
+      "focusNodes": ["api-server", "deployment", "replica-set", "scheduler"],
+      "focusEdges": [
+        "api-to-deployment",
+        "api-to-scheduler",
+        "deployment-to-replica-set"
+      ],
+      "focusGroups": ["control-plane", "cluster"]
+    },
+    {
+      "id": "service-routing",
+      "title": "Route clients to changing Pods",
+      "shortTitle": "Service",
+      "explanation": "Clients call the Service. Its selector tracks matching Pods, keeping the client address stable across rescheduling and rollout.",
+      "focusNodes": ["client", "service", "pod-a", "pod-b"],
+      "focusEdges": ["client-to-service", "service-to-pod-a", "service-to-pod-b"],
+      "introducedNodes": ["service"]
+    }
+  ],
+  "roleRelevance": {
+    "title": "Why this matters for a software engineer",
+    "points": [
+      "Debug from the object model: Deployment, ReplicaSet, Pod, Node, and Service.",
+      "Interpret Pending Pods as a scheduling, capacity, or placement-constraint signal.",
+      "Expect controllers to recreate deleted resources when desired state still requires them.",
+      "Use the API Server as the control-plane boundary for kubectl, CI, and automation."
+    ]
+  },
+  "contextCards": [
+    {
+      "id": "ownership",
+      "title": "How the pieces fit",
+      "points": [
+        "Deployment owns ReplicaSet; ReplicaSet owns Pods.",
+        "Scheduler binds Pods to Nodes.",
+        "Service selects Pods independently of ownership."
+      ]
+    },
+    {
+      "id": "debugging",
+      "title": "Useful debugging boundaries",
+      "points": [
+        "Accepted spec but no Pod: inspect controllers and events.",
+        "Pending Pod: inspect requests, capacity, taints, and affinity.",
+        "Healthy Pod but no traffic: inspect Service selection and networking."
+      ]
+    },
+    {
+      "id": "purpose",
+      "title": "Why this exists",
+      "points": [
+        "Reconcile instead of scripting every recovery action.",
+        "Roll out and scale through desired state.",
+        "Decouple client addresses from ephemeral Pods."
+      ]
+    }
+  ],
+  "layout": {
+    "preferredDirection": "left-to-right"
+  }
+}

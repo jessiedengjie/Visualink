@@ -1,0 +1,231 @@
+{
+  "version": "1.0",
+  "concept": {
+    "name": "Kubernetes",
+    "title": "Kubernetes, for Customer Success",
+    "definition": "Kubernetes is the platform customers use to run containerized applications: it deploys the app, keeps copies running, scales when traffic grows, and recovers when something breaks.",
+    "problem": "Customers need applications to stay available and scale without manually managing every machine."
+  },
+  "audience": {
+    "role": "Customer Success Managers",
+    "technicalLevel": "intermediate",
+    "goals": [
+      "understand customer architecture discussions",
+      "explain Kubernetes accurately to customers",
+      "recognize operational implications"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "application",
+      "label": "Customer's App",
+      "caption": "what they ship",
+      "type": "input",
+      "description": "The customer's product or workload. Kubernetes is the platform underneath it, not the application itself.",
+      "layoutHint": { "rank": 0, "order": 0 }
+    },
+    {
+      "id": "users",
+      "label": "Users",
+      "caption": "call the application",
+      "type": "actor",
+      "description": "People or systems using the customer's product through a stable address.",
+      "layoutHint": { "rank": 0, "order": 4 }
+    },
+    {
+      "id": "container",
+      "label": "Container",
+      "caption": "the packaged app",
+      "type": "process",
+      "description": "A container packages the application so the same build can run consistently across environments.",
+      "layoutHint": { "rank": 1, "order": 0 }
+    },
+    {
+      "id": "deploy",
+      "label": "Deploy",
+      "caption": "release a version",
+      "type": "service",
+      "description": "Kubernetes places a released application version onto the cluster as running copies.",
+      "layoutHint": { "rank": 1, "order": 1 }
+    },
+    {
+      "id": "service",
+      "label": "Stable Access",
+      "caption": "Service — one address",
+      "type": "service",
+      "description": "A Kubernetes Service gives users one address while running copies change behind it.",
+      "layoutHint": { "rank": 1, "order": 4 }
+    },
+    {
+      "id": "scale",
+      "label": "Scale",
+      "caption": "add or remove copies",
+      "type": "service",
+      "description": "Kubernetes can add copies for more traffic and remove them when demand falls.",
+      "layoutHint": { "rank": 2, "order": 0 }
+    },
+    {
+      "id": "recover",
+      "label": "Recover",
+      "caption": "restart what breaks",
+      "type": "service",
+      "description": "Kubernetes replaces failed copies so a machine or process failure does not automatically become product downtime.",
+      "layoutHint": { "rank": 2, "order": 2 }
+    },
+    {
+      "id": "running-copies",
+      "label": "Running Copies",
+      "caption": "the live application",
+      "type": "infrastructure",
+      "description": "These are the live application copies. Customers may call them Pods in architecture conversations.",
+      "layoutHint": { "rank": 3, "order": 1 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "application-to-container",
+      "from": "application",
+      "to": "container",
+      "label": "packages as",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "container-to-copies",
+      "from": "container",
+      "to": "running-copies",
+      "label": "runs as",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "deploy-to-copies",
+      "from": "deploy",
+      "to": "running-copies",
+      "label": "places",
+      "kind": "control",
+      "importance": "primary"
+    },
+    {
+      "id": "scale-to-copies",
+      "from": "scale",
+      "to": "running-copies",
+      "label": "adds copies",
+      "kind": "control"
+    },
+    {
+      "id": "recover-to-copies",
+      "from": "recover",
+      "to": "running-copies",
+      "label": "restarts",
+      "kind": "control"
+    },
+    {
+      "id": "users-to-service",
+      "from": "users",
+      "to": "service",
+      "label": "use the app",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "service-to-copies",
+      "from": "service",
+      "to": "running-copies",
+      "label": "routes to",
+      "kind": "flow",
+      "importance": "primary"
+    }
+  ],
+  "groups": [
+    {
+      "id": "cluster",
+      "label": "Kubernetes Cluster — deploy, scale, recover, manage",
+      "description": "The Kubernetes platform that runs and manages the customer's containerized application.",
+      "nodes": ["deploy", "service", "scale", "recover", "running-copies"]
+    }
+  ],
+  "chapters": [
+    {
+      "id": "where-it-sits",
+      "title": "Where Kubernetes sits",
+      "shortTitle": "Where it sits",
+      "explanation": "The customer's application is packaged as a Container. Kubernetes is the platform that runs that package across machines.",
+      "focusNodes": ["application", "container", "running-copies"],
+      "focusEdges": ["application-to-container", "container-to-copies"],
+      "focusGroups": ["cluster"],
+      "introducedNodes": ["container"],
+      "takeaways": ["Application is the product", "Container is the package", "Kubernetes is the platform"]
+    },
+    {
+      "id": "deploy",
+      "title": "Deploy the application",
+      "shortTitle": "Deploy",
+      "explanation": "Deploy means releasing a version onto the cluster. Kubernetes places running copies of the packaged application.",
+      "focusNodes": ["application", "container", "deploy", "running-copies"],
+      "focusEdges": ["application-to-container", "deploy-to-copies"],
+      "introducedNodes": ["deploy"]
+    },
+    {
+      "id": "reliability",
+      "title": "Scale and recover",
+      "shortTitle": "Scale and recover",
+      "explanation": "When traffic grows, Kubernetes adds copies. When a copy breaks, Kubernetes replaces it. This is the operational value customers usually mean.",
+      "focusNodes": ["scale", "recover", "running-copies"],
+      "focusEdges": ["scale-to-copies", "recover-to-copies"],
+      "focusGroups": ["cluster"],
+      "introducedNodes": ["scale", "recover"],
+      "takeaways": ["Scale handles demand", "Recovery protects availability"]
+    },
+    {
+      "id": "stable-access",
+      "title": "How users reach the app",
+      "shortTitle": "How users reach it",
+      "explanation": "Users call one stable Service address. Kubernetes routes them to healthy running copies even while those copies are replaced.",
+      "focusNodes": ["users", "service", "running-copies"],
+      "focusEdges": ["users-to-service", "service-to-copies"],
+      "introducedNodes": ["service"]
+    }
+  ],
+  "roleRelevance": {
+    "title": "Why this matters for a Customer Success Manager",
+    "points": [
+      "Follow customer architecture conversations when Kubernetes appears in the stack.",
+      "Connect deployment, scaling, and recovery to reliability outcomes customers care about.",
+      "Distinguish an application issue from capacity or platform recovery symptoms.",
+      "Use customer vocabulary accurately without needing scheduler internals."
+    ]
+  },
+  "contextCards": [
+    {
+      "id": "stack",
+      "title": "How the pieces fit",
+      "points": [
+        "The application is packaged as a Container.",
+        "Kubernetes runs and manages copies of that Container.",
+        "A Service keeps access stable while copies change."
+      ]
+    },
+    {
+      "id": "customer-language",
+      "title": "Terms customers may use",
+      "points": [
+        "Cluster means the whole Kubernetes environment.",
+        "A Node is one machine; a Pod is one scheduled running unit.",
+        "Deploy, scale, and recover are jobs the same platform performs."
+      ]
+    },
+    {
+      "id": "value",
+      "title": "Why customers use it",
+      "points": [
+        "Avoid managing every machine by hand.",
+        "Keep products available through individual failures.",
+        "Run the same packaged application across environments."
+      ]
+    }
+  ],
+  "layout": {
+    "preferredDirection": "left-to-right"
+  }
+}

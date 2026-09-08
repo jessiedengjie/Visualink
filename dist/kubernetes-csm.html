@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="generator" content="Visualink renderer 1.0"/>
+<title>Kubernetes, for Customer Success</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f3f7fc;
+  --panel: #ffffff;
+  --panel-2: #edf4fb;
+  --ink: #101828;
+  --ink-2: #475467;
+  --muted: #66758a;
+  --hair: #cbd8e8;
+  --hair-2: #8fa4bd;
+  --external: #d15f32;
+  --service: #008e87;
+  --model: #2b7fd3;
+  --store: #9b4cad;
+  --infra: #2d9b59;
+  --concept: #b7791f;
+  --focus: #d08b1e;
+  --edge-flow: #008e87;
+  --edge-control: #9b4cad;
+  --edge-data: #2d9b59;
+  --edge-dependency: #d15f32;
+  --edge-relationship: #718096;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+}
+
+body[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b0f14;
+  --panel: #131922;
+  --panel-2: #18212c;
+  --ink: #f8fafc;
+  --ink-2: #d3dbe6;
+  --muted: #a8b4c3;
+  --hair: #354153;
+  --hair-2: #607086;
+  --external: #f09a70;
+  --service: #64d2c8;
+  --model: #77b9ff;
+  --store: #d3a7df;
+  --infra: #83d39f;
+  --concept: #f2c66d;
+  --focus: #f2c66d;
+  --edge-flow: #64d2c8;
+  --edge-control: #d3a7df;
+  --edge-data: #83d39f;
+  --edge-dependency: #f09a70;
+  --edge-relationship: #91a0b4;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 20px 26px 24px;
+  display: grid;
+  grid-template-rows: auto auto minmax(410px, 1fr) auto;
+  gap: 14px;
+}
+
+.bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.title {
+  min-width: 0;
+}
+
+h1 {
+  max-width: 48rem;
+  font-size: clamp(24px, 3vw, 31px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.13;
+}
+
+.audience {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.lede {
+  max-width: 54rem;
+  margin-top: 8px;
+  color: var(--ink-2);
+  font-size: 14.5px;
+  line-height: 1.52;
+}
+
+.tools {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tool-button,
+.theme-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 15px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.tool-button:hover,
+.theme-trigger:hover,
+.tool-button:focus-visible,
+.theme-trigger:focus-visible {
+  border-color: var(--hair-2);
+  color: var(--ink);
+  outline: 2px solid color-mix(in srgb, var(--focus) 48%, transparent);
+  outline-offset: 2px;
+}
+
+.theme-icon,
+.chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.chevron {
+  width: 10px;
+  height: 10px;
+  transition: transform 160ms ease;
+}
+
+[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+.drop {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 172px;
+  padding: 4px;
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: 0 14px 34px rgba(4, 10, 20, 0.22);
+}
+
+.menu[hidden] {
+  display: none;
+}
+
+.menu button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.menu button:hover,
+.menu button:focus-visible,
+.menu button[aria-checked="true"] {
+  background: var(--panel-2);
+  outline: none;
+}
+
+.strip {
+  display: grid;
+  grid-template-columns: 235px 1fr;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 16px;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.strip-meta {
+  padding-right: 16px;
+  border-right: 1px solid var(--hair);
+}
+
+.eyebrow {
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.now {
+  margin-top: 5px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 550;
+  line-height: 1.1;
+  text-align: left;
+}
+
+.chip b {
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+}
+
+.chip:hover,
+.chip:focus-visible {
+  border-color: var(--hair-2);
+  background: var(--panel-2);
+  color: var(--ink);
+  outline: none;
+}
+
+.chip.is-active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--panel);
+}
+
+.chip.is-active b {
+  color: var(--focus);
+}
+
+.takeaways {
+  grid-column: 1 / -1;
+  padding-top: 10px;
+  border-top: 1px solid var(--hair);
+}
+
+.takeaways[hidden] {
+  display: none;
+}
+
+.takeaways ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 6px;
+  list-style: none;
+}
+
+.takeaways li {
+  position: relative;
+  padding-left: 11px;
+  color: var(--ink-2);
+  font-size: 11.5px;
+}
+
+.takeaways li::before {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--focus);
+  content: "";
+}
+
+.stage {
+  position: relative;
+  min-height: 410px;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+#diagram {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 390px;
+  cursor: grab;
+  touch-action: none;
+}
+
+#diagram.is-dragging {
+  cursor: grabbing;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 9px 16px;
+  border-top: 1px solid var(--hair);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 18px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink-2);
+  font-size: 11px;
+}
+
+.legend-swatch {
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--swatch);
+}
+
+.zoom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.zoom button {
+  width: 27px;
+  height: 25px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.zoom button:hover,
+.zoom button:focus-visible {
+  border-color: var(--hair-2);
+  background: var(--panel-2);
+  color: var(--ink);
+  outline: none;
+}
+
+.zoom-output {
+  min-width: 44px;
+  color: var(--muted);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.group,
+.node,
+.edge {
+  transition: opacity 240ms ease;
+}
+
+.group-boundary {
+  fill: color-mix(in srgb, var(--panel-2) 64%, transparent);
+  stroke: var(--hair-2);
+  stroke-width: 1.4;
+  stroke-dasharray: 7 5;
+}
+
+.group[data-family="external"] .group-boundary { stroke: var(--external); }
+.group[data-family="service"] .group-boundary { stroke: var(--service); }
+.group[data-family="model"] .group-boundary { stroke: var(--model); }
+.group[data-family="store"] .group-boundary { stroke: var(--store); }
+.group[data-family="infra"] .group-boundary { stroke: var(--infra); }
+.group[data-family="concept"] .group-boundary { stroke: var(--concept); }
+.group[data-depth="0"] .group-boundary {
+  fill: color-mix(in srgb, var(--panel-2) 78%, transparent);
+}
+
+.group[data-depth="1"] .group-boundary,
+.group[data-depth="2"] .group-boundary {
+  fill: color-mix(in srgb, var(--panel-2) 34%, transparent);
+}
+
+.group-label {
+  fill: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.group[data-family="external"] .group-label { fill: var(--external); }
+.group[data-family="service"] .group-label { fill: var(--service); }
+.group[data-family="model"] .group-label { fill: var(--model); }
+.group[data-family="store"] .group-label { fill: var(--store); }
+.group[data-family="infra"] .group-label { fill: var(--infra); }
+.group[data-family="concept"] .group-label { fill: var(--concept); }
+
+.group,
+.node {
+  cursor: pointer;
+}
+
+.node-bg {
+  fill: var(--panel);
+  stroke: var(--node-color, var(--hair-2));
+  stroke-width: 1.25;
+}
+
+.node-stripe {
+  fill: var(--node-color, var(--hair-2));
+}
+
+.node-label {
+  fill: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.node-caption {
+  fill: var(--muted);
+  font-size: 10.5px;
+}
+
+.node[data-type="actor"],
+.node[data-type="input"],
+.node[data-type="output"] {
+  --node-color: var(--external);
+}
+
+.node[data-type="process"],
+.node[data-type="service"] {
+  --node-color: var(--service);
+}
+
+.node[data-type="model"] {
+  --node-color: var(--model);
+}
+
+.node[data-type="store"] {
+  --node-color: var(--store);
+}
+
+.node[data-type="infrastructure"],
+.node[data-type="boundary"] {
+  --node-color: var(--infra);
+}
+
+.node[data-type="concept"] {
+  --node-color: var(--concept);
+}
+
+.edge-path {
+  fill: none;
+  stroke: var(--edge-color, var(--edge-relationship));
+  stroke-width: 1.45;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.edge[data-kind="flow"] {
+  --edge-color: var(--edge-flow);
+}
+
+.edge[data-kind="control"] {
+  --edge-color: var(--edge-control);
+}
+
+.edge[data-kind="data"] {
+  --edge-color: var(--edge-data);
+}
+
+.edge[data-kind="dependency"] {
+  --edge-color: var(--edge-dependency);
+}
+
+.edge[data-importance="primary"] .edge-path {
+  stroke-width: 2.3;
+}
+
+.edge-label-bg {
+  fill: var(--panel);
+  stroke: var(--hair);
+  stroke-width: 0.8;
+}
+
+.edge-label {
+  fill: var(--edge-color, var(--muted));
+  font-size: 9.5px;
+  font-weight: 650;
+}
+
+.is-dim {
+  opacity: 0.38;
+}
+
+.group.is-dim {
+  opacity: 0.45;
+}
+
+.node.is-hot .node-bg,
+.node.is-hover .node-bg,
+.node:focus-visible .node-bg {
+  stroke-width: 2.4;
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--node-color) 35%, transparent));
+}
+
+.group.is-hot .group-boundary,
+.group.is-hover .group-boundary {
+  stroke: var(--focus);
+  stroke-width: 2;
+}
+
+.edge.is-hot .edge-path,
+.edge.is-hover .edge-path {
+  stroke-width: 2.7;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--edge-color) 32%, transparent));
+}
+
+.node.is-new .node-bg {
+  stroke-width: 3;
+  stroke-dasharray: 5 3;
+}
+
+.node:focus-visible {
+  outline: none;
+}
+
+.tip {
+  position: absolute;
+  z-index: 10;
+  max-width: 280px;
+  padding: 8px 10px;
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  background: var(--ink);
+  box-shadow: 0 9px 26px rgba(0, 0, 0, 0.28);
+  color: var(--panel);
+  font-size: 12px;
+  line-height: 1.42;
+  pointer-events: none;
+}
+
+.tip[hidden],
+.toast[hidden] {
+  display: none;
+}
+
+.below {
+  display: grid;
+  gap: 14px;
+}
+
+.role-relevance {
+  padding: 14px 16px 16px;
+  border: 1px solid var(--hair);
+  border-left: 3px solid var(--focus);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.role-relevance h2,
+.card h2 {
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.role-relevance ul {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 28px;
+  margin-top: 10px;
+  list-style: none;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.card {
+  padding: 13px 16px 15px;
+  border: 1px solid var(--hair);
+  border-top: 2px solid var(--card-accent, var(--hair-2));
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.role-relevance li,
+.card li {
+  position: relative;
+  padding-left: 12px;
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.role-relevance li::before,
+.card li::before {
+  position: absolute;
+  top: 7px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--focus);
+  content: "";
+}
+
+.card ul {
+  display: grid;
+  gap: 7px;
+  margin-top: 9px;
+  list-style: none;
+}
+
+.card:nth-child(4n + 1) {
+  --card-accent: var(--external);
+}
+
+.card:nth-child(4n + 2) {
+  --card-accent: var(--store);
+}
+
+.card:nth-child(4n + 3) {
+  --card-accent: var(--service);
+}
+
+.card:nth-child(4n) {
+  --card-accent: var(--infra);
+}
+
+.toast {
+  position: fixed;
+  z-index: 40;
+  bottom: 22px;
+  left: 50%;
+  padding: 9px 14px;
+  transform: translateX(-50%);
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--panel);
+  font-size: 12.5px;
+  pointer-events: none;
+}
+
+body[data-theme="dark"] .node-bg {
+  fill: #151c25;
+}
+
+body[data-theme="dark"] .node-label {
+  fill: #ffffff;
+}
+
+body[data-theme="dark"] .node-caption {
+  fill: #b7c2d0;
+}
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-rows: auto auto minmax(440px, auto) auto;
+    padding: 16px;
+  }
+
+  .bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tools {
+    flex-wrap: wrap;
+  }
+
+  .strip {
+    grid-template-columns: 1fr;
+  }
+
+  .strip-meta {
+    padding: 0 0 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--hair);
+  }
+
+  .cards,
+  .role-relevance ul {
+    grid-template-columns: 1fr;
+  }
+
+  .foot {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #diagram {
+    min-height: 420px;
+  }
+}
+
+@media (max-width: 520px) {
+  .app {
+    padding: 12px;
+  }
+
+  .chips {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .chip {
+    width: 100%;
+  }
+
+  .legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+</style>
+</head>
+<body data-theme="dark">
+<main class="app">
+  <header class="bar">
+    <div class="title">
+      <h1>Kubernetes, for Customer Success</h1>
+      <p class="audience">For Customer Success Managers</p>
+      <p class="lede" id="lede">Kubernetes is the platform customers use to run containerized applications: it deploys the app, keeps copies running, scales when traffic grows, and recovers when something breaks.</p>
+    </div>
+    <div class="tools">
+    <button class="tool-button" id="play" type="button" aria-label="Play guided chapters">Play</button>
+    <div class="drop">
+      <button class="tool-button" id="export" type="button" aria-haspopup="menu" aria-expanded="false">Export</button>
+      <div class="menu" id="export-menu" role="menu" hidden>
+        <button type="button" id="copy-image" role="menuitem">Copy image</button>
+        <button type="button" id="download-image" role="menuitem">Download PNG</button>
+      </div>
+    </div>
+    <div class="drop">
+      <button class="theme-trigger" id="theme" type="button" aria-haspopup="menu" aria-expanded="false">
+        <svg class="theme-icon" id="theme-icon" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/></svg>
+        <span id="theme-label">Dark</span>
+        <svg class="chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="menu" id="theme-menu" role="menu" hidden>
+        <button type="button" id="theme-light" role="menuitemradio" aria-checked="false">
+          <svg class="theme-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3.15" fill="currentColor"/><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1.2v1.7M8 13.1v1.7M1.2 8h1.7M13.1 8h1.7"/><path d="M3.15 3.15l1.2 1.2M11.65 11.65l1.2 1.2M3.15 12.85l1.2-1.2M11.65 4.35l1.2-1.2"/></g></svg>
+          Light
+        </button>
+        <button type="button" id="theme-dark" role="menuitemradio" aria-checked="true">
+          <svg class="theme-icon" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/></svg>
+          Dark
+        </button>
+      </div>
+    </div>
+  </div>
+  </header>
+  <section class="strip" aria-label="Guided chapters">
+    <div class="strip-meta">
+      <div class="eyebrow" id="eyebrow">Overview</div>
+      <div class="now" id="now">The whole picture</div>
+    </div>
+    <div class="chips"><button class="chip" type="button" data-chapter-index="0" aria-pressed="false"><b>01</b><span>Where it sits</span></button>
+      <button class="chip" type="button" data-chapter-index="1" aria-pressed="false"><b>02</b><span>Deploy</span></button>
+      <button class="chip" type="button" data-chapter-index="2" aria-pressed="false"><b>03</b><span>Scale and recover</span></button>
+      <button class="chip" type="button" data-chapter-index="3" aria-pressed="false"><b>04</b><span>How users reach it</span></button></div>
+    <div class="takeaways" id="takeaways" hidden>
+      <div class="eyebrow">Takeaways</div>
+      <ul id="takeaway-list"></ul>
+    </div>
+  </section>
+  <section class="stage" aria-label="Interactive system map">
+    <svg id="diagram" viewBox="0 0 1427 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Kubernetes system map for Customer Success Managers">
+    <defs>
+    <marker id="arrow-flow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-control" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-data" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-dependency" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-relationship" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+  </defs>
+    <g id="scene">
+      <g class="group" data-group-id="cluster" data-depth="0" data-family="service">
+        <rect class="group-boundary" x="579.2" y="48" width="799.2" height="238" rx="12"/>
+        <text class="group-label" x="592.2" y="67">Kubernetes Cluster — deploy, scale, recover, manage</text>
+      </g>
+      <g class="edge" data-edge-id="application-to-container" data-from="application" data-to="container" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M214.4,116 L263.2,116 L263.2,167 L328,167" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="256.7" y="156" width="77.8" height="17" rx="5"/>
+        <text class="edge-label" x="295.6" y="168" text-anchor="middle">packages as</text>
+      </g>
+      <g class="edge" data-edge-id="container-to-copies" data-from="container" data-to="running-copies" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M487.2,167 L827.8,167 L827.8,180 L1168.4,180" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="630.2" y="156" width="54.6" height="17" rx="5"/>
+        <text class="edge-label" x="657.5" y="168" text-anchor="middle">runs as</text>
+      </g>
+      <g class="edge" data-edge-id="deploy-to-copies" data-from="deploy" data-to="running-copies" data-kind="control" data-importance="primary">
+        <path class="edge-path" d="M782,129 L983.2,129 L983.2,180 L1168.4,180" marker-end="url(#arrow-control)"/>
+        <rect class="edge-label-bg" x="858.2" y="118" width="48.8" height="17" rx="5"/>
+        <text class="edge-label" x="882.6" y="130" text-anchor="middle">places</text>
+      </g>
+      <g class="edge" data-edge-id="scale-to-copies" data-from="scale" data-to="running-copies" data-kind="control" data-importance="supporting">
+        <path class="edge-path" d="M1076.4,129 L1114.4,129 L1114.4,180 L1168.4,180" marker-end="url(#arrow-control)"/>
+        <rect class="edge-label-bg" x="1102.5" y="169" width="77.8" height="17" rx="5"/>
+        <text class="edge-label" x="1141.4" y="181" text-anchor="middle">adds copies</text>
+      </g>
+      <g class="edge" data-edge-id="recover-to-copies" data-from="recover" data-to="running-copies" data-kind="control" data-importance="supporting">
+        <path class="edge-path" d="M1072.8,231 L1120.6,231 L1120.6,180 L1168.4,180" marker-end="url(#arrow-control)"/>
+        <rect class="edge-label-bg" x="1090.4" y="194.5" width="60.4" height="17" rx="5"/>
+        <text class="edge-label" x="1120.6" y="206.5" text-anchor="middle">restarts</text>
+      </g>
+      <g class="edge" data-edge-id="users-to-service" data-from="users" data-to="service" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M236,218 L426.6,218 L426.6,231 L601.2,231" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="292.4" y="207" width="77.8" height="17" rx="5"/>
+        <text class="edge-label" x="331.3" y="219" text-anchor="middle">use the app</text>
+      </g>
+      <g class="edge" data-edge-id="service-to-copies" data-from="service" data-to="running-copies" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M796.4,231 L974.4,231 L974.4,180 L1168.4,180" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="1038.3" y="169" width="66.2" height="17" rx="5"/>
+        <text class="edge-label" x="1071.4" y="181" text-anchor="middle">routes to</text>
+      </g>
+      <g class="node" data-node-id="application" data-type="input" data-importance="primary" role="button" tabindex="0" aria-label="Customer&#39;s App: The customer&#39;s product or workload. Kubernetes is the platform underneath it, not the application itself.">
+        <rect class="node-bg" x="69.6" y="83" width="144.8" height="66" rx="8"/>
+        <rect class="node-stripe" x="69.6" y="83" width="4" height="66" rx="2"/>
+        <text class="node-label" x="87.6" y="110">Customer&#39;s App</text>
+        <text class="node-caption" x="87.6" y="130">what they ship</text>
+      </g>
+      <g class="node" data-node-id="users" data-type="actor" data-importance="primary" role="button" tabindex="0" aria-label="Users: People or systems using the customer&#39;s product through a stable address.">
+        <rect class="node-bg" x="48" y="185" width="188" height="66" rx="8"/>
+        <rect class="node-stripe" x="48" y="185" width="4" height="66" rx="2"/>
+        <text class="node-label" x="66" y="212">Users</text>
+        <text class="node-caption" x="66" y="232">call the application</text>
+      </g>
+      <g class="node" data-node-id="container" data-type="process" data-importance="primary" role="button" tabindex="0" aria-label="Container: A container packages the application so the same build can run consistently across environments.">
+        <rect class="node-bg" x="328" y="134" width="159.2" height="66" rx="8"/>
+        <rect class="node-stripe" x="328" y="134" width="4" height="66" rx="2"/>
+        <text class="node-label" x="346" y="161">Container</text>
+        <text class="node-caption" x="346" y="181">the packaged app</text>
+      </g>
+      <g class="node" data-node-id="deploy" data-type="service" data-importance="primary" role="button" tabindex="0" aria-label="Deploy: Kubernetes places a released application version onto the cluster as running copies.">
+        <rect class="node-bg" x="615.6" y="96" width="166.4" height="66" rx="8"/>
+        <rect class="node-stripe" x="615.6" y="96" width="4" height="66" rx="2"/>
+        <text class="node-label" x="633.6" y="123">Deploy</text>
+        <text class="node-caption" x="633.6" y="143">release a version</text>
+      </g>
+      <g class="node" data-node-id="service" data-type="service" data-importance="primary" role="button" tabindex="0" aria-label="Stable Access: A Kubernetes Service gives users one address while running copies change behind it.">
+        <rect class="node-bg" x="601.2" y="198" width="195.2" height="66" rx="8"/>
+        <rect class="node-stripe" x="601.2" y="198" width="4" height="66" rx="2"/>
+        <text class="node-label" x="619.2" y="225">Stable Access</text>
+        <text class="node-caption" x="619.2" y="245">Service — one address</text>
+      </g>
+      <g class="node" data-node-id="scale" data-type="service" data-importance="primary" role="button" tabindex="0" aria-label="Scale: Kubernetes can add copies for more traffic and remove them when demand falls.">
+        <rect class="node-bg" x="888.4" y="96" width="188" height="66" rx="8"/>
+        <rect class="node-stripe" x="888.4" y="96" width="4" height="66" rx="2"/>
+        <text class="node-label" x="906.4" y="123">Scale</text>
+        <text class="node-caption" x="906.4" y="143">add or remove copies</text>
+      </g>
+      <g class="node" data-node-id="recover" data-type="service" data-importance="primary" role="button" tabindex="0" aria-label="Recover: Kubernetes replaces failed copies so a machine or process failure does not automatically become product downtime.">
+        <rect class="node-bg" x="892" y="198" width="180.8" height="66" rx="8"/>
+        <rect class="node-stripe" x="892" y="198" width="4" height="66" rx="2"/>
+        <text class="node-label" x="910" y="225">Recover</text>
+        <text class="node-caption" x="910" y="245">restart what breaks</text>
+      </g>
+      <g class="node" data-node-id="running-copies" data-type="infrastructure" data-importance="primary" role="button" tabindex="0" aria-label="Running Copies: These are the live application copies. Customers may call them Pods in architecture conversations.">
+        <rect class="node-bg" x="1168.4" y="147" width="188" height="66" rx="8"/>
+        <rect class="node-stripe" x="1168.4" y="147" width="4" height="66" rx="2"/>
+        <text class="node-label" x="1186.4" y="174">Running Copies</text>
+        <text class="node-caption" x="1186.4" y="194">the live application</text>
+      </g>
+    </g>
+  </svg>
+    <div class="tip" id="tip" role="tooltip" hidden></div>
+    <div class="foot">
+      <div class="legend" aria-label="Diagram legend">
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--external)"></span>Actors, inputs, and outputs</div>
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--service)"></span>Processes and services</div>
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--infra)"></span>Infrastructure</div>
+  </div>
+      <div class="zoom" aria-label="Diagram zoom controls">
+        <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
+        <span class="zoom-output" id="zoom-output">100%</span>
+        <button id="zoom-in" type="button" aria-label="Zoom in">+</button>
+        <button id="zoom-reset" type="button" aria-label="Reset view">↺</button>
+      </div>
+    </div>
+  </section>
+  <div class="below">
+    <section class="role-relevance" aria-labelledby="role-relevance-title">
+    <div class="eyebrow">Your role</div>
+    <h2 id="role-relevance-title">Why this matters for a Customer Success Manager</h2>
+    <ul><li>Follow customer architecture conversations when Kubernetes appears in the stack.</li><li>Connect deployment, scaling, and recovery to reliability outcomes customers care about.</li><li>Distinguish an application issue from capacity or platform recovery symptoms.</li><li>Use customer vocabulary accurately without needing scheduler internals.</li></ul>
+  </section>
+    <div class="cards">
+    <section class="card">
+      <h2>How the pieces fit</h2>
+      <ul><li>The application is packaged as a Container.</li><li>Kubernetes runs and manages copies of that Container.</li><li>A Service keeps access stable while copies change.</li></ul>
+    </section>
+    <section class="card">
+      <h2>Terms customers may use</h2>
+      <ul><li>Cluster means the whole Kubernetes environment.</li><li>A Node is one machine; a Pod is one scheduled running unit.</li><li>Deploy, scale, and recover are jobs the same platform performs.</li></ul>
+    </section>
+    <section class="card">
+      <h2>Why customers use it</h2>
+      <ul><li>Avoid managing every machine by hand.</li><li>Keep products available through individual failures.</li><li>Run the same packaged application across environments.</li></ul>
+    </section>
+  </div>
+  </div>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script>window.__VISUALINK_SPEC__={"version":"1.0","concept":{"name":"Kubernetes","title":"Kubernetes, for Customer Success","definition":"Kubernetes is the platform customers use to run containerized applications: it deploys the app, keeps copies running, scales when traffic grows, and recovers when something breaks.","problem":"Customers need applications to stay available and scale without manually managing every machine."},"audience":{"role":"Customer Success Managers","technicalLevel":"intermediate","goals":["understand customer architecture discussions","explain Kubernetes accurately to customers","recognize operational implications"]},"nodes":[{"id":"application","label":"Customer's App","caption":"what they ship","type":"input","description":"The customer's product or workload. Kubernetes is the platform underneath it, not the application itself.","layoutHint":{"rank":0,"order":0}},{"id":"users","label":"Users","caption":"call the application","type":"actor","description":"People or systems using the customer's product through a stable address.","layoutHint":{"rank":0,"order":4}},{"id":"container","label":"Container","caption":"the packaged app","type":"process","description":"A container packages the application so the same build can run consistently across environments.","layoutHint":{"rank":1,"order":0}},{"id":"deploy","label":"Deploy","caption":"release a version","type":"service","description":"Kubernetes places a released application version onto the cluster as running copies.","layoutHint":{"rank":1,"order":1}},{"id":"service","label":"Stable Access","caption":"Service — one address","type":"service","description":"A Kubernetes Service gives users one address while running copies change behind it.","layoutHint":{"rank":1,"order":4}},{"id":"scale","label":"Scale","caption":"add or remove copies","type":"service","description":"Kubernetes can add copies for more traffic and remove them when demand falls.","layoutHint":{"rank":2,"order":0}},{"id":"recover","label":"Recover","caption":"restart what breaks","type":"service","description":"Kubernetes replaces failed copies so a machine or process failure does not automatically become product downtime.","layoutHint":{"rank":2,"order":2}},{"id":"running-copies","label":"Running Copies","caption":"the live application","type":"infrastructure","description":"These are the live application copies. Customers may call them Pods in architecture conversations.","layoutHint":{"rank":3,"order":1}}],"edges":[{"id":"application-to-container","from":"application","to":"container","label":"packages as","kind":"flow","importance":"primary"},{"id":"container-to-copies","from":"container","to":"running-copies","label":"runs as","kind":"flow","importance":"primary"},{"id":"deploy-to-copies","from":"deploy","to":"running-copies","label":"places","kind":"control","importance":"primary"},{"id":"scale-to-copies","from":"scale","to":"running-copies","label":"adds copies","kind":"control"},{"id":"recover-to-copies","from":"recover","to":"running-copies","label":"restarts","kind":"control"},{"id":"users-to-service","from":"users","to":"service","label":"use the app","kind":"flow","importance":"primary"},{"id":"service-to-copies","from":"service","to":"running-copies","label":"routes to","kind":"flow","importance":"primary"}],"groups":[{"id":"cluster","label":"Kubernetes Cluster — deploy, scale, recover, manage","description":"The Kubernetes platform that runs and manages the customer's containerized application.","nodes":["deploy","service","scale","recover","running-copies"]}],"chapters":[{"id":"where-it-sits","title":"Where Kubernetes sits","shortTitle":"Where it sits","explanation":"The customer's application is packaged as a Container. Kubernetes is the platform that runs that package across machines.","focusNodes":["application","container","running-copies"],"focusEdges":["application-to-container","container-to-copies"],"focusGroups":["cluster"],"introducedNodes":["container"],"takeaways":["Application is the product","Container is the package","Kubernetes is the platform"]},{"id":"deploy","title":"Deploy the application","shortTitle":"Deploy","explanation":"Deploy means releasing a version onto the cluster. Kubernetes places running copies of the packaged application.","focusNodes":["application","container","deploy","running-copies"],"focusEdges":["application-to-container","deploy-to-copies"],"introducedNodes":["deploy"]},{"id":"reliability","title":"Scale and recover","shortTitle":"Scale and recover","explanation":"When traffic grows, Kubernetes adds copies. When a copy breaks, Kubernetes replaces it. This is the operational value customers usually mean.","focusNodes":["scale","recover","running-copies"],"focusEdges":["scale-to-copies","recover-to-copies"],"focusGroups":["cluster"],"introducedNodes":["scale","recover"],"takeaways":["Scale handles demand","Recovery protects availability"]},{"id":"stable-access","title":"How users reach the app","shortTitle":"How users reach it","explanation":"Users call one stable Service address. Kubernetes routes them to healthy running copies even while those copies are replaced.","focusNodes":["users","service","running-copies"],"focusEdges":["users-to-service","service-to-copies"],"introducedNodes":["service"]}],"roleRelevance":{"title":"Why this matters for a Customer Success Manager","points":["Follow customer architecture conversations when Kubernetes appears in the stack.","Connect deployment, scaling, and recovery to reliability outcomes customers care about.","Distinguish an application issue from capacity or platform recovery symptoms.","Use customer vocabulary accurately without needing scheduler internals."]},"contextCards":[{"id":"stack","title":"How the pieces fit","points":["The application is packaged as a Container.","Kubernetes runs and manages copies of that Container.","A Service keeps access stable while copies change."]},{"id":"customer-language","title":"Terms customers may use","points":["Cluster means the whole Kubernetes environment.","A Node is one machine; a Pod is one scheduled running unit.","Deploy, scale, and recover are jobs the same platform performs."]},{"id":"value","title":"Why customers use it","points":["Avoid managing every machine by hand.","Keep products available through individual failures.","Run the same packaged application across environments."]}],"layout":{"preferredDirection":"left-to-right"}};</script>
+<script>
+(() => {
+  "use strict";
+
+  const spec = window.__VISUALINK_SPEC__;
+  if (!spec) throw new Error("Visualink runtime could not find its embedded spec.");
+
+  const diagram = document.getElementById("diagram");
+  const scene = document.getElementById("scene");
+  const lede = document.getElementById("lede");
+  const eyebrow = document.getElementById("eyebrow");
+  const now = document.getElementById("now");
+  const takeaways = document.getElementById("takeaways");
+  const takeawayList = document.getElementById("takeaway-list");
+  const tip = document.getElementById("tip");
+  const toast = document.getElementById("toast");
+  const playButton = document.getElementById("play");
+  const chapterButtons = [...document.querySelectorAll(".chip")];
+  const nodes = [...document.querySelectorAll(".node")];
+  const groups = [...document.querySelectorAll(".group")];
+  const edges = [...document.querySelectorAll(".edge")];
+  const parts = [...nodes, ...groups];
+
+  const nodeById = new Map(spec.nodes.map((node) => [node.id, node]));
+  const groupById = new Map((spec.groups || []).map((group) => [group.id, group]));
+  const edgeById = new Map(spec.edges.map((edge) => [edge.id, edge]));
+  const groupParent = new Map();
+  const nodeGroup = new Map();
+
+  for (const group of spec.groups || []) {
+    for (const childId of group.groups || []) groupParent.set(childId, group.id);
+    for (const nodeId of group.nodes || []) nodeGroup.set(nodeId, group.id);
+  }
+  for (const node of spec.nodes) {
+    if (node.group) nodeGroup.set(node.id, node.group);
+  }
+
+  function groupAncestors(groupId) {
+    const result = new Set();
+    let current = groupId;
+    while (current) {
+      result.add(current);
+      current = groupParent.get(current);
+    }
+    return result;
+  }
+
+  function groupsForNodes(nodeIds) {
+    const result = new Set();
+    for (const nodeId of nodeIds) {
+      for (const groupId of groupAncestors(nodeGroup.get(nodeId))) result.add(groupId);
+    }
+    return result;
+  }
+
+  function descendantNodes(groupId, result = new Set()) {
+    const group = groupById.get(groupId);
+    if (!group) return result;
+    for (const nodeId of group.nodes || []) result.add(nodeId);
+    for (const node of spec.nodes) {
+      if (node.group === groupId) result.add(node.id);
+    }
+    for (const childId of group.groups || []) descendantNodes(childId, result);
+    return result;
+  }
+
+  let chapterIndex = -1;
+  let playTimer = null;
+  let toastTimer = null;
+
+  function stopPlayback() {
+    if (!playTimer) return;
+    clearInterval(playTimer);
+    playTimer = null;
+    playButton.textContent = "Play";
+    playButton.setAttribute("aria-label", "Play guided chapters");
+  }
+
+  function clearDiagramState() {
+    for (const element of [...parts, ...edges]) {
+      element.classList.remove("is-dim", "is-hot", "is-hover", "is-new");
+    }
+  }
+
+  function paintChapterButtons() {
+    chapterButtons.forEach((button, index) => {
+      const active = index === chapterIndex;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  }
+
+  function renderTakeaways(items) {
+    takeawayList.replaceChildren();
+    if (!items || items.length === 0) {
+      takeaways.hidden = true;
+      return;
+    }
+    for (const item of items) {
+      const li = document.createElement("li");
+      li.textContent = item;
+      takeawayList.appendChild(li);
+    }
+    takeaways.hidden = false;
+  }
+
+  function overviewMode() {
+    chapterIndex = -1;
+    eyebrow.textContent = "Overview";
+    now.textContent = "The whole picture";
+    lede.textContent = spec.concept.definition;
+    renderTakeaways([]);
+    paintChapterButtons();
+    clearDiagramState();
+    hideTip();
+  }
+
+  function focusChapter(index) {
+    chapterIndex = (index + spec.chapters.length) % spec.chapters.length;
+    const chapter = spec.chapters[chapterIndex];
+    const focusNodes = new Set(chapter.focusNodes || []);
+    const introducedNodes = new Set(chapter.introducedNodes || []);
+    for (const id of introducedNodes) focusNodes.add(id);
+
+    const relevantGroups = groupsForNodes(focusNodes);
+    for (const id of chapter.focusGroups || []) {
+      for (const ancestor of groupAncestors(id)) relevantGroups.add(ancestor);
+    }
+
+    let focusEdges;
+    if (Array.isArray(chapter.focusEdges)) {
+      focusEdges = new Set(chapter.focusEdges);
+    } else {
+      focusEdges = new Set(
+        spec.edges
+          .filter((edge) => focusNodes.has(edge.from) && focusNodes.has(edge.to))
+          .map((edge) => edge.id)
+      );
+    }
+
+    eyebrow.textContent = `Chapter ${chapterIndex + 1} of ${spec.chapters.length}`;
+    now.textContent = chapter.title;
+    lede.textContent = chapter.explanation;
+    renderTakeaways(chapter.takeaways || []);
+    paintChapterButtons();
+
+    const hasNodeFocus = focusNodes.size > 0;
+    for (const element of nodes) {
+      const id = element.dataset.nodeId;
+      const focused = !hasNodeFocus || focusNodes.has(id);
+      element.classList.toggle("is-hot", focused && hasNodeFocus);
+      element.classList.toggle("is-dim", !focused);
+      element.classList.toggle("is-new", introducedNodes.has(id));
+      element.classList.remove("is-hover");
+    }
+
+    for (const element of groups) {
+      const focused = relevantGroups.has(element.dataset.groupId);
+      element.classList.toggle("is-hot", focused);
+      element.classList.toggle("is-dim", relevantGroups.size > 0 && !focused);
+      element.classList.remove("is-hover");
+    }
+
+    for (const element of edges) {
+      const focused = focusEdges.has(element.dataset.edgeId);
+      element.classList.toggle("is-hot", focused);
+      element.classList.toggle("is-dim", !focused);
+      element.classList.remove("is-hover");
+    }
+    hideTip();
+  }
+
+  chapterButtons.forEach((button, index) => {
+    button.addEventListener("click", () => {
+      stopPlayback();
+      focusChapter(index);
+    });
+  });
+
+  playButton.addEventListener("click", () => {
+    if (playTimer) {
+      stopPlayback();
+      return;
+    }
+    playButton.textContent = "Pause";
+    playButton.setAttribute("aria-label", "Pause guided chapters");
+    if (chapterIndex < 0) focusChapter(0);
+    playTimer = setInterval(() => focusChapter(chapterIndex + 1), 3600);
+  });
+
+  function neighboringNodes(nodeId) {
+    const result = new Set([nodeId]);
+    for (const edge of spec.edges) {
+      if (edge.from === nodeId) result.add(edge.to);
+      if (edge.to === nodeId) result.add(edge.from);
+    }
+    return result;
+  }
+
+  function showTip(element, text) {
+    if (!text) return;
+    const stage = document.querySelector(".stage").getBoundingClientRect();
+    const bounds = element.getBoundingClientRect();
+    tip.textContent = text;
+    tip.hidden = false;
+    const tipWidth = tip.offsetWidth;
+    const tipHeight = tip.offsetHeight;
+    let left = bounds.left - stage.left;
+    let top = bounds.bottom - stage.top + 8;
+    if (left + tipWidth > stage.width - 12) left = stage.width - tipWidth - 12;
+    if (left < 12) left = 12;
+    if (top + tipHeight > stage.height - 12) top = bounds.top - stage.top - tipHeight - 8;
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+  }
+
+  function hideTip() {
+    tip.hidden = true;
+  }
+
+  function hoverNode(nodeId, element) {
+    const near = neighboringNodes(nodeId);
+    for (const node of nodes) {
+      const relevant = near.has(node.dataset.nodeId);
+      node.classList.toggle("is-hover", node.dataset.nodeId === nodeId);
+      if (chapterIndex < 0) node.classList.toggle("is-dim", !relevant);
+    }
+    for (const edge of edges) {
+      const semanticEdge = edgeById.get(edge.dataset.edgeId);
+      const relevant = semanticEdge.from === nodeId || semanticEdge.to === nodeId;
+      edge.classList.toggle("is-hover", relevant);
+      if (chapterIndex < 0) edge.classList.toggle("is-dim", !relevant);
+    }
+    if (chapterIndex < 0) {
+      const relatedGroups = groupsForNodes(near);
+      for (const group of groups) {
+        group.classList.toggle("is-dim", !relatedGroups.has(group.dataset.groupId));
+      }
+    }
+    showTip(element, nodeById.get(nodeId)?.description);
+  }
+
+  function hoverGroup(groupId, element) {
+    const members = descendantNodes(groupId);
+    for (const group of groups) {
+      group.classList.toggle("is-hover", group.dataset.groupId === groupId);
+      if (chapterIndex < 0) {
+        const related = groupAncestors(groupId).has(group.dataset.groupId) ||
+          groupAncestors(group.dataset.groupId).has(groupId);
+        group.classList.toggle("is-dim", !related);
+      }
+    }
+    if (chapterIndex < 0) {
+      for (const node of nodes) node.classList.toggle("is-dim", !members.has(node.dataset.nodeId));
+      for (const edge of edges) {
+        const semanticEdge = edgeById.get(edge.dataset.edgeId);
+        edge.classList.toggle(
+          "is-dim",
+          !(members.has(semanticEdge.from) && members.has(semanticEdge.to))
+        );
+      }
+    }
+    showTip(element, groupById.get(groupId)?.description);
+  }
+
+  function clearHover() {
+    for (const element of [...parts, ...edges]) element.classList.remove("is-hover");
+    if (chapterIndex < 0) {
+      for (const element of [...parts, ...edges]) element.classList.remove("is-dim");
+    }
+    hideTip();
+  }
+
+  function chapterForNode(nodeId) {
+    return spec.chapters.findIndex((chapter) =>
+      (chapter.focusNodes || []).includes(nodeId) ||
+      (chapter.introducedNodes || []).includes(nodeId)
+    );
+  }
+
+  for (const element of nodes) {
+    const nodeId = element.dataset.nodeId;
+    element.addEventListener("pointerenter", () => hoverNode(nodeId, element));
+    element.addEventListener("pointerleave", clearHover);
+    element.addEventListener("focus", () => hoverNode(nodeId, element));
+    element.addEventListener("blur", clearHover);
+    element.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const target = chapterForNode(nodeId);
+      if (target >= 0) {
+        stopPlayback();
+        focusChapter(target);
+      }
+    });
+    element.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        element.click();
+      }
+    });
+  }
+
+  for (const element of groups) {
+    const groupId = element.dataset.groupId;
+    element.addEventListener("pointerenter", () => hoverGroup(groupId, element));
+    element.addEventListener("pointerleave", clearHover);
+    element.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const target = spec.chapters.findIndex((chapter) =>
+        (chapter.focusGroups || []).includes(groupId)
+      );
+      if (target >= 0) {
+        stopPlayback();
+        focusChapter(target);
+      }
+    });
+  }
+
+  const themeButton = document.getElementById("theme");
+  const themeMenu = document.getElementById("theme-menu");
+  const themeLabel = document.getElementById("theme-label");
+  const themeIcon = document.getElementById("theme-icon");
+  const lightButton = document.getElementById("theme-light");
+  const darkButton = document.getElementById("theme-dark");
+  const moonIcon = '<path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/>';
+  const sunIcon = '<circle cx="8" cy="8" r="3.15" fill="currentColor"/><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1.2v1.7M8 13.1v1.7M1.2 8h1.7M13.1 8h1.7"/><path d="M3.15 3.15l1.2 1.2M11.65 11.65l1.2 1.2M3.15 12.85l1.2-1.2M11.65 4.35l1.2-1.2"/></g>';
+
+  function closeThemeMenu() {
+    themeMenu.hidden = true;
+    themeButton.setAttribute("aria-expanded", "false");
+  }
+
+  function setTheme(theme) {
+    document.body.dataset.theme = theme;
+    const dark = theme === "dark";
+    themeLabel.textContent = dark ? "Dark" : "Light";
+    themeIcon.innerHTML = dark ? moonIcon : sunIcon;
+    lightButton.setAttribute("aria-checked", String(!dark));
+    darkButton.setAttribute("aria-checked", String(dark));
+    closeThemeMenu();
+  }
+
+  themeButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const opening = themeMenu.hidden;
+    themeMenu.hidden = !opening;
+    themeButton.setAttribute("aria-expanded", String(opening));
+  });
+  themeMenu.addEventListener("click", (event) => event.stopPropagation());
+  lightButton.addEventListener("click", () => setTheme("light"));
+  darkButton.addEventListener("click", () => setTheme("dark"));
+
+  const exportButton = document.getElementById("export");
+  const exportMenu = document.getElementById("export-menu");
+
+  function closeExportMenu() {
+    exportMenu.hidden = true;
+    exportButton.setAttribute("aria-expanded", "false");
+  }
+
+  exportButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const opening = exportMenu.hidden;
+    exportMenu.hidden = !opening;
+    exportButton.setAttribute("aria-expanded", String(opening));
+  });
+  exportMenu.addEventListener("click", (event) => event.stopPropagation());
+
+  document.addEventListener("click", () => {
+    closeExportMenu();
+    closeThemeMenu();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeExportMenu();
+      closeThemeMenu();
+      hideTip();
+      return;
+    }
+    if (event.target.closest("button, [role='button']")) return;
+    if (event.key === "ArrowRight") {
+      stopPlayback();
+      focusChapter(chapterIndex < 0 ? 0 : chapterIndex + 1);
+    } else if (event.key === "ArrowLeft") {
+      stopPlayback();
+      if (chapterIndex <= 0) overviewMode();
+      else focusChapter(chapterIndex - 1);
+    }
+  });
+
+  function announce(message) {
+    toast.textContent = message;
+    toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.hidden = true;
+    }, 2300);
+  }
+
+  const viewBox = diagram.viewBox.baseVal;
+  let scale = 1;
+  let translateX = 0;
+  let translateY = 0;
+  let drag = null;
+
+  function applyView() {
+    scene.setAttribute(
+      "transform",
+      `translate(${translateX.toFixed(1)},${translateY.toFixed(1)}) scale(${scale.toFixed(3)})`
+    );
+    document.getElementById("zoom-output").textContent = `${Math.round(scale * 100)}%`;
+  }
+
+  function zoom(factor) {
+    const next = Math.min(2.6, Math.max(0.6, scale * factor));
+    const centerX = viewBox.x + viewBox.width / 2;
+    const centerY = viewBox.y + viewBox.height / 2;
+    translateX = centerX - (centerX - translateX) * (next / scale);
+    translateY = centerY - (centerY - translateY) * (next / scale);
+    scale = next;
+    applyView();
+  }
+
+  document.getElementById("zoom-in").addEventListener("click", () => zoom(1.18));
+  document.getElementById("zoom-out").addEventListener("click", () => zoom(1 / 1.18));
+  document.getElementById("zoom-reset").addEventListener("click", () => {
+    scale = 1;
+    translateX = 0;
+    translateY = 0;
+    applyView();
+  });
+  diagram.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    zoom(event.deltaY < 0 ? 1.08 : 1 / 1.08);
+  }, { passive: false });
+  diagram.addEventListener("pointerdown", (event) => {
+    if (event.target.closest(".node")) return;
+    drag = {
+      x: event.clientX,
+      y: event.clientY,
+      translateX,
+      translateY
+    };
+    diagram.classList.add("is-dragging");
+    diagram.setPointerCapture(event.pointerId);
+  });
+  diagram.addEventListener("pointermove", (event) => {
+    if (!drag) return;
+    const bounds = diagram.getBoundingClientRect();
+    translateX = drag.translateX + (event.clientX - drag.x) * (viewBox.width / bounds.width);
+    translateY = drag.translateY + (event.clientY - drag.y) * (viewBox.height / bounds.height);
+    applyView();
+  });
+  function endDrag() {
+    drag = null;
+    diagram.classList.remove("is-dragging");
+  }
+  diagram.addEventListener("pointerup", endDrag);
+  diagram.addEventListener("pointercancel", endDrag);
+
+  function cloneForExport() {
+    const clone = diagram.cloneNode(true);
+    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    clone.querySelector("#scene")?.removeAttribute("transform");
+    clone.querySelectorAll(".is-dim, .is-hot, .is-hover, .is-new").forEach((element) => {
+      element.classList.remove("is-dim", "is-hot", "is-hover", "is-new");
+    });
+
+    const sourceElements = [diagram, ...diagram.querySelectorAll("*")];
+    const cloneElements = [clone, ...clone.querySelectorAll("*")];
+    const properties = [
+      "fill",
+      "stroke",
+      "stroke-width",
+      "stroke-dasharray",
+      "stroke-linecap",
+      "stroke-linejoin",
+      "opacity",
+      "font-size",
+      "font-weight",
+      "font-family",
+      "letter-spacing",
+      "text-anchor"
+    ];
+    sourceElements.forEach((source, index) => {
+      const target = cloneElements[index];
+      if (!target) return;
+      const computed = getComputedStyle(source);
+      for (const property of properties) {
+        const value = computed.getPropertyValue(property).trim();
+        if (value && value !== "normal") target.style.setProperty(property, value);
+      }
+    });
+
+    const background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    background.setAttribute("x", String(viewBox.x));
+    background.setAttribute("y", String(viewBox.y));
+    background.setAttribute("width", String(viewBox.width));
+    background.setAttribute("height", String(viewBox.height));
+    background.setAttribute(
+      "fill",
+      getComputedStyle(document.body).getPropertyValue("--panel").trim()
+    );
+    clone.insertBefore(background, clone.firstChild);
+    return clone;
+  }
+
+  function rasterize() {
+    return new Promise((resolve, reject) => {
+      const clone = cloneForExport();
+      const width = 2080;
+      const height = Math.max(720, Math.round(width * viewBox.height / viewBox.width));
+      clone.setAttribute("width", String(width));
+      clone.setAttribute("height", String(height));
+      const xml = new XMLSerializer().serializeToString(clone);
+      const url = URL.createObjectURL(new Blob([xml], { type: "image/svg+xml;charset=utf-8" }));
+      const image = new Image();
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d");
+        context.fillStyle = getComputedStyle(document.body).getPropertyValue("--panel").trim();
+        context.fillRect(0, 0, width, height);
+        context.drawImage(image, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Could not build image."));
+        }, "image/png");
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Could not render diagram."));
+      };
+      image.src = url;
+    });
+  }
+
+  function downloadBlob(blob) {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    const slug = spec.concept.shortName || spec.concept.name;
+    link.download = `${slug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}.png`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  }
+
+  document.getElementById("copy-image").addEventListener("click", async (event) => {
+    event.stopPropagation();
+    closeExportMenu();
+    const blobPromise = rasterize();
+    try {
+      if (navigator.clipboard && window.ClipboardItem) {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blobPromise })]);
+        announce("Copied image");
+        return;
+      }
+    } catch {
+      // Clipboard access can be unavailable for local files; download is the portable fallback.
+    }
+    try {
+      downloadBlob(await blobPromise);
+      announce("Clipboard unavailable — downloaded PNG instead");
+    } catch {
+      announce("Could not export image");
+    }
+  });
+
+  document.getElementById("download-image").addEventListener("click", async (event) => {
+    event.stopPropagation();
+    closeExportMenu();
+    try {
+      downloadBlob(await rasterize());
+      announce("Downloaded PNG");
+    } catch {
+      announce("Could not download image");
+    }
+  });
+
+  overviewMode();
+  applyView();
+})();
+
+</script>
+</body>
+</html>
