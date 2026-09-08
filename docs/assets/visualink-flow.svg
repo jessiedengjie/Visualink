@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="340" viewBox="0 0 1400 340" role="img" aria-labelledby="title desc">
   <title id="title">How Visualink turns a question into understanding</title>
-  <desc id="desc">Five steps: ask, answer, map, explore, and export.</desc>
+  <desc id="desc">Five steps: ask with an optional role, get a fitted answer, see the map, explore including why it matters when a role is named, and export.</desc>
   <defs>
     <linearGradient id="canvas" x1="0" y1="0" x2="1" y2="1">
       <stop stop-color="#f4f9ff"/>
@@ -19,7 +19,7 @@
     One question becomes a mental model
   </text>
   <text x="60" y="90" fill="#64748b" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="15">
-    Visualink gives you the answer first, then reveals the system around it.
+    Answer first, then the system. Name a role only if you want the explanation adapted.
   </text>
 
   <g transform="translate(60 126)" filter="url(#cardShadow)">
@@ -28,7 +28,7 @@
     <text x="26" y="38" fill="#c84d25" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="16" font-weight="800">1</text>
     <text x="24" y="76" fill="#111827" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="18" font-weight="750">Ask</text>
     <text x="24" y="104" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">"What does this mean?"</text>
-    <text x="24" y="126" fill="#94a3b8" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12">No technical brief needed.</text>
+    <text x="24" y="126" fill="#94a3b8" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12">A role is optional.</text>
   </g>
 
   <path d="M292 201H326" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
@@ -38,8 +38,9 @@
     <circle cx="32" cy="32" r="17" fill="#f2edff"/>
     <text x="26" y="38" fill="#6d3ed1" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="16" font-weight="800">2</text>
     <text x="24" y="76" fill="#111827" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="18" font-weight="750">Answer</text>
-    <text x="24" y="103" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">Get the core idea in</text>
-    <text x="24" y="124" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">one or two sentences.</text>
+    <text x="24" y="100" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">Get the core idea in</text>
+    <text x="24" y="118" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">one or two sentences.</text>
+    <text x="24" y="138" fill="#94a3b8" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12">Role-specific if named.</text>
   </g>
 
   <path d="M572 201H606" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
@@ -49,8 +50,8 @@
     <circle cx="32" cy="32" r="17" fill="#e9f8ff"/>
     <text x="26" y="38" fill="#037cae" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="16" font-weight="800">3</text>
     <text x="24" y="76" fill="#111827" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="18" font-weight="750">Map</text>
-    <text x="24" y="103" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">See the full picture and</text>
-    <text x="24" y="124" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">how the pieces connect.</text>
+    <text x="24" y="103" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">See the picture this</text>
+    <text x="24" y="124" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">learner needs to hold.</text>
   </g>
 
   <path d="M852 201H886" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
@@ -60,8 +61,8 @@
     <circle cx="32" cy="32" r="17" fill="#e8fbf3"/>
     <text x="26" y="38" fill="#087d59" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="16" font-weight="800">4</text>
     <text x="24" y="76" fill="#111827" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="18" font-weight="750">Explore</text>
-    <text x="24" y="103" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">Follow guided chapters,</text>
-    <text x="24" y="124" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">hover, zoom, and connect.</text>
+    <text x="24" y="104" fill="#475569" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="14">Chapters, hover, zoom.</text>
+    <text x="24" y="126" fill="#94a3b8" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="12">A role adds why it matters.</text>
   </g>
 
   <path d="M1132 201H1166" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
