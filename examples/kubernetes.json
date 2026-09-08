@@ -1,0 +1,265 @@
+{
+  "version": "1.0",
+  "concept": {
+    "name": "Kubernetes",
+    "title": "Kubernetes, from image to cluster",
+    "definition": "Kubernetes runs your app across a group of computers, restarts it when something breaks, and scales it when traffic grows — so you do not babysit each machine.",
+    "problem": "Running an application on many machines by hand makes deployment, scaling, recovery, and networking fragile."
+  },
+  "nodes": [
+    {
+      "id": "image",
+      "label": "Container Image",
+      "caption": "the recipe",
+      "type": "input",
+      "description": "A container image is the recipe: the files and settings needed to start the same build of the app on any computer.",
+      "layoutHint": { "rank": 0, "order": 0 }
+    },
+    {
+      "id": "user",
+      "label": "You",
+      "caption": "browser or phone",
+      "type": "actor",
+      "description": "You are the person or device using the app — a browser, a phone, or another service.",
+      "layoutHint": { "rank": 0, "order": 3 }
+    },
+    {
+      "id": "manager",
+      "label": "The Manager",
+      "caption": "places and heals",
+      "type": "process",
+      "description": "The Manager is part of the Control Plane. It places Pods, restarts crashes, and follows the written plan.",
+      "layoutHint": { "rank": 1, "order": 0 }
+    },
+    {
+      "id": "desired-state",
+      "label": "Written Plan",
+      "caption": "desired state",
+      "type": "store",
+      "description": "The written plan is the desired state: what should be running, how many copies, and which image they use.",
+      "layoutHint": { "rank": 1, "order": 1 }
+    },
+    {
+      "id": "service",
+      "label": "Service",
+      "caption": "stable front desk",
+      "type": "service",
+      "description": "A Service is a stable front desk. You call one address; Kubernetes forwards work to healthy Pods behind it.",
+      "layoutHint": { "rank": 1, "order": 3 }
+    },
+    {
+      "id": "pod-a",
+      "label": "Pod A",
+      "caption": "running copy 1",
+      "type": "infrastructure",
+      "description": "A Pod is the smallest unit Kubernetes will place. Pod A is one running copy of the app.",
+      "layoutHint": { "rank": 2, "order": 0 }
+    },
+    {
+      "id": "pod-b",
+      "label": "Pod B",
+      "caption": "running copy 2",
+      "type": "infrastructure",
+      "description": "Pod B is a second running copy, giving spare capacity if one copy fails or traffic grows.",
+      "layoutHint": { "rank": 2, "order": 2 }
+    },
+    {
+      "id": "container-a",
+      "label": "Container",
+      "caption": "the packed app",
+      "type": "process",
+      "description": "A Container is one running copy of the image — the packed app itself inside Pod A.",
+      "importance": "supporting",
+      "layoutHint": { "rank": 3, "order": 0 }
+    },
+    {
+      "id": "container-b",
+      "label": "Container",
+      "caption": "the packed app",
+      "type": "process",
+      "description": "A Container is one running copy of the same image inside Pod B.",
+      "importance": "supporting",
+      "layoutHint": { "rank": 3, "order": 2 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "image-to-manager",
+      "from": "image",
+      "to": "manager",
+      "label": "recipe",
+      "kind": "data"
+    },
+    {
+      "id": "manager-to-plan",
+      "from": "manager",
+      "to": "desired-state",
+      "label": "saves the plan",
+      "kind": "control",
+      "importance": "primary"
+    },
+    {
+      "id": "manager-to-pod-a",
+      "from": "manager",
+      "to": "pod-a",
+      "label": "places and watches",
+      "kind": "control",
+      "importance": "primary"
+    },
+    {
+      "id": "manager-to-pod-b",
+      "from": "manager",
+      "to": "pod-b",
+      "label": "places and watches",
+      "kind": "control"
+    },
+    {
+      "id": "user-to-service",
+      "from": "user",
+      "to": "service",
+      "label": "uses the app",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "service-to-pod-a",
+      "from": "service",
+      "to": "pod-a",
+      "label": "forwards work",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "service-to-pod-b",
+      "from": "service",
+      "to": "pod-b",
+      "label": "forwards work",
+      "kind": "flow"
+    },
+    {
+      "id": "pod-a-to-container",
+      "from": "pod-a",
+      "to": "container-a",
+      "label": "holds",
+      "kind": "flow",
+      "importance": "primary"
+    },
+    {
+      "id": "pod-b-to-container",
+      "from": "pod-b",
+      "to": "container-b",
+      "label": "holds",
+      "kind": "flow"
+    }
+  ],
+  "groups": [
+    {
+      "id": "cluster",
+      "label": "Kubernetes Cluster — the campus",
+      "description": "The Cluster is the whole campus: Worker Nodes that run the app, plus a Control Plane that keeps the written plan and heals problems.",
+      "nodes": ["service"],
+      "groups": ["control-plane", "worker-a", "worker-b"]
+    },
+    {
+      "id": "control-plane",
+      "label": "Control Plane — the office",
+      "description": "The Control Plane is the office that decides where work goes and heals what breaks.",
+      "nodes": ["manager", "desired-state"]
+    },
+    {
+      "id": "worker-a",
+      "label": "Worker Node 1 — a computer",
+      "description": "A Worker Node is one computer that actually runs Pods.",
+      "nodes": ["pod-a", "container-a"]
+    },
+    {
+      "id": "worker-b",
+      "label": "Worker Node 2 — a computer",
+      "description": "A Worker Node is one computer that actually runs Pods.",
+      "nodes": ["pod-b", "container-b"]
+    }
+  ],
+  "chapters": [
+    {
+      "id": "package",
+      "title": "Docker packs the app",
+      "shortTitle": "Pack the app",
+      "explanation": "A container image is the recipe for the app. A Container is one running copy of that recipe, packed so it behaves the same on any computer.",
+      "focusNodes": ["image", "container-a", "container-b"],
+      "focusEdges": ["pod-a-to-container", "pod-b-to-container"],
+      "introducedNodes": ["image", "container-a", "container-b"],
+      "takeaways": ["Image is the recipe", "Container is a running copy"]
+    },
+    {
+      "id": "pod",
+      "title": "A Pod holds the box",
+      "shortTitle": "A Pod holds it",
+      "explanation": "A Pod is the smallest box Kubernetes will place. It holds one or more Containers that should live and die together.",
+      "focusNodes": ["pod-a", "container-a", "pod-b", "container-b"],
+      "focusEdges": ["pod-a-to-container", "pod-b-to-container"],
+      "focusGroups": ["worker-a", "worker-b"],
+      "introducedNodes": ["pod-a", "pod-b"]
+    },
+    {
+      "id": "workers",
+      "title": "Worker Nodes are computers",
+      "shortTitle": "Worker Nodes",
+      "explanation": "A Worker Node is one computer in the cluster. Kubernetes places Pods onto these machines and can move them if a machine fails.",
+      "focusNodes": ["pod-a", "container-a", "pod-b", "container-b"],
+      "focusEdges": ["manager-to-pod-a", "manager-to-pod-b"],
+      "focusGroups": ["worker-a", "worker-b"],
+      "introducedNodes": []
+    },
+    {
+      "id": "cluster-campus",
+      "title": "The Cluster is the campus",
+      "shortTitle": "The Cluster",
+      "explanation": "The Cluster is the whole campus: Worker Nodes that run the app, plus a Control Plane that keeps the written plan and heals problems.",
+      "focusNodes": ["manager", "desired-state", "service", "pod-a", "pod-b"],
+      "focusEdges": ["manager-to-plan", "manager-to-pod-a", "manager-to-pod-b"],
+      "focusGroups": ["cluster", "control-plane", "worker-a", "worker-b"],
+      "introducedNodes": ["manager", "desired-state"]
+    },
+    {
+      "id": "reach",
+      "title": "How you reach the app",
+      "shortTitle": "How you reach it",
+      "explanation": "A Service is a stable front desk. You talk to one address; Kubernetes forwards the work to whichever Pods are healthy behind it.",
+      "focusNodes": ["user", "service", "pod-a", "pod-b"],
+      "focusEdges": ["user-to-service", "service-to-pod-a", "service-to-pod-b"],
+      "introducedNodes": ["service"]
+    }
+  ],
+  "contextCards": [
+    {
+      "id": "nesting",
+      "title": "How the pieces nest",
+      "points": [
+        "The image packs the app into a Container that runs the same everywhere.",
+        "A Pod holds that Container — the smallest unit Kubernetes will place.",
+        "A Worker Node is one computer; the Cluster is the whole campus plus the office."
+      ]
+    },
+    {
+      "id": "neighbors",
+      "title": "What the neighbors do",
+      "points": [
+        "Control Plane: places Pods, restarts crashes, keeps the written plan.",
+        "Service: a stable front desk so you never hunt for a Pod.",
+        "Image is the recipe; a Container is one running copy of it."
+      ]
+    },
+    {
+      "id": "purpose",
+      "title": "Why this exists",
+      "points": [
+        "A computer fails: work moves to another Worker Node.",
+        "Traffic grows: more Pods start from the same image.",
+        "You keep calling one Service while Pods are replaced behind it."
+      ]
+    }
+  ],
+  "layout": {
+    "preferredDirection": "left-to-right"
+  }
+}

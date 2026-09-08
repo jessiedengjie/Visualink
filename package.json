@@ -1,0 +1,20 @@
+{
+  "name": "visualink-renderer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Structured spec renderer for portable Visualink explainers.",
+  "type": "module",
+  "bin": {
+    "visualink": ".cursor/skills/visualink/bin/visualink.mjs"
+  },
+  "scripts": {
+    "visualink": "node .cursor/skills/visualink/bin/visualink.mjs",
+    "test": "node --test",
+    "render:examples": "node .cursor/skills/visualink/bin/visualink.mjs render examples/kubernetes.json && node .cursor/skills/visualink/bin/visualink.mjs render examples/kubernetes-csm.json && node .cursor/skills/visualink/bin/visualink.mjs render examples/kubernetes-engineer.json && node .cursor/skills/visualink/bin/visualink.mjs render examples/rag.json && node .cursor/skills/visualink/bin/visualink.mjs render examples/oauth.json",
+    "check": "npm test && npm run render:examples"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

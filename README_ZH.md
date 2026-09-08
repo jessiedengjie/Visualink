@@ -6,7 +6,7 @@
 
 **把难以消化的技术概念，变成一眼能看懂、可以逐步探索的交互式地图。**
 
-Visualink 是一个帮助所有人理解陌生技术概念的 Agent Skill。你只需要用自己的语言提问，它会给出直接回答、完整视觉地图，以及你可能还不知道该问、但理解全貌所必需的相关概念——对没有技术背景的学习者尤其有帮助。
+Visualink 是一个帮助所有人理解陌生技术概念的 Agent Skill 和结构化渲染器。你只需要用自己的语言提问，它会给出直接回答、完整视觉地图，以及你可能还不知道该问、但理解全貌所必需的相关概念。如果你说明自己的角色，Visualink 会按该角色调整解释方式。
 
 ![Agent Skill](https://img.shields.io/badge/Agent-Skill-7C3AED?style=flat-square)
 ![输出](https://img.shields.io/badge/输出-单个_HTML-0891B2?style=flat-square)
@@ -17,6 +17,8 @@ Visualink 是一个帮助所有人理解陌生技术概念的 Agent Skill。你�
 
 <p align="center">
   <a href="https://jessiedengjie.github.io/Visualink/kubernetes-explained.html"><strong>打开在线 Demo →</strong></a>
+  ·
+  <a href="#按角色解释">同一概念，不同角色</a>
   ·
   <a href="#快速开始">安装 Visualink</a>
   ·
@@ -60,15 +62,36 @@ Visualink 是一个帮助所有人理解陌生技术概念的 Agent Skill。你�
 
 Kubernetes 只是这里的示范。网络、AI 系统、开发工具，或其他带有组件和流程的概念，都应该得到同样类型的地图。
 
+合适的解释还取决于**学习者是谁**。Visualink 会根据你的角色，调整心智模型、术语、深度、例子和学习路径。
+
 这就是 Visualink 要改变的体验：
 
 - **先回答问题** —— 用一到两句话说清楚核心概念。
 - **先看完整系统** —— 默认展示全貌，而不是一个缺少上下文的局部。
 - **从上到下理解** —— 再通过章节逐步进入必要的组成部分、依赖关系和工作流程。
 - **补上你不知道该问的问题** —— 主动展示你尚未意识到的组件、边界、连接和相关概念。
+- **按角色解释** —— 同一个概念，对 CSM、工程师、产品经理或管理者会生成不同的地图。
 - **留下自己的心智模型** —— 可以复制或下载图片，方便复习和分享。
 
 ![Visualink 如何把一个问题变成心智模型](docs/assets/visualink-flow.svg)
+
+## 工作原理
+
+Visualink 把「解释什么」和「如何呈现」分开：
+
+```text
+用户请求
+↓
+Agent 推理概念与受众
+↓
+VisualinkSpec 1.0（语义 JSON）
+↓
+校验 + 自动分层布局 + 公共渲染器
+↓
+独立的交互式 HTML
+```
+
+Spec 只包含概念、语义节点与连接、边界、章节和角色相关性，不包含像素坐标、CSS、SVG 路径或 JavaScript。一个无依赖的公共渲染器统一负责嵌套分组布局和交互，因此不同解释器可以保持一致体验，同时保留针对概念和角色的不同心智模型。
 
 ## 快速开始
 
@@ -95,7 +118,7 @@ npx skills add jessiedengjie/Visualink
 # 请替换成上面列出的目标目录之一。
 SKILL_DIR="$HOME/.cursor/skills/visualink"
 mkdir -p "$SKILL_DIR"
-cp .cursor/skills/visualink/SKILL.md "$SKILL_DIR/SKILL.md"
+cp -R .cursor/skills/visualink/. "$SKILL_DIR/"
 ```
 
 如果只希望在当前项目中使用，请把 Skill 复制到 `.cursor/skills/visualink/`、`.claude/skills/visualink/` 或 `.agents/skills/visualink/`。
@@ -108,33 +131,77 @@ cp .cursor/skills/visualink/SKILL.md "$SKILL_DIR/SKILL.md"
 
 ```text
 使用 Visualink 向我解释[一个技术概念]。
-假设我没有技术背景。
 ```
 
-也可以补充自己的工作场景：
+如果没有说明角色，Visualink 会使用面向一般技术学习者的默认路径。
+
+也可以直接说明你是谁：
 
 ```text
-我在工作中经常听到[某个技术术语]，但一直不理解它。
-使用 Visualink 告诉我它是什么意思、如何工作、和什么相关，
-以及为什么这对我的工作很重要。
+Explain Kubernetes for a Customer Success Manager.
+```
+
+```text
+I'm a product manager. Help me understand OAuth.
+```
+
+```text
+Explain RAG to me as a solutions architect.
 ```
 
 ### 3. 打开结果
 
-Visualink 会生成一个独立 HTML 文件并在浏览器中打开。不需要安装前端框架，不需要运行构建流程，也不要求你懂设计或代码。
+Visualink 会先创建并校验 `VisualinkSpec`，再生成一个独立 HTML 文件并在浏览器中打开。查看结果不需要前端框架、后端服务，也不要求你懂设计或代码。
+
+## 按角色解释
+
+> 合适的解释取决于学习者是谁。Visualink 会根据你的角色，调整心智模型、术语、深度、例子和学习路径。
+
+CSM、销售、产品经理、软件工程师、解决方案架构师、管理者和初学者都可能问「Explain Kubernetes。」他们不应该得到同一张图。
+
+角色会改变 Visualink 强调什么、哪些组件成为主节点、章节如何排序、术语深入到哪一层，以及这个概念对这份工作为什么重要。它不会编造一套不同的系统。
+
+比较同一个概念的两条学习路径：
+
+- [给 Customer Success Manager 的 Kubernetes](https://jessiedengjie.github.io/Visualink/kubernetes-csm.html) —— 应用 → 容器 → Kubernetes；部署、扩缩、恢复。
+- [给软件工程师的 Kubernetes](https://jessiedengjie.github.io/Visualink/kubernetes-engineer.html) —— Deployment → ReplicaSet → Pods → Nodes，以及 API Server 与 Scheduler。
+
+[通用 Kubernetes 示例](https://jessiedengjie.github.io/Visualink/kubernetes-explained.html) 是未指定角色时的默认结果。
+
+不需要正式职位名称，相关背景就够了：
+
+```text
+I work with enterprise AI customers but I'm not an engineer.
+Use Visualink to explain RAG.
+```
 
 ## 你会得到什么
 
 每个解释器都遵循同一条学习路径：
 
-1. 一到两句话的直接定义
-2. 默认完整展示的系统地图
-3. 从简单到完整的编号章节
+1. 符合受众语言的一到两句直接定义
+2. 为该受众选择的完整系统地图 —— 不是同一张通用架构图配不同说明
+3. 从该学习者起点出发的编号章节
 4. 有方向、有动词标签的连接关系
-5. 解释结构、邻近概念和存在原因的简短卡片
-6. Hover 提示、缩放、拖动和章节播放
-7. Light 与 Dark 两套主题
-8. 复制图片与下载 PNG
+5. 如果提供了角色，会有「Why this matters for [role]」部分
+6. 解释结构、邻近概念和存在原因的简短卡片
+7. Hover 提示、缩放、拖动和章节播放
+8. Light 与 Dark 两套主题
+9. 复制图片与下载 PNG
+
+## 结构化渲染器工作流
+
+贡献者可以直接校验、渲染和预览 Spec：
+
+```bash
+npm run visualink -- validate examples/rag.json
+npm run visualink -- render examples/rag.json
+npm run visualink -- dev examples/rag.json
+```
+
+默认输出到 `dist/`。生成的文件会内联公共 CSS 和运行时代码，生成后仍然可以独立打开和分享。详细格式请参阅 [VisualinkSpec 贡献者指南](docs/visualink-spec.md)和公开的 [JSON Schema](.cursor/skills/visualink/schema/visualink.schema.json)。
+
+仓库包含通用 Kubernetes、面向 CSM 的 Kubernetes、面向工程师的 Kubernetes、RAG 和 OAuth 结构化示例。根目录原有的三个 Kubernetes HTML 保持不变，作为迁移和回归参照；新渲染结果统一放在 `dist/`。
 
 ## Visualink 的解释方式
 
@@ -191,20 +258,29 @@ Visualink 使用可移植的 `SKILL.md` Agent Skills 格式。
 
 ```text
 Visualink/
-├── .cursor/skills/visualink/SKILL.md   # 可复用的 Agent Skill
-├── docs/assets/                        # GitHub 引导图片
-├── kubernetes-explained.html           # 交互示例 A
-├── LICENSE                             # MIT License
-├── README.md                           # English onboarding
+├── .cursor/skills/visualink/
+│   ├── SKILL.md                        # Spec-first Agent Skill
+│   ├── schema/visualink.schema.json    # VisualinkSpec 1.0 规范
+│   ├── lib/                            # 校验、布局与渲染
+│   ├── renderer/                       # 公共样式和浏览器运行时
+│   └── bin/visualink.mjs               # validate、render、dev CLI
+├── examples/                           # 语义 VisualinkSpec 源文件
+├── dist/                               # 生成的独立 HTML
+├── tests/                              # 无依赖 Node 测试
+├── docs/visualink-spec.md              # 贡献者指南
+├── kubernetes-*.html                   # 旧版/参照 Demo
+├── package.json                        # 本地 CLI 与脚本
 └── README_ZH.md                        # 中文使用引导
 ```
 
 ## 设计原则
 
 - 从学习者出发，而不是从系统术语出发。
+- 按角色调整地图，而不是复用一张通用架构图。
 - 只展示理解当前问题所必需的组件。
 - 用视觉层级降低认知负担。
 - 每一条重要连接都应该有方向和名称。
+- 把语义推理放在 Spec 中，把呈现行为放在渲染器中。
 - 优先交付一个容易打开、保存和分享的独立文件。
 - 必须在浏览器里检查真实体验，不能只相信代码。
 

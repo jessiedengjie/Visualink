@@ -1,0 +1,310 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jessiedengjie/Visualink/blob/main/.cursor/skills/visualink/schema/visualink.schema.json",
+  "title": "VisualinkSpec",
+  "description": "Semantic source document for a Visualink interactive explainer.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "concept", "nodes", "edges", "chapters"],
+  "properties": {
+    "version": {
+      "const": "1.0"
+    },
+    "concept": {
+      "$ref": "#/$defs/concept"
+    },
+    "audience": {
+      "$ref": "#/$defs/audience"
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/edge"
+      }
+    },
+    "groups": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/group"
+      }
+    },
+    "chapters": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "items": {
+        "$ref": "#/$defs/chapter"
+      }
+    },
+    "roleRelevance": {
+      "$ref": "#/$defs/roleRelevance"
+    },
+    "contextCards": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "$ref": "#/$defs/contextCard"
+      }
+    },
+    "layout": {
+      "$ref": "#/$defs/layout"
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stringList": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/nonEmptyString"
+      }
+    },
+    "idList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/identifier"
+      }
+    },
+    "concept": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "definition", "problem"],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "shortName": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "title": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "definition": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "problem": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "audience": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "role": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "context": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "technicalLevel": {
+          "enum": ["beginner", "intermediate", "advanced"]
+        },
+        "goals": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "type", "description"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "label": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "caption": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "type": {
+          "enum": [
+            "actor",
+            "input",
+            "process",
+            "service",
+            "model",
+            "store",
+            "infrastructure",
+            "boundary",
+            "output",
+            "concept"
+          ]
+        },
+        "description": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "importance": {
+          "enum": ["primary", "supporting"],
+          "default": "primary"
+        },
+        "group": {
+          "$ref": "#/$defs/identifier"
+        },
+        "layoutHint": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "rank": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "order": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "from", "to", "label"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "from": {
+          "$ref": "#/$defs/identifier"
+        },
+        "to": {
+          "$ref": "#/$defs/identifier"
+        },
+        "label": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "kind": {
+          "enum": ["flow", "control", "data", "dependency", "relationship"],
+          "default": "flow"
+        },
+        "importance": {
+          "enum": ["primary", "supporting"],
+          "default": "supporting"
+        }
+      }
+    },
+    "group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "label": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "description": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "nodes": {
+          "$ref": "#/$defs/idList"
+        },
+        "groups": {
+          "$ref": "#/$defs/idList"
+        }
+      }
+    },
+    "chapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "explanation"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "title": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "shortTitle": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "explanation": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "focusNodes": {
+          "$ref": "#/$defs/idList"
+        },
+        "focusEdges": {
+          "$ref": "#/$defs/idList"
+        },
+        "focusGroups": {
+          "$ref": "#/$defs/idList"
+        },
+        "introducedNodes": {
+          "$ref": "#/$defs/idList"
+        },
+        "takeaways": {
+          "$ref": "#/$defs/stringList"
+        }
+      }
+    },
+    "roleRelevance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "points"],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "points": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        }
+      }
+    },
+    "contextCard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "points"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "title": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "points": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preferredDirection": {
+          "enum": ["left-to-right", "top-to-bottom"],
+          "default": "left-to-right"
+        }
+      }
+    }
+  }
+}

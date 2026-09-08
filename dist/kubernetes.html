@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="generator" content="Visualink renderer 1.0"/>
+<title>Kubernetes, from image to cluster</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f3f7fc;
+  --panel: #ffffff;
+  --panel-2: #edf4fb;
+  --ink: #101828;
+  --ink-2: #475467;
+  --muted: #66758a;
+  --hair: #cbd8e8;
+  --hair-2: #8fa4bd;
+  --external: #d15f32;
+  --service: #008e87;
+  --model: #2b7fd3;
+  --store: #9b4cad;
+  --infra: #2d9b59;
+  --concept: #b7791f;
+  --focus: #d08b1e;
+  --edge-flow: #008e87;
+  --edge-control: #9b4cad;
+  --edge-data: #2d9b59;
+  --edge-dependency: #d15f32;
+  --edge-relationship: #718096;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+}
+
+body[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b0f14;
+  --panel: #131922;
+  --panel-2: #18212c;
+  --ink: #f8fafc;
+  --ink-2: #d3dbe6;
+  --muted: #a8b4c3;
+  --hair: #354153;
+  --hair-2: #607086;
+  --external: #f09a70;
+  --service: #64d2c8;
+  --model: #77b9ff;
+  --store: #d3a7df;
+  --infra: #83d39f;
+  --concept: #f2c66d;
+  --focus: #f2c66d;
+  --edge-flow: #64d2c8;
+  --edge-control: #d3a7df;
+  --edge-data: #83d39f;
+  --edge-dependency: #f09a70;
+  --edge-relationship: #91a0b4;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 20px 26px 24px;
+  display: grid;
+  grid-template-rows: auto auto minmax(410px, 1fr) auto;
+  gap: 14px;
+}
+
+.bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.title {
+  min-width: 0;
+}
+
+h1 {
+  max-width: 48rem;
+  font-size: clamp(24px, 3vw, 31px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.13;
+}
+
+.audience {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.lede {
+  max-width: 54rem;
+  margin-top: 8px;
+  color: var(--ink-2);
+  font-size: 14.5px;
+  line-height: 1.52;
+}
+
+.tools {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tool-button,
+.theme-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 15px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.tool-button:hover,
+.theme-trigger:hover,
+.tool-button:focus-visible,
+.theme-trigger:focus-visible {
+  border-color: var(--hair-2);
+  color: var(--ink);
+  outline: 2px solid color-mix(in srgb, var(--focus) 48%, transparent);
+  outline-offset: 2px;
+}
+
+.theme-icon,
+.chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.chevron {
+  width: 10px;
+  height: 10px;
+  transition: transform 160ms ease;
+}
+
+[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+.drop {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 172px;
+  padding: 4px;
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: 0 14px 34px rgba(4, 10, 20, 0.22);
+}
+
+.menu[hidden] {
+  display: none;
+}
+
+.menu button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.menu button:hover,
+.menu button:focus-visible,
+.menu button[aria-checked="true"] {
+  background: var(--panel-2);
+  outline: none;
+}
+
+.strip {
+  display: grid;
+  grid-template-columns: 235px 1fr;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 16px;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.strip-meta {
+  padding-right: 16px;
+  border-right: 1px solid var(--hair);
+}
+
+.eyebrow {
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.now {
+  margin-top: 5px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 550;
+  line-height: 1.1;
+  text-align: left;
+}
+
+.chip b {
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+}
+
+.chip:hover,
+.chip:focus-visible {
+  border-color: var(--hair-2);
+  background: var(--panel-2);
+  color: var(--ink);
+  outline: none;
+}
+
+.chip.is-active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--panel);
+}
+
+.chip.is-active b {
+  color: var(--focus);
+}
+
+.takeaways {
+  grid-column: 1 / -1;
+  padding-top: 10px;
+  border-top: 1px solid var(--hair);
+}
+
+.takeaways[hidden] {
+  display: none;
+}
+
+.takeaways ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 6px;
+  list-style: none;
+}
+
+.takeaways li {
+  position: relative;
+  padding-left: 11px;
+  color: var(--ink-2);
+  font-size: 11.5px;
+}
+
+.takeaways li::before {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--focus);
+  content: "";
+}
+
+.stage {
+  position: relative;
+  min-height: 410px;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+#diagram {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 390px;
+  cursor: grab;
+  touch-action: none;
+}
+
+#diagram.is-dragging {
+  cursor: grabbing;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 9px 16px;
+  border-top: 1px solid var(--hair);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 18px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink-2);
+  font-size: 11px;
+}
+
+.legend-swatch {
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--swatch);
+}
+
+.zoom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.zoom button {
+  width: 27px;
+  height: 25px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.zoom button:hover,
+.zoom button:focus-visible {
+  border-color: var(--hair-2);
+  background: var(--panel-2);
+  color: var(--ink);
+  outline: none;
+}
+
+.zoom-output {
+  min-width: 44px;
+  color: var(--muted);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.group,
+.node,
+.edge {
+  transition: opacity 240ms ease;
+}
+
+.group-boundary {
+  fill: color-mix(in srgb, var(--panel-2) 64%, transparent);
+  stroke: var(--hair-2);
+  stroke-width: 1.4;
+  stroke-dasharray: 7 5;
+}
+
+.group[data-family="external"] .group-boundary { stroke: var(--external); }
+.group[data-family="service"] .group-boundary { stroke: var(--service); }
+.group[data-family="model"] .group-boundary { stroke: var(--model); }
+.group[data-family="store"] .group-boundary { stroke: var(--store); }
+.group[data-family="infra"] .group-boundary { stroke: var(--infra); }
+.group[data-family="concept"] .group-boundary { stroke: var(--concept); }
+.group[data-depth="0"] .group-boundary {
+  fill: color-mix(in srgb, var(--panel-2) 78%, transparent);
+}
+
+.group[data-depth="1"] .group-boundary,
+.group[data-depth="2"] .group-boundary {
+  fill: color-mix(in srgb, var(--panel-2) 34%, transparent);
+}
+
+.group-label {
+  fill: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.group[data-family="external"] .group-label { fill: var(--external); }
+.group[data-family="service"] .group-label { fill: var(--service); }
+.group[data-family="model"] .group-label { fill: var(--model); }
+.group[data-family="store"] .group-label { fill: var(--store); }
+.group[data-family="infra"] .group-label { fill: var(--infra); }
+.group[data-family="concept"] .group-label { fill: var(--concept); }
+
+.group,
+.node {
+  cursor: pointer;
+}
+
+.node-bg {
+  fill: var(--panel);
+  stroke: var(--node-color, var(--hair-2));
+  stroke-width: 1.25;
+}
+
+.node-stripe {
+  fill: var(--node-color, var(--hair-2));
+}
+
+.node-label {
+  fill: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.node-caption {
+  fill: var(--muted);
+  font-size: 10.5px;
+}
+
+.node[data-type="actor"],
+.node[data-type="input"],
+.node[data-type="output"] {
+  --node-color: var(--external);
+}
+
+.node[data-type="process"],
+.node[data-type="service"] {
+  --node-color: var(--service);
+}
+
+.node[data-type="model"] {
+  --node-color: var(--model);
+}
+
+.node[data-type="store"] {
+  --node-color: var(--store);
+}
+
+.node[data-type="infrastructure"],
+.node[data-type="boundary"] {
+  --node-color: var(--infra);
+}
+
+.node[data-type="concept"] {
+  --node-color: var(--concept);
+}
+
+.edge-path {
+  fill: none;
+  stroke: var(--edge-color, var(--edge-relationship));
+  stroke-width: 1.45;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.edge[data-kind="flow"] {
+  --edge-color: var(--edge-flow);
+}
+
+.edge[data-kind="control"] {
+  --edge-color: var(--edge-control);
+}
+
+.edge[data-kind="data"] {
+  --edge-color: var(--edge-data);
+}
+
+.edge[data-kind="dependency"] {
+  --edge-color: var(--edge-dependency);
+}
+
+.edge[data-importance="primary"] .edge-path {
+  stroke-width: 2.3;
+}
+
+.edge-label-bg {
+  fill: var(--panel);
+  stroke: var(--hair);
+  stroke-width: 0.8;
+}
+
+.edge-label {
+  fill: var(--edge-color, var(--muted));
+  font-size: 9.5px;
+  font-weight: 650;
+}
+
+.is-dim {
+  opacity: 0.38;
+}
+
+.group.is-dim {
+  opacity: 0.45;
+}
+
+.node.is-hot .node-bg,
+.node.is-hover .node-bg,
+.node:focus-visible .node-bg {
+  stroke-width: 2.4;
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--node-color) 35%, transparent));
+}
+
+.group.is-hot .group-boundary,
+.group.is-hover .group-boundary {
+  stroke: var(--focus);
+  stroke-width: 2;
+}
+
+.edge.is-hot .edge-path,
+.edge.is-hover .edge-path {
+  stroke-width: 2.7;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--edge-color) 32%, transparent));
+}
+
+.node.is-new .node-bg {
+  stroke-width: 3;
+  stroke-dasharray: 5 3;
+}
+
+.node:focus-visible {
+  outline: none;
+}
+
+.tip {
+  position: absolute;
+  z-index: 10;
+  max-width: 280px;
+  padding: 8px 10px;
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  background: var(--ink);
+  box-shadow: 0 9px 26px rgba(0, 0, 0, 0.28);
+  color: var(--panel);
+  font-size: 12px;
+  line-height: 1.42;
+  pointer-events: none;
+}
+
+.tip[hidden],
+.toast[hidden] {
+  display: none;
+}
+
+.below {
+  display: grid;
+  gap: 14px;
+}
+
+.role-relevance {
+  padding: 14px 16px 16px;
+  border: 1px solid var(--hair);
+  border-left: 3px solid var(--focus);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.role-relevance h2,
+.card h2 {
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.role-relevance ul {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 28px;
+  margin-top: 10px;
+  list-style: none;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.card {
+  padding: 13px 16px 15px;
+  border: 1px solid var(--hair);
+  border-top: 2px solid var(--card-accent, var(--hair-2));
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.role-relevance li,
+.card li {
+  position: relative;
+  padding-left: 12px;
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.role-relevance li::before,
+.card li::before {
+  position: absolute;
+  top: 7px;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--focus);
+  content: "";
+}
+
+.card ul {
+  display: grid;
+  gap: 7px;
+  margin-top: 9px;
+  list-style: none;
+}
+
+.card:nth-child(4n + 1) {
+  --card-accent: var(--external);
+}
+
+.card:nth-child(4n + 2) {
+  --card-accent: var(--store);
+}
+
+.card:nth-child(4n + 3) {
+  --card-accent: var(--service);
+}
+
+.card:nth-child(4n) {
+  --card-accent: var(--infra);
+}
+
+.toast {
+  position: fixed;
+  z-index: 40;
+  bottom: 22px;
+  left: 50%;
+  padding: 9px 14px;
+  transform: translateX(-50%);
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--panel);
+  font-size: 12.5px;
+  pointer-events: none;
+}
+
+body[data-theme="dark"] .node-bg {
+  fill: #151c25;
+}
+
+body[data-theme="dark"] .node-label {
+  fill: #ffffff;
+}
+
+body[data-theme="dark"] .node-caption {
+  fill: #b7c2d0;
+}
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-rows: auto auto minmax(440px, auto) auto;
+    padding: 16px;
+  }
+
+  .bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tools {
+    flex-wrap: wrap;
+  }
+
+  .strip {
+    grid-template-columns: 1fr;
+  }
+
+  .strip-meta {
+    padding: 0 0 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--hair);
+  }
+
+  .cards,
+  .role-relevance ul {
+    grid-template-columns: 1fr;
+  }
+
+  .foot {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #diagram {
+    min-height: 420px;
+  }
+}
+
+@media (max-width: 520px) {
+  .app {
+    padding: 12px;
+  }
+
+  .chips {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .chip {
+    width: 100%;
+  }
+
+  .legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+</style>
+</head>
+<body data-theme="dark">
+<main class="app">
+  <header class="bar">
+    <div class="title">
+      <h1>Kubernetes, from image to cluster</h1>
+      
+      <p class="lede" id="lede">Kubernetes runs your app across a group of computers, restarts it when something breaks, and scales it when traffic grows — so you do not babysit each machine.</p>
+    </div>
+    <div class="tools">
+    <button class="tool-button" id="play" type="button" aria-label="Play guided chapters">Play</button>
+    <div class="drop">
+      <button class="tool-button" id="export" type="button" aria-haspopup="menu" aria-expanded="false">Export</button>
+      <div class="menu" id="export-menu" role="menu" hidden>
+        <button type="button" id="copy-image" role="menuitem">Copy image</button>
+        <button type="button" id="download-image" role="menuitem">Download PNG</button>
+      </div>
+    </div>
+    <div class="drop">
+      <button class="theme-trigger" id="theme" type="button" aria-haspopup="menu" aria-expanded="false">
+        <svg class="theme-icon" id="theme-icon" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/></svg>
+        <span id="theme-label">Dark</span>
+        <svg class="chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="menu" id="theme-menu" role="menu" hidden>
+        <button type="button" id="theme-light" role="menuitemradio" aria-checked="false">
+          <svg class="theme-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3.15" fill="currentColor"/><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1.2v1.7M8 13.1v1.7M1.2 8h1.7M13.1 8h1.7"/><path d="M3.15 3.15l1.2 1.2M11.65 11.65l1.2 1.2M3.15 12.85l1.2-1.2M11.65 4.35l1.2-1.2"/></g></svg>
+          Light
+        </button>
+        <button type="button" id="theme-dark" role="menuitemradio" aria-checked="true">
+          <svg class="theme-icon" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/></svg>
+          Dark
+        </button>
+      </div>
+    </div>
+  </div>
+  </header>
+  <section class="strip" aria-label="Guided chapters">
+    <div class="strip-meta">
+      <div class="eyebrow" id="eyebrow">Overview</div>
+      <div class="now" id="now">The whole picture</div>
+    </div>
+    <div class="chips"><button class="chip" type="button" data-chapter-index="0" aria-pressed="false"><b>01</b><span>Pack the app</span></button>
+      <button class="chip" type="button" data-chapter-index="1" aria-pressed="false"><b>02</b><span>A Pod holds it</span></button>
+      <button class="chip" type="button" data-chapter-index="2" aria-pressed="false"><b>03</b><span>Worker Nodes</span></button>
+      <button class="chip" type="button" data-chapter-index="3" aria-pressed="false"><b>04</b><span>The Cluster</span></button>
+      <button class="chip" type="button" data-chapter-index="4" aria-pressed="false"><b>05</b><span>How you reach it</span></button></div>
+    <div class="takeaways" id="takeaways" hidden>
+      <div class="eyebrow">Takeaways</div>
+      <ul id="takeaway-list"></ul>
+    </div>
+  </section>
+  <section class="stage" aria-label="Interactive system map">
+    <svg id="diagram" viewBox="0 0 1112 544" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Kubernetes system map">
+    <defs>
+    <marker id="arrow-flow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-control" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-data" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-dependency" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+    <marker id="arrow-relationship" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="context-stroke"/></marker>
+  </defs>
+    <g id="scene">
+      <g class="group" data-group-id="cluster" data-depth="0" data-family="service">
+        <rect class="group-boundary" x="299.2" y="48" width="764.8" height="448" rx="12"/>
+        <text class="group-label" x="312.2" y="67">Kubernetes Cluster — the campus</text>
+      </g>
+      <g class="group" data-group-id="control-plane" data-depth="1" data-family="service">
+        <rect class="group-boundary" x="321.2" y="166" width="203.2" height="238" rx="12"/>
+        <text class="group-label" x="334.2" y="185">Control Plane — the office</text>
+      </g>
+      <g class="group" data-group-id="worker-a" data-depth="1" data-family="infra">
+        <rect class="group-boundary" x="616.4" y="96" width="425.6" height="136" rx="12"/>
+        <text class="group-label" x="629.4" y="115">Worker Node 1 — a computer</text>
+      </g>
+      <g class="group" data-group-id="worker-b" data-depth="1" data-family="infra">
+        <rect class="group-boundary" x="616.4" y="252" width="425.6" height="136" rx="12"/>
+        <text class="group-label" x="629.4" y="271">Worker Node 2 — a computer</text>
+      </g>
+      <g class="edge" data-edge-id="image-to-manager" data-from="image" data-to="manager" data-kind="data" data-importance="supporting">
+        <path class="edge-path" d="M203.6,221 L265.4,221 L265.4,247 L343.2,247" marker-end="url(#arrow-data)"/>
+        <rect class="edge-label-bg" x="279.9" y="236" width="48.8" height="17" rx="5"/>
+        <text class="edge-label" x="304.3" y="248" text-anchor="middle">recipe</text>
+      </g>
+      <g class="edge" data-edge-id="manager-to-plan" data-from="manager" data-to="desired-state" data-kind="control" data-importance="primary">
+        <path class="edge-path" d="M343.2,247 L283.2,247 L283.2,349 L494.8,349" marker-end="url(#arrow-control)"/>
+        <rect class="edge-label-bg" x="341.4" y="338" width="95.2" height="17" rx="5"/>
+        <text class="edge-label" x="389" y="350" text-anchor="middle">saves the plan</text>
+      </g>
+      <g class="edge" data-edge-id="manager-to-pod-a" data-from="manager" data-to="pod-a" data-kind="control" data-importance="primary">
+        <path class="edge-path" d="M502.4,247 L578.4,247 L578.4,177 L638.4,177" marker-end="url(#arrow-control)"/>
+        <rect class="edge-label-bg" x="481.2" y="236" width="118.4" height="17" rx="5"/>
+        <text class="edge-label" x="540.4" y="248" text-anchor="middle">places and watches</text>
+      </g>
+      <g class="edge" data-edge-id="manager-to-pod-b" data-from="manager" data-to="pod-b" data-kind="control" data-importance="supporting">
+        <path class="edge-path" d="M502.4,247 L562.4,247 L562.4,333 L638.4,333" marker-end="url(#arrow-control)"/>
+        <rect class="edge-label-bg" x="503.2" y="279" width="118.4" height="17" rx="5"/>
+        <text class="edge-label" x="562.4" y="291" text-anchor="middle">places and watches</text>
+      </g>
+      <g class="edge" data-edge-id="user-to-service" data-from="user" data-to="service" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M207.2,323 L476.6,323 L476.6,441 L746,441" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="300.1" y="312" width="83.6" height="17" rx="5"/>
+        <text class="edge-label" x="341.9" y="324" text-anchor="middle">uses the app</text>
+      </g>
+      <g class="edge" data-edge-id="service-to-pod-a" data-from="service" data-to="pod-a" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M746,441 L674,441 L674,177 L783.2,177" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="629.3" y="298" width="89.4" height="17" rx="5"/>
+        <text class="edge-label" x="674" y="310" text-anchor="middle">forwards work</text>
+      </g>
+      <g class="edge" data-edge-id="service-to-pod-b" data-from="service" data-to="pod-b" data-kind="flow" data-importance="supporting">
+        <path class="edge-path" d="M746,441 L698,441 L698,333 L783.2,333" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="653.3" y="376" width="89.4" height="17" rx="5"/>
+        <text class="edge-label" x="698" y="388" text-anchor="middle">forwards work</text>
+      </g>
+      <g class="edge" data-edge-id="pod-a-to-container" data-from="pod-a" data-to="container-a" data-kind="flow" data-importance="primary">
+        <path class="edge-path" d="M783.2,177 L875.2,177" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="807.7" y="166" width="43" height="17" rx="5"/>
+        <text class="edge-label" x="829.2" y="178" text-anchor="middle">holds</text>
+      </g>
+      <g class="edge" data-edge-id="pod-b-to-container" data-from="pod-b" data-to="container-b" data-kind="flow" data-importance="supporting">
+        <path class="edge-path" d="M783.2,333 L875.2,333" marker-end="url(#arrow-flow)"/>
+        <rect class="edge-label-bg" x="807.7" y="322" width="43" height="17" rx="5"/>
+        <text class="edge-label" x="829.2" y="334" text-anchor="middle">holds</text>
+      </g>
+      <g class="node" data-node-id="image" data-type="input" data-importance="primary" role="button" tabindex="0" aria-label="Container Image: A container image is the recipe: the files and settings needed to start the same build of the app on any computer.">
+        <rect class="node-bg" x="51.6" y="188" width="152" height="66" rx="8"/>
+        <rect class="node-stripe" x="51.6" y="188" width="4" height="66" rx="2"/>
+        <text class="node-label" x="69.6" y="215">Container Image</text>
+        <text class="node-caption" x="69.6" y="235">the recipe</text>
+      </g>
+      <g class="node" data-node-id="user" data-type="actor" data-importance="primary" role="button" tabindex="0" aria-label="You: You are the person or device using the app — a browser, a phone, or another service.">
+        <rect class="node-bg" x="48" y="290" width="159.2" height="66" rx="8"/>
+        <rect class="node-stripe" x="48" y="290" width="4" height="66" rx="2"/>
+        <text class="node-label" x="66" y="317">You</text>
+        <text class="node-caption" x="66" y="337">browser or phone</text>
+      </g>
+      <g class="node" data-node-id="manager" data-type="process" data-importance="primary" role="button" tabindex="0" aria-label="The Manager: The Manager is part of the Control Plane. It places Pods, restarts crashes, and follows the written plan.">
+        <rect class="node-bg" x="343.2" y="214" width="159.2" height="66" rx="8"/>
+        <rect class="node-stripe" x="343.2" y="214" width="4" height="66" rx="2"/>
+        <text class="node-label" x="361.2" y="241">The Manager</text>
+        <text class="node-caption" x="361.2" y="261">places and heals</text>
+      </g>
+      <g class="node" data-node-id="desired-state" data-type="store" data-importance="primary" role="button" tabindex="0" aria-label="Written Plan: The written plan is the desired state: what should be running, how many copies, and which image they use.">
+        <rect class="node-bg" x="350.8" y="316" width="144" height="66" rx="8"/>
+        <rect class="node-stripe" x="350.8" y="316" width="4" height="66" rx="2"/>
+        <text class="node-label" x="368.8" y="343">Written Plan</text>
+        <text class="node-caption" x="368.8" y="363">desired state</text>
+      </g>
+      <g class="node" data-node-id="service" data-type="service" data-importance="primary" role="button" tabindex="0" aria-label="Service: A Service is a stable front desk. You call one address; Kubernetes forwards work to healthy Pods behind it.">
+        <rect class="node-bg" x="746" y="408" width="166.4" height="66" rx="8"/>
+        <rect class="node-stripe" x="746" y="408" width="4" height="66" rx="2"/>
+        <text class="node-label" x="764" y="435">Service</text>
+        <text class="node-caption" x="764" y="455">stable front desk</text>
+      </g>
+      <g class="node" data-node-id="pod-a" data-type="infrastructure" data-importance="primary" role="button" tabindex="0" aria-label="Pod A: A Pod is the smallest unit Kubernetes will place. Pod A is one running copy of the app.">
+        <rect class="node-bg" x="638.4" y="144" width="144.8" height="66" rx="8"/>
+        <rect class="node-stripe" x="638.4" y="144" width="4" height="66" rx="2"/>
+        <text class="node-label" x="656.4" y="171">Pod A</text>
+        <text class="node-caption" x="656.4" y="191">running copy 1</text>
+      </g>
+      <g class="node" data-node-id="pod-b" data-type="infrastructure" data-importance="primary" role="button" tabindex="0" aria-label="Pod B: Pod B is a second running copy, giving spare capacity if one copy fails or traffic grows.">
+        <rect class="node-bg" x="638.4" y="300" width="144.8" height="66" rx="8"/>
+        <rect class="node-stripe" x="638.4" y="300" width="4" height="66" rx="2"/>
+        <text class="node-label" x="656.4" y="327">Pod B</text>
+        <text class="node-caption" x="656.4" y="347">running copy 2</text>
+      </g>
+      <g class="node" data-node-id="container-a" data-type="process" data-importance="supporting" role="button" tabindex="0" aria-label="Container: A Container is one running copy of the image — the packed app itself inside Pod A.">
+        <rect class="node-bg" x="875.2" y="144" width="144.8" height="66" rx="8"/>
+        <rect class="node-stripe" x="875.2" y="144" width="4" height="66" rx="2"/>
+        <text class="node-label" x="893.2" y="171">Container</text>
+        <text class="node-caption" x="893.2" y="191">the packed app</text>
+      </g>
+      <g class="node" data-node-id="container-b" data-type="process" data-importance="supporting" role="button" tabindex="0" aria-label="Container: A Container is one running copy of the same image inside Pod B.">
+        <rect class="node-bg" x="875.2" y="300" width="144.8" height="66" rx="8"/>
+        <rect class="node-stripe" x="875.2" y="300" width="4" height="66" rx="2"/>
+        <text class="node-label" x="893.2" y="327">Container</text>
+        <text class="node-caption" x="893.2" y="347">the packed app</text>
+      </g>
+    </g>
+  </svg>
+    <div class="tip" id="tip" role="tooltip" hidden></div>
+    <div class="foot">
+      <div class="legend" aria-label="Diagram legend">
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--external)"></span>Actors, inputs, and outputs</div>
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--service)"></span>Processes and services</div>
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--store)"></span>Stores</div>
+    <div class="legend-item"><span class="legend-swatch" style="--swatch:var(--infra)"></span>Infrastructure</div>
+  </div>
+      <div class="zoom" aria-label="Diagram zoom controls">
+        <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
+        <span class="zoom-output" id="zoom-output">100%</span>
+        <button id="zoom-in" type="button" aria-label="Zoom in">+</button>
+        <button id="zoom-reset" type="button" aria-label="Reset view">↺</button>
+      </div>
+    </div>
+  </section>
+  <div class="below">
+    
+    <div class="cards">
+    <section class="card">
+      <h2>How the pieces nest</h2>
+      <ul><li>The image packs the app into a Container that runs the same everywhere.</li><li>A Pod holds that Container — the smallest unit Kubernetes will place.</li><li>A Worker Node is one computer; the Cluster is the whole campus plus the office.</li></ul>
+    </section>
+    <section class="card">
+      <h2>What the neighbors do</h2>
+      <ul><li>Control Plane: places Pods, restarts crashes, keeps the written plan.</li><li>Service: a stable front desk so you never hunt for a Pod.</li><li>Image is the recipe; a Container is one running copy of it.</li></ul>
+    </section>
+    <section class="card">
+      <h2>Why this exists</h2>
+      <ul><li>A computer fails: work moves to another Worker Node.</li><li>Traffic grows: more Pods start from the same image.</li><li>You keep calling one Service while Pods are replaced behind it.</li></ul>
+    </section>
+  </div>
+  </div>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script>window.__VISUALINK_SPEC__={"version":"1.0","concept":{"name":"Kubernetes","title":"Kubernetes, from image to cluster","definition":"Kubernetes runs your app across a group of computers, restarts it when something breaks, and scales it when traffic grows — so you do not babysit each machine.","problem":"Running an application on many machines by hand makes deployment, scaling, recovery, and networking fragile."},"nodes":[{"id":"image","label":"Container Image","caption":"the recipe","type":"input","description":"A container image is the recipe: the files and settings needed to start the same build of the app on any computer.","layoutHint":{"rank":0,"order":0}},{"id":"user","label":"You","caption":"browser or phone","type":"actor","description":"You are the person or device using the app — a browser, a phone, or another service.","layoutHint":{"rank":0,"order":3}},{"id":"manager","label":"The Manager","caption":"places and heals","type":"process","description":"The Manager is part of the Control Plane. It places Pods, restarts crashes, and follows the written plan.","layoutHint":{"rank":1,"order":0}},{"id":"desired-state","label":"Written Plan","caption":"desired state","type":"store","description":"The written plan is the desired state: what should be running, how many copies, and which image they use.","layoutHint":{"rank":1,"order":1}},{"id":"service","label":"Service","caption":"stable front desk","type":"service","description":"A Service is a stable front desk. You call one address; Kubernetes forwards work to healthy Pods behind it.","layoutHint":{"rank":1,"order":3}},{"id":"pod-a","label":"Pod A","caption":"running copy 1","type":"infrastructure","description":"A Pod is the smallest unit Kubernetes will place. Pod A is one running copy of the app.","layoutHint":{"rank":2,"order":0}},{"id":"pod-b","label":"Pod B","caption":"running copy 2","type":"infrastructure","description":"Pod B is a second running copy, giving spare capacity if one copy fails or traffic grows.","layoutHint":{"rank":2,"order":2}},{"id":"container-a","label":"Container","caption":"the packed app","type":"process","description":"A Container is one running copy of the image — the packed app itself inside Pod A.","importance":"supporting","layoutHint":{"rank":3,"order":0}},{"id":"container-b","label":"Container","caption":"the packed app","type":"process","description":"A Container is one running copy of the same image inside Pod B.","importance":"supporting","layoutHint":{"rank":3,"order":2}}],"edges":[{"id":"image-to-manager","from":"image","to":"manager","label":"recipe","kind":"data"},{"id":"manager-to-plan","from":"manager","to":"desired-state","label":"saves the plan","kind":"control","importance":"primary"},{"id":"manager-to-pod-a","from":"manager","to":"pod-a","label":"places and watches","kind":"control","importance":"primary"},{"id":"manager-to-pod-b","from":"manager","to":"pod-b","label":"places and watches","kind":"control"},{"id":"user-to-service","from":"user","to":"service","label":"uses the app","kind":"flow","importance":"primary"},{"id":"service-to-pod-a","from":"service","to":"pod-a","label":"forwards work","kind":"flow","importance":"primary"},{"id":"service-to-pod-b","from":"service","to":"pod-b","label":"forwards work","kind":"flow"},{"id":"pod-a-to-container","from":"pod-a","to":"container-a","label":"holds","kind":"flow","importance":"primary"},{"id":"pod-b-to-container","from":"pod-b","to":"container-b","label":"holds","kind":"flow"}],"groups":[{"id":"cluster","label":"Kubernetes Cluster — the campus","description":"The Cluster is the whole campus: Worker Nodes that run the app, plus a Control Plane that keeps the written plan and heals problems.","nodes":["service"],"groups":["control-plane","worker-a","worker-b"]},{"id":"control-plane","label":"Control Plane — the office","description":"The Control Plane is the office that decides where work goes and heals what breaks.","nodes":["manager","desired-state"]},{"id":"worker-a","label":"Worker Node 1 — a computer","description":"A Worker Node is one computer that actually runs Pods.","nodes":["pod-a","container-a"]},{"id":"worker-b","label":"Worker Node 2 — a computer","description":"A Worker Node is one computer that actually runs Pods.","nodes":["pod-b","container-b"]}],"chapters":[{"id":"package","title":"Docker packs the app","shortTitle":"Pack the app","explanation":"A container image is the recipe for the app. A Container is one running copy of that recipe, packed so it behaves the same on any computer.","focusNodes":["image","container-a","container-b"],"focusEdges":["pod-a-to-container","pod-b-to-container"],"introducedNodes":["image","container-a","container-b"],"takeaways":["Image is the recipe","Container is a running copy"]},{"id":"pod","title":"A Pod holds the box","shortTitle":"A Pod holds it","explanation":"A Pod is the smallest box Kubernetes will place. It holds one or more Containers that should live and die together.","focusNodes":["pod-a","container-a","pod-b","container-b"],"focusEdges":["pod-a-to-container","pod-b-to-container"],"focusGroups":["worker-a","worker-b"],"introducedNodes":["pod-a","pod-b"]},{"id":"workers","title":"Worker Nodes are computers","shortTitle":"Worker Nodes","explanation":"A Worker Node is one computer in the cluster. Kubernetes places Pods onto these machines and can move them if a machine fails.","focusNodes":["pod-a","container-a","pod-b","container-b"],"focusEdges":["manager-to-pod-a","manager-to-pod-b"],"focusGroups":["worker-a","worker-b"],"introducedNodes":[]},{"id":"cluster-campus","title":"The Cluster is the campus","shortTitle":"The Cluster","explanation":"The Cluster is the whole campus: Worker Nodes that run the app, plus a Control Plane that keeps the written plan and heals problems.","focusNodes":["manager","desired-state","service","pod-a","pod-b"],"focusEdges":["manager-to-plan","manager-to-pod-a","manager-to-pod-b"],"focusGroups":["cluster","control-plane","worker-a","worker-b"],"introducedNodes":["manager","desired-state"]},{"id":"reach","title":"How you reach the app","shortTitle":"How you reach it","explanation":"A Service is a stable front desk. You talk to one address; Kubernetes forwards the work to whichever Pods are healthy behind it.","focusNodes":["user","service","pod-a","pod-b"],"focusEdges":["user-to-service","service-to-pod-a","service-to-pod-b"],"introducedNodes":["service"]}],"contextCards":[{"id":"nesting","title":"How the pieces nest","points":["The image packs the app into a Container that runs the same everywhere.","A Pod holds that Container — the smallest unit Kubernetes will place.","A Worker Node is one computer; the Cluster is the whole campus plus the office."]},{"id":"neighbors","title":"What the neighbors do","points":["Control Plane: places Pods, restarts crashes, keeps the written plan.","Service: a stable front desk so you never hunt for a Pod.","Image is the recipe; a Container is one running copy of it."]},{"id":"purpose","title":"Why this exists","points":["A computer fails: work moves to another Worker Node.","Traffic grows: more Pods start from the same image.","You keep calling one Service while Pods are replaced behind it."]}],"layout":{"preferredDirection":"left-to-right"}};</script>
+<script>
+(() => {
+  "use strict";
+
+  const spec = window.__VISUALINK_SPEC__;
+  if (!spec) throw new Error("Visualink runtime could not find its embedded spec.");
+
+  const diagram = document.getElementById("diagram");
+  const scene = document.getElementById("scene");
+  const lede = document.getElementById("lede");
+  const eyebrow = document.getElementById("eyebrow");
+  const now = document.getElementById("now");
+  const takeaways = document.getElementById("takeaways");
+  const takeawayList = document.getElementById("takeaway-list");
+  const tip = document.getElementById("tip");
+  const toast = document.getElementById("toast");
+  const playButton = document.getElementById("play");
+  const chapterButtons = [...document.querySelectorAll(".chip")];
+  const nodes = [...document.querySelectorAll(".node")];
+  const groups = [...document.querySelectorAll(".group")];
+  const edges = [...document.querySelectorAll(".edge")];
+  const parts = [...nodes, ...groups];
+
+  const nodeById = new Map(spec.nodes.map((node) => [node.id, node]));
+  const groupById = new Map((spec.groups || []).map((group) => [group.id, group]));
+  const edgeById = new Map(spec.edges.map((edge) => [edge.id, edge]));
+  const groupParent = new Map();
+  const nodeGroup = new Map();
+
+  for (const group of spec.groups || []) {
+    for (const childId of group.groups || []) groupParent.set(childId, group.id);
+    for (const nodeId of group.nodes || []) nodeGroup.set(nodeId, group.id);
+  }
+  for (const node of spec.nodes) {
+    if (node.group) nodeGroup.set(node.id, node.group);
+  }
+
+  function groupAncestors(groupId) {
+    const result = new Set();
+    let current = groupId;
+    while (current) {
+      result.add(current);
+      current = groupParent.get(current);
+    }
+    return result;
+  }
+
+  function groupsForNodes(nodeIds) {
+    const result = new Set();
+    for (const nodeId of nodeIds) {
+      for (const groupId of groupAncestors(nodeGroup.get(nodeId))) result.add(groupId);
+    }
+    return result;
+  }
+
+  function descendantNodes(groupId, result = new Set()) {
+    const group = groupById.get(groupId);
+    if (!group) return result;
+    for (const nodeId of group.nodes || []) result.add(nodeId);
+    for (const node of spec.nodes) {
+      if (node.group === groupId) result.add(node.id);
+    }
+    for (const childId of group.groups || []) descendantNodes(childId, result);
+    return result;
+  }
+
+  let chapterIndex = -1;
+  let playTimer = null;
+  let toastTimer = null;
+
+  function stopPlayback() {
+    if (!playTimer) return;
+    clearInterval(playTimer);
+    playTimer = null;
+    playButton.textContent = "Play";
+    playButton.setAttribute("aria-label", "Play guided chapters");
+  }
+
+  function clearDiagramState() {
+    for (const element of [...parts, ...edges]) {
+      element.classList.remove("is-dim", "is-hot", "is-hover", "is-new");
+    }
+  }
+
+  function paintChapterButtons() {
+    chapterButtons.forEach((button, index) => {
+      const active = index === chapterIndex;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  }
+
+  function renderTakeaways(items) {
+    takeawayList.replaceChildren();
+    if (!items || items.length === 0) {
+      takeaways.hidden = true;
+      return;
+    }
+    for (const item of items) {
+      const li = document.createElement("li");
+      li.textContent = item;
+      takeawayList.appendChild(li);
+    }
+    takeaways.hidden = false;
+  }
+
+  function overviewMode() {
+    chapterIndex = -1;
+    eyebrow.textContent = "Overview";
+    now.textContent = "The whole picture";
+    lede.textContent = spec.concept.definition;
+    renderTakeaways([]);
+    paintChapterButtons();
+    clearDiagramState();
+    hideTip();
+  }
+
+  function focusChapter(index) {
+    chapterIndex = (index + spec.chapters.length) % spec.chapters.length;
+    const chapter = spec.chapters[chapterIndex];
+    const focusNodes = new Set(chapter.focusNodes || []);
+    const introducedNodes = new Set(chapter.introducedNodes || []);
+    for (const id of introducedNodes) focusNodes.add(id);
+
+    const relevantGroups = groupsForNodes(focusNodes);
+    for (const id of chapter.focusGroups || []) {
+      for (const ancestor of groupAncestors(id)) relevantGroups.add(ancestor);
+    }
+
+    let focusEdges;
+    if (Array.isArray(chapter.focusEdges)) {
+      focusEdges = new Set(chapter.focusEdges);
+    } else {
+      focusEdges = new Set(
+        spec.edges
+          .filter((edge) => focusNodes.has(edge.from) && focusNodes.has(edge.to))
+          .map((edge) => edge.id)
+      );
+    }
+
+    eyebrow.textContent = `Chapter ${chapterIndex + 1} of ${spec.chapters.length}`;
+    now.textContent = chapter.title;
+    lede.textContent = chapter.explanation;
+    renderTakeaways(chapter.takeaways || []);
+    paintChapterButtons();
+
+    const hasNodeFocus = focusNodes.size > 0;
+    for (const element of nodes) {
+      const id = element.dataset.nodeId;
+      const focused = !hasNodeFocus || focusNodes.has(id);
+      element.classList.toggle("is-hot", focused && hasNodeFocus);
+      element.classList.toggle("is-dim", !focused);
+      element.classList.toggle("is-new", introducedNodes.has(id));
+      element.classList.remove("is-hover");
+    }
+
+    for (const element of groups) {
+      const focused = relevantGroups.has(element.dataset.groupId);
+      element.classList.toggle("is-hot", focused);
+      element.classList.toggle("is-dim", relevantGroups.size > 0 && !focused);
+      element.classList.remove("is-hover");
+    }
+
+    for (const element of edges) {
+      const focused = focusEdges.has(element.dataset.edgeId);
+      element.classList.toggle("is-hot", focused);
+      element.classList.toggle("is-dim", !focused);
+      element.classList.remove("is-hover");
+    }
+    hideTip();
+  }
+
+  chapterButtons.forEach((button, index) => {
+    button.addEventListener("click", () => {
+      stopPlayback();
+      focusChapter(index);
+    });
+  });
+
+  playButton.addEventListener("click", () => {
+    if (playTimer) {
+      stopPlayback();
+      return;
+    }
+    playButton.textContent = "Pause";
+    playButton.setAttribute("aria-label", "Pause guided chapters");
+    if (chapterIndex < 0) focusChapter(0);
+    playTimer = setInterval(() => focusChapter(chapterIndex + 1), 3600);
+  });
+
+  function neighboringNodes(nodeId) {
+    const result = new Set([nodeId]);
+    for (const edge of spec.edges) {
+      if (edge.from === nodeId) result.add(edge.to);
+      if (edge.to === nodeId) result.add(edge.from);
+    }
+    return result;
+  }
+
+  function showTip(element, text) {
+    if (!text) return;
+    const stage = document.querySelector(".stage").getBoundingClientRect();
+    const bounds = element.getBoundingClientRect();
+    tip.textContent = text;
+    tip.hidden = false;
+    const tipWidth = tip.offsetWidth;
+    const tipHeight = tip.offsetHeight;
+    let left = bounds.left - stage.left;
+    let top = bounds.bottom - stage.top + 8;
+    if (left + tipWidth > stage.width - 12) left = stage.width - tipWidth - 12;
+    if (left < 12) left = 12;
+    if (top + tipHeight > stage.height - 12) top = bounds.top - stage.top - tipHeight - 8;
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+  }
+
+  function hideTip() {
+    tip.hidden = true;
+  }
+
+  function hoverNode(nodeId, element) {
+    const near = neighboringNodes(nodeId);
+    for (const node of nodes) {
+      const relevant = near.has(node.dataset.nodeId);
+      node.classList.toggle("is-hover", node.dataset.nodeId === nodeId);
+      if (chapterIndex < 0) node.classList.toggle("is-dim", !relevant);
+    }
+    for (const edge of edges) {
+      const semanticEdge = edgeById.get(edge.dataset.edgeId);
+      const relevant = semanticEdge.from === nodeId || semanticEdge.to === nodeId;
+      edge.classList.toggle("is-hover", relevant);
+      if (chapterIndex < 0) edge.classList.toggle("is-dim", !relevant);
+    }
+    if (chapterIndex < 0) {
+      const relatedGroups = groupsForNodes(near);
+      for (const group of groups) {
+        group.classList.toggle("is-dim", !relatedGroups.has(group.dataset.groupId));
+      }
+    }
+    showTip(element, nodeById.get(nodeId)?.description);
+  }
+
+  function hoverGroup(groupId, element) {
+    const members = descendantNodes(groupId);
+    for (const group of groups) {
+      group.classList.toggle("is-hover", group.dataset.groupId === groupId);
+      if (chapterIndex < 0) {
+        const related = groupAncestors(groupId).has(group.dataset.groupId) ||
+          groupAncestors(group.dataset.groupId).has(groupId);
+        group.classList.toggle("is-dim", !related);
+      }
+    }
+    if (chapterIndex < 0) {
+      for (const node of nodes) node.classList.toggle("is-dim", !members.has(node.dataset.nodeId));
+      for (const edge of edges) {
+        const semanticEdge = edgeById.get(edge.dataset.edgeId);
+        edge.classList.toggle(
+          "is-dim",
+          !(members.has(semanticEdge.from) && members.has(semanticEdge.to))
+        );
+      }
+    }
+    showTip(element, groupById.get(groupId)?.description);
+  }
+
+  function clearHover() {
+    for (const element of [...parts, ...edges]) element.classList.remove("is-hover");
+    if (chapterIndex < 0) {
+      for (const element of [...parts, ...edges]) element.classList.remove("is-dim");
+    }
+    hideTip();
+  }
+
+  function chapterForNode(nodeId) {
+    return spec.chapters.findIndex((chapter) =>
+      (chapter.focusNodes || []).includes(nodeId) ||
+      (chapter.introducedNodes || []).includes(nodeId)
+    );
+  }
+
+  for (const element of nodes) {
+    const nodeId = element.dataset.nodeId;
+    element.addEventListener("pointerenter", () => hoverNode(nodeId, element));
+    element.addEventListener("pointerleave", clearHover);
+    element.addEventListener("focus", () => hoverNode(nodeId, element));
+    element.addEventListener("blur", clearHover);
+    element.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const target = chapterForNode(nodeId);
+      if (target >= 0) {
+        stopPlayback();
+        focusChapter(target);
+      }
+    });
+    element.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        element.click();
+      }
+    });
+  }
+
+  for (const element of groups) {
+    const groupId = element.dataset.groupId;
+    element.addEventListener("pointerenter", () => hoverGroup(groupId, element));
+    element.addEventListener("pointerleave", clearHover);
+    element.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const target = spec.chapters.findIndex((chapter) =>
+        (chapter.focusGroups || []).includes(groupId)
+      );
+      if (target >= 0) {
+        stopPlayback();
+        focusChapter(target);
+      }
+    });
+  }
+
+  const themeButton = document.getElementById("theme");
+  const themeMenu = document.getElementById("theme-menu");
+  const themeLabel = document.getElementById("theme-label");
+  const themeIcon = document.getElementById("theme-icon");
+  const lightButton = document.getElementById("theme-light");
+  const darkButton = document.getElementById("theme-dark");
+  const moonIcon = '<path fill="currentColor" d="M11.7 11.05A5.35 5.35 0 0 1 6.1 3.15 5.9 5.9 0 1 0 13.4 11.2a5.1 5.1 0 0 1-1.7-.15z"/>';
+  const sunIcon = '<circle cx="8" cy="8" r="3.15" fill="currentColor"/><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1.2v1.7M8 13.1v1.7M1.2 8h1.7M13.1 8h1.7"/><path d="M3.15 3.15l1.2 1.2M11.65 11.65l1.2 1.2M3.15 12.85l1.2-1.2M11.65 4.35l1.2-1.2"/></g>';
+
+  function closeThemeMenu() {
+    themeMenu.hidden = true;
+    themeButton.setAttribute("aria-expanded", "false");
+  }
+
+  function setTheme(theme) {
+    document.body.dataset.theme = theme;
+    const dark = theme === "dark";
+    themeLabel.textContent = dark ? "Dark" : "Light";
+    themeIcon.innerHTML = dark ? moonIcon : sunIcon;
+    lightButton.setAttribute("aria-checked", String(!dark));
+    darkButton.setAttribute("aria-checked", String(dark));
+    closeThemeMenu();
+  }
+
+  themeButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const opening = themeMenu.hidden;
+    themeMenu.hidden = !opening;
+    themeButton.setAttribute("aria-expanded", String(opening));
+  });
+  themeMenu.addEventListener("click", (event) => event.stopPropagation());
+  lightButton.addEventListener("click", () => setTheme("light"));
+  darkButton.addEventListener("click", () => setTheme("dark"));
+
+  const exportButton = document.getElementById("export");
+  const exportMenu = document.getElementById("export-menu");
+
+  function closeExportMenu() {
+    exportMenu.hidden = true;
+    exportButton.setAttribute("aria-expanded", "false");
+  }
+
+  exportButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const opening = exportMenu.hidden;
+    exportMenu.hidden = !opening;
+    exportButton.setAttribute("aria-expanded", String(opening));
+  });
+  exportMenu.addEventListener("click", (event) => event.stopPropagation());
+
+  document.addEventListener("click", () => {
+    closeExportMenu();
+    closeThemeMenu();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeExportMenu();
+      closeThemeMenu();
+      hideTip();
+      return;
+    }
+    if (event.target.closest("button, [role='button']")) return;
+    if (event.key === "ArrowRight") {
+      stopPlayback();
+      focusChapter(chapterIndex < 0 ? 0 : chapterIndex + 1);
+    } else if (event.key === "ArrowLeft") {
+      stopPlayback();
+      if (chapterIndex <= 0) overviewMode();
+      else focusChapter(chapterIndex - 1);
+    }
+  });
+
+  function announce(message) {
+    toast.textContent = message;
+    toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.hidden = true;
+    }, 2300);
+  }
+
+  const viewBox = diagram.viewBox.baseVal;
+  let scale = 1;
+  let translateX = 0;
+  let translateY = 0;
+  let drag = null;
+
+  function applyView() {
+    scene.setAttribute(
+      "transform",
+      `translate(${translateX.toFixed(1)},${translateY.toFixed(1)}) scale(${scale.toFixed(3)})`
+    );
+    document.getElementById("zoom-output").textContent = `${Math.round(scale * 100)}%`;
+  }
+
+  function zoom(factor) {
+    const next = Math.min(2.6, Math.max(0.6, scale * factor));
+    const centerX = viewBox.x + viewBox.width / 2;
+    const centerY = viewBox.y + viewBox.height / 2;
+    translateX = centerX - (centerX - translateX) * (next / scale);
+    translateY = centerY - (centerY - translateY) * (next / scale);
+    scale = next;
+    applyView();
+  }
+
+  document.getElementById("zoom-in").addEventListener("click", () => zoom(1.18));
+  document.getElementById("zoom-out").addEventListener("click", () => zoom(1 / 1.18));
+  document.getElementById("zoom-reset").addEventListener("click", () => {
+    scale = 1;
+    translateX = 0;
+    translateY = 0;
+    applyView();
+  });
+  diagram.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    zoom(event.deltaY < 0 ? 1.08 : 1 / 1.08);
+  }, { passive: false });
+  diagram.addEventListener("pointerdown", (event) => {
+    if (event.target.closest(".node")) return;
+    drag = {
+      x: event.clientX,
+      y: event.clientY,
+      translateX,
+      translateY
+    };
+    diagram.classList.add("is-dragging");
+    diagram.setPointerCapture(event.pointerId);
+  });
+  diagram.addEventListener("pointermove", (event) => {
+    if (!drag) return;
+    const bounds = diagram.getBoundingClientRect();
+    translateX = drag.translateX + (event.clientX - drag.x) * (viewBox.width / bounds.width);
+    translateY = drag.translateY + (event.clientY - drag.y) * (viewBox.height / bounds.height);
+    applyView();
+  });
+  function endDrag() {
+    drag = null;
+    diagram.classList.remove("is-dragging");
+  }
+  diagram.addEventListener("pointerup", endDrag);
+  diagram.addEventListener("pointercancel", endDrag);
+
+  function cloneForExport() {
+    const clone = diagram.cloneNode(true);
+    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    clone.querySelector("#scene")?.removeAttribute("transform");
+    clone.querySelectorAll(".is-dim, .is-hot, .is-hover, .is-new").forEach((element) => {
+      element.classList.remove("is-dim", "is-hot", "is-hover", "is-new");
+    });
+
+    const sourceElements = [diagram, ...diagram.querySelectorAll("*")];
+    const cloneElements = [clone, ...clone.querySelectorAll("*")];
+    const properties = [
+      "fill",
+      "stroke",
+      "stroke-width",
+      "stroke-dasharray",
+      "stroke-linecap",
+      "stroke-linejoin",
+      "opacity",
+      "font-size",
+      "font-weight",
+      "font-family",
+      "letter-spacing",
+      "text-anchor"
+    ];
+    sourceElements.forEach((source, index) => {
+      const target = cloneElements[index];
+      if (!target) return;
+      const computed = getComputedStyle(source);
+      for (const property of properties) {
+        const value = computed.getPropertyValue(property).trim();
+        if (value && value !== "normal") target.style.setProperty(property, value);
+      }
+    });
+
+    const background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    background.setAttribute("x", String(viewBox.x));
+    background.setAttribute("y", String(viewBox.y));
+    background.setAttribute("width", String(viewBox.width));
+    background.setAttribute("height", String(viewBox.height));
+    background.setAttribute(
+      "fill",
+      getComputedStyle(document.body).getPropertyValue("--panel").trim()
+    );
+    clone.insertBefore(background, clone.firstChild);
+    return clone;
+  }
+
+  function rasterize() {
+    return new Promise((resolve, reject) => {
+      const clone = cloneForExport();
+      const width = 2080;
+      const height = Math.max(720, Math.round(width * viewBox.height / viewBox.width));
+      clone.setAttribute("width", String(width));
+      clone.setAttribute("height", String(height));
+      const xml = new XMLSerializer().serializeToString(clone);
+      const url = URL.createObjectURL(new Blob([xml], { type: "image/svg+xml;charset=utf-8" }));
+      const image = new Image();
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d");
+        context.fillStyle = getComputedStyle(document.body).getPropertyValue("--panel").trim();
+        context.fillRect(0, 0, width, height);
+        context.drawImage(image, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Could not build image."));
+        }, "image/png");
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Could not render diagram."));
+      };
+      image.src = url;
+    });
+  }
+
+  function downloadBlob(blob) {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    const slug = spec.concept.shortName || spec.concept.name;
+    link.download = `${slug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}.png`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  }
+
+  document.getElementById("copy-image").addEventListener("click", async (event) => {
+    event.stopPropagation();
+    closeExportMenu();
+    const blobPromise = rasterize();
+    try {
+      if (navigator.clipboard && window.ClipboardItem) {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blobPromise })]);
+        announce("Copied image");
+        return;
+      }
+    } catch {
+      // Clipboard access can be unavailable for local files; download is the portable fallback.
+    }
+    try {
+      downloadBlob(await blobPromise);
+      announce("Clipboard unavailable — downloaded PNG instead");
+    } catch {
+      announce("Could not export image");
+    }
+  });
+
+  document.getElementById("download-image").addEventListener("click", async (event) => {
+    event.stopPropagation();
+    closeExportMenu();
+    try {
+      downloadBlob(await rasterize());
+      announce("Downloaded PNG");
+    } catch {
+      announce("Could not download image");
+    }
+  });
+
+  overviewMode();
+  applyView();
+})();
+
+</script>
+</body>
+</html>
